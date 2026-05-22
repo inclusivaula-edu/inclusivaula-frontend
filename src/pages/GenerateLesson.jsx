@@ -185,4 +185,29 @@ export default function GenerateLesson() {
               onChange={handleChange}
               placeholder="Ex: que o aluno compreenda o conceito de fração própria..."
               rows={3}
-              style={{ wi
+              style={{ width: "100%", boxSizing: "border-box", resize: "vertical" }}
+            />
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            style={{
+              width: "100%",
+              padding: "12px",
+              background: loading ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+              color: "#fff",
+              border: "none",
+              borderRadius: 8,
+              fontSize: 15,
+              fontWeight: 500,
+              cursor: loading ? "not-allowed" : "pointer"
+            }}
+          >
+            {loading ? "Enviando para o Nexus7..." : "🧠 Gerar aula"}
+          </button>
+        </div>
+      </main>
+    </div>
+  );
+}
