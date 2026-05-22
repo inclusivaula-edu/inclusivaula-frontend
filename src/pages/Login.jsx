@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import logo from "../assets/logo.png";
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -30,22 +31,23 @@ export default function Login() {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      background: "#f5f5f3"
+      background: "linear-gradient(135deg, #f0f9ff 0%, #f0fff8 100%)"
     }}>
       <div style={{
         background: "#fff",
         border: "0.5px solid #d3d1c7",
-        borderRadius: 12,
+        borderRadius: 16,
         padding: "2.5rem",
         width: "100%",
-        maxWidth: 400
+        maxWidth: 400,
+        boxShadow: "0 4px 24px rgba(43,158,195,0.08)"
       }}>
-        <h1 style={{ fontSize: 22, fontWeight: 500, marginBottom: 8 }}>
-          InclusivAula
-        </h1>
-        <p style={{ fontSize: 14, color: "#5f5e5a", marginBottom: 32 }}>
-          Plataforma de aulas adaptadas com IA
-        </p>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <img src={logo} alt="InclusivAula" style={{ height: 60, marginBottom: 8 }} />
+          <p style={{ fontSize: 13, color: "#5f5e5a" }}>
+            Educação adaptada. Inclusão de verdade.
+          </p>
+        </div>
 
         {error && (
           <div style={{
@@ -90,7 +92,18 @@ export default function Login() {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          style={{ width: "100%" }}
+          style={{
+            width: "100%",
+            padding: "12px",
+            background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+            color: "#fff",
+            border: "none",
+            borderRadius: 8,
+            fontSize: 15,
+            fontWeight: 500,
+            cursor: loading ? "not-allowed" : "pointer",
+            opacity: loading ? 0.7 : 1
+          }}
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>

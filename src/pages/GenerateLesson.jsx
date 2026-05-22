@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLesson } from "../contexts/LessonContext";
 import { generateLesson } from "../services/mapiClient";
+import icone from "../assets/icone.png";
 
 const DEFICIENCIAS = [
   "TDAH", "Autismo", "Dislexia", "Baixa visão",
@@ -59,7 +60,7 @@ export default function GenerateLesson() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f5f3" }}>
+    <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
       <header style={{
         background: "#fff",
         borderBottom: "0.5px solid #d3d1c7",
@@ -71,12 +72,22 @@ export default function GenerateLesson() {
         <button onClick={() => navigate("/dashboard")} style={{ fontSize: 13 }}>
           ← Voltar
         </button>
-        <h1 style={{ fontSize: 18, fontWeight: 500, margin: 0 }}>
-          Gerar aula com MAPI
-        </h1>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img src={icone} alt="InclusivAula" style={{ height: 32 }} />
+          <span style={{ fontSize: 16, fontWeight: 600, color: "#2B9EC3" }}>
+            Inclusiv<span style={{ color: "#4CAF82" }}>Aula</span>
+          </span>
+        </div>
       </header>
 
       <main style={{ maxWidth: 640, margin: "0 auto", padding: "2rem 1rem" }}>
+        <h2 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>
+          Gerar aula com IA
+        </h2>
+        <p style={{ fontSize: 13, color: "#5f5e5a", marginBottom: 24 }}>
+          Preencha os dados e o Nexus7 cria uma aula pedagógica adaptada
+        </p>
+
         {localError && (
           <div style={{
             background: "#fcebeb",
@@ -98,7 +109,8 @@ export default function GenerateLesson() {
           padding: "1.5rem",
           display: "flex",
           flexDirection: "column",
-          gap: 20
+          gap: 20,
+          boxShadow: "0 2px 8px rgba(43,158,195,0.06)"
         }}>
           <div>
             <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
@@ -159,7 +171,7 @@ export default function GenerateLesson() {
               step="10"
               value={form.duracao}
               onChange={handleChange}
-              style={{ width: "100%" }}
+              style={{ width: "100%", accentColor: "#2B9EC3" }}
             />
           </div>
 
@@ -173,19 +185,4 @@ export default function GenerateLesson() {
               onChange={handleChange}
               placeholder="Ex: que o aluno compreenda o conceito de fração própria..."
               rows={3}
-              style={{ width: "100%", boxSizing: "border-box", resize: "vertical" }}
-            />
-          </div>
-
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            style={{ width: "100%", padding: "12px" }}
-          >
-            {loading ? "Enviando para o MAPI..." : "Gerar aula"}
-          </button>
-        </div>
-      </main>
-    </div>
-  );
-}
+              style={{ wi

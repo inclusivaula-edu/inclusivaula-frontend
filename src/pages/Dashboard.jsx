@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useLesson } from "../contexts/LessonContext";
+import icone from "../assets/icone.png";
 
 export default function Dashboard() {
   const { user, signOut } = useAuth();
@@ -13,7 +14,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f5f3" }}>
+    <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
       <header style={{
         background: "#fff",
         borderBottom: "0.5px solid #d3d1c7",
@@ -22,7 +23,12 @@ export default function Dashboard() {
         justifyContent: "space-between",
         alignItems: "center"
       }}>
-        <h1 style={{ fontSize: 18, fontWeight: 500, margin: 0 }}>InclusivAula</h1>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img src={icone} alt="InclusivAula" style={{ height: 36 }} />
+          <span style={{ fontSize: 18, fontWeight: 600, color: "#2B9EC3" }}>
+            Inclusiv<span style={{ color: "#4CAF82" }}>Aula</span>
+          </span>
+        </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <span style={{ fontSize: 13, color: "#5f5e5a" }}>{user?.email}</span>
           <button onClick={signOut} style={{ fontSize: 13 }}>Sair</button>
@@ -31,7 +37,7 @@ export default function Dashboard() {
 
       <main style={{ maxWidth: 900, margin: "0 auto", padding: "2rem 1rem" }}>
         <h2 style={{ fontSize: 22, fontWeight: 500, marginBottom: 8 }}>
-          Olá, professor
+          Olá, professor 👋
         </h2>
         <p style={{ color: "#5f5e5a", marginBottom: 32 }}>
           O que vamos gerar hoje?
@@ -48,12 +54,16 @@ export default function Dashboard() {
             border: "0.5px solid #d3d1c7",
             borderRadius: 12,
             padding: "1.5rem",
-            cursor: "pointer"
+            cursor: "pointer",
+            transition: "box-shadow 0.2s",
+            boxShadow: "0 2px 8px rgba(43,158,195,0.06)"
           }} onClick={handleNova}>
-            <div style={{ fontSize: 28, marginBottom: 12 }}>🧠</div>
-            <p style={{ fontWeight: 500, marginBottom: 4 }}>Gerar nova aula</p>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🧠</div>
+            <p style={{ fontWeight: 500, marginBottom: 4, color: "#2B9EC3" }}>
+              Gerar nova aula
+            </p>
             <p style={{ fontSize: 13, color: "#5f5e5a" }}>
-              Crie uma aula adaptada com o MAPI
+              Crie uma aula adaptada com IA
             </p>
           </div>
 
@@ -62,10 +72,13 @@ export default function Dashboard() {
             border: "0.5px solid #d3d1c7",
             borderRadius: 12,
             padding: "1.5rem",
-            cursor: "pointer"
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(76,175,130,0.06)"
           }} onClick={() => navigate("/historico")}>
-            <div style={{ fontSize: 28, marginBottom: 12 }}>📚</div>
-            <p style={{ fontWeight: 500, marginBottom: 4 }}>Histórico</p>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📚</div>
+            <p style={{ fontWeight: 500, marginBottom: 4, color: "#4CAF82" }}>
+              Histórico
+            </p>
             <p style={{ fontSize: 13, color: "#5f5e5a" }}>
               Veja suas aulas geradas
             </p>
