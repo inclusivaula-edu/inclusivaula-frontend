@@ -40,7 +40,7 @@ export default function Dashboard() {
           Olá, professor 👋
         </h2>
         <p style={{ color: "#5f5e5a", marginBottom: 32 }}>
-          O que vamos gerar hoje?
+          O que vamos fazer hoje?
         </p>
 
         <div style={{
@@ -64,6 +64,23 @@ export default function Dashboard() {
             </p>
             <p style={{ fontSize: 13, color: "#5f5e5a" }}>
               Crie uma aula adaptada com IA
+            </p>
+          </div>
+
+          <div style={{
+            background: "#fff",
+            border: "0.5px solid #d3d1c7",
+            borderRadius: 12,
+            padding: "1.5rem",
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(76,175,130,0.06)"
+          }} onClick={() => navigate("/alunos")}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>👨‍🎓</div>
+            <p style={{ fontWeight: 500, marginBottom: 4, color: "#4CAF82" }}>
+              Alunos
+            </p>
+            <p style={{ fontSize: 13, color: "#5f5e5a" }}>
+              Gerencie seus alunos
             </p>
           </div>
 

@@ -3,10 +3,12 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LessonProvider } from "./contexts/LessonContext";
 
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import GenerateLesson from "./pages/GenerateLesson";
 import LessonResult from "./pages/LessonResult";
 import History from "./pages/History";
+import Students from "./pages/Students";
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -26,6 +28,9 @@ function AppRoutes() {
       <Route path="/" element={
         <PublicRoute><Login /></PublicRoute>
       } />
+      <Route path="/cadastro" element={
+        <PublicRoute><Register /></PublicRoute>
+      } />
       <Route path="/dashboard" element={
         <PrivateRoute><Dashboard /></PrivateRoute>
       } />
@@ -37,6 +42,9 @@ function AppRoutes() {
       } />
       <Route path="/historico" element={
         <PrivateRoute><History /></PrivateRoute>
+      } />
+      <Route path="/alunos" element={
+        <PrivateRoute><Students /></PrivateRoute>
       } />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

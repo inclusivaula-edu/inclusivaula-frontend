@@ -107,6 +107,14 @@ export default function Login() {
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>
+
+        <p style={{ fontSize: 13, textAlign: "center", color: "#5f5e5a", marginTop: 16 }}>
+          Primeira vez aqui?{" "}
+          <span style={{ color: "#2B9EC3", cursor: "pointer" }} onClick={() => navigate("/cadastro")}>
+            Criar conta
+          </span>
+        </p>
+
       </div>
     </div>
   );
