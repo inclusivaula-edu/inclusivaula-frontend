@@ -32,24 +32,16 @@ export default function Register() {
         email: auth.email,
         password: auth.password
       });
-
-      console.log("response.error:", response.error);
-      console.log("response.data.user:", response.data.user);
-      console.log("response.data.user.id:", response.data.user?.id);
-
+      
       if (response.error) throw response.error;
       if (!response.data?.user?.id) {
         throw new Error(`Falha ao criar usuário: ${JSON.stringify(response.data)}`);
       }
-
-      console.log("Antes de setUserId:", response.data.user.id);
+      
+      // Não faz login ainda — apenas salva o user ID
       setUserId(response.data.user.id);
-      console.log("Depois de setUserId");
-
-      console.log("Antes de setStep(2)");
       setStep(2);
-      console.log("Depois de setStep(2)");
-
+      
     } catch (err) {
       setError(err.message);
       console.error("SignUp error:", err);
@@ -88,9 +80,18 @@ export default function Register() {
         full_name: auth.full_name
       });
 
+      // SÓ AGORA faz login
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: auth.email,
+        password: auth.password
+      });
+      
+      if (signInError) throw signInError;
+
       setStep(3);
     } catch (err) {
       setError(err.message);
+      console.error("Step2 error:", err);
     } finally {
       setLoading(false);
     }
