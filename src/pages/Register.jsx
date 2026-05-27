@@ -20,42 +20,43 @@ export default function Register() {
     setAuth(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function handleSchool(e) {
-    setSchool(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  }
-
   async function handleStep1() {
-  if (!auth.email || !auth.password || !auth.full_name) {
-    setError("Preencha nome, e-mail e senha.");
-    return;
-  }
-  setError(null);
-  setLoading(true);
-  try {
-    const response = await supabase.auth.signUp({
-      email: auth.email,
-      password: auth.password
-    });
-    
-    console.log("Full response:", JSON.stringify(response, null, 2));
-    console.log("data:", response.data);
-    console.log("error:", response.error);
-    console.log("user:", response.data?.user);
-    
-    if (response.error) throw response.error;
-    if (!response.data?.user?.id) {
-      throw new Error(`Falha ao criar usuário: ${JSON.stringify(response.data)}`);
+    if (!auth.email || !auth.password || !auth.full_name) {
+      setError("Preencha nome, e-mail e senha.");
+      return;
     }
-    
-    setUserId(response.data.user.id);
-    setStep(2);
-  } catch (err) {
-    setError(err.message);
-    console.error("SignUp error:", err);
-  } finally {
-    setLoading(false);
+    setError(null);
+    setLoading(true);
+    try {
+      const response = await supabase.auth.signUp({
+        email: auth.email,
+        password: auth.password
+      });
+
+      console.log("response.error:", response.error);
+      console.log("response.data.user:", response.data.user);
+      console.log("response.data.user.id:", response.data.user?.id);
+
+      if (response.error) throw response.error;
+      if (!response.data?.user?.id) {
+        throw new Error(`Falha ao criar usuário: ${JSON.stringify(response.data)}`);
+      }
+
+      console.log("Antes de setUserId:", response.data.user.id);
+      setUserId(response.data.user.id);
+      console.log("Depois de setUserId");
+
+      console.log("Antes de setStep(2)");
+      setStep(2);
+      console.log("Depois de setStep(2)");
+
+    } catch (err) {
+      setError(err.message);
+      console.error("SignUp error:", err);
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   async function handleStep2() {
     if (!school.name || !school.city) {
