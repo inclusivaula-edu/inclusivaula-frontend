@@ -4,7 +4,7 @@ import { supabase } from "../services/supabaseClient";
 import { createSchool, createTeacher } from "../services/schoolClient";
 import logo from "../assets/logo.png";
 
-const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+const STATES = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"];
 
 export default function Register() {
   const navigate = useNavigate();
@@ -36,11 +36,19 @@ export default function Register() {
         email: auth.email,
         password: auth.password
       });
+
+      console.log("SignUp response:", { data, signUpError });
+
       if (signUpError) throw signUpError;
+      if (!data?.user?.id) {
+        throw new Error("Falha ao criar usuário. Tente novamente.");
+      }
+
       setUserId(data.user.id);
       setStep(2);
     } catch (err) {
       setError(err.message);
+      console.error("SignUp error:", err);
     } finally {
       setLoading(false);
     }
@@ -163,7 +171,8 @@ export default function Register() {
                 width: "100%", padding: "12px",
                 background: loading ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
                 color: "#fff", border: "none", borderRadius: 8,
-                fontSize: 15, fontWeight: 500, cursor: loading ? "not-allowed" : "pointer"
+                fontSize: 15, fontWeight: 500, cursor: loading ? "not-allowed" : "pointer",
+                marginTop: 8
               }}
             >
               {loading ? "Criando conta..." : "Continuar →"}
