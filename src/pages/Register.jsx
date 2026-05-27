@@ -38,7 +38,10 @@ export default function Register() {
         throw new Error(`Falha ao criar usuário: ${JSON.stringify(response.data)}`);
       }
       
-      // Não faz login ainda — apenas salva o user ID
+      // Logout imediatamente para não redirecionar pro dashboard
+      await supabase.auth.signOut();
+      
+      // Agora salva o user ID e vai pro step 2
       setUserId(response.data.user.id);
       setStep(2);
       
