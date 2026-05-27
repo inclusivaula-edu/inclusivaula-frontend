@@ -25,34 +25,37 @@ export default function Register() {
   }
 
   async function handleStep1() {
-    if (!auth.email || !auth.password || !auth.full_name) {
-      setError("Preencha nome, e-mail e senha.");
-      return;
-    }
-    setError(null);
-    setLoading(true);
-    try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: auth.email,
-        password: auth.password
-      });
-
-      console.log("SignUp response:", { data, signUpError });
-
-      if (signUpError) throw signUpError;
-      if (!data?.user?.id) {
-        throw new Error("Falha ao criar usuário. Tente novamente.");
-      }
-
-      setUserId(data.user.id);
-      setStep(2);
-    } catch (err) {
-      setError(err.message);
-      console.error("SignUp error:", err);
-    } finally {
-      setLoading(false);
-    }
+  if (!auth.email || !auth.password || !auth.full_name) {
+    setError("Preencha nome, e-mail e senha.");
+    return;
   }
+  setError(null);
+  setLoading(true);
+  try {
+    const response = await supabase.auth.signUp({
+      email: auth.email,
+      password: auth.password
+    });
+    
+    console.log("Full response:", JSON.stringify(response, null, 2));
+    console.log("data:", response.data);
+    console.log("error:", response.error);
+    console.log("user:", response.data?.user);
+    
+    if (response.error) throw response.error;
+    if (!response.data?.user?.id) {
+      throw new Error(`Falha ao criar usuário: ${JSON.stringify(response.data)}`);
+    }
+    
+    setUserId(response.data.user.id);
+    setStep(2);
+  } catch (err) {
+    setError(err.message);
+    console.error("SignUp error:", err);
+  } finally {
+    setLoading(false);
+  }
+}
 
   async function handleStep2() {
     if (!school.name || !school.city) {
