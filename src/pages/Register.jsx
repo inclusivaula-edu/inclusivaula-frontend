@@ -4,7 +4,7 @@ import { supabase } from "../services/supabaseClient";
 import { createSchool, createTeacher } from "../services/schoolClient";
 import logo from "../assets/logo.png";
 
-const STATES = ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"];
+const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
 export default function Register() {
   const navigate = useNavigate();
@@ -18,6 +18,10 @@ export default function Register() {
 
   function handleAuth(e) {
     setAuth(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  function handleSchool(e) {
+    setSchool(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
   async function handleStep1() {
