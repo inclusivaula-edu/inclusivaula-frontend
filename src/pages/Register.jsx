@@ -58,51 +58,63 @@ export default function Register() {
   }
 
   async function handleStep2() {
-    if (!school.name || !school.city) {
-      setError("Preencha nome e cidade da escola.");
-      return;
-    }
-    setError(null);
-    setLoading(true);
-    try {
-      const newSchool = await createSchool({
-        ...school,
-        admin_user_id: userId
-      });
-
-      await createTeacher({
-        user_id: userId,
-        school_id: newSchool.id,
-        full_name: auth.full_name,
-        email: auth.email,
-        phone: auth.phone,
-        specialization: ""
-      });
-
-      await supabase.from("profiles").upsert({
-        id: userId,
-        email: auth.email,
-        role: "teacher",
-        school_id: newSchool.id,
-        full_name: auth.full_name
-      });
-
-      // SÓ AGORA faz login
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: auth.email,
-        password: auth.password
-      });
-      
-      if (signInError) throw signInError;
-
-      setStep(3);
-    } catch (err) {
-      setError(err.message);
-      console.error("Step2 error:", err);
-    } finally {
-      setLoading(false);
-    }
+  if (!school.name || !school.city) {
+    setError("Preencha nome e cidade da escola.");
+    return;
   }
+  setError(null);
+  setLoading(true);
+  try {
+    // 1. Cria a escola
+    const newSchool = await createSchool({
+      ...school,
+      admin_user_id: userId
+    });
+
+    // 2. Insere na tabela public.users (necessário para FK do teacher)
+    await supabase.from("users").upsert({
+      id: userId,
+      school_id: newSchool.id,
+      full_name: auth.full_name,
+      email: auth.email,
+      role: "teacher"
+    });
+
+    // 3. Cria o teacher vinculado ao usuário e escola
+    await createTeacher({
+      user_id: userId,
+      school_id: newSchool.id,
+      full_name: auth.full_name,
+      email: auth.email,
+      phone: auth.phone,
+      specialization: ""
+    });
+
+    // 4. Cria o profile
+    await supabase.from("profiles").upsert({
+      id: userId,
+      email: auth.email,
+      role: "teacher",
+      school_id: newSchool.id,
+      full_name: auth.full_name
+    });
+
+    // 5. Só agora faz login
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: auth.email,
+      password: auth.password
+    });
+    
+    if (signInError) throw signInError;
+
+    setStep(3);
+  } catch (err) {
+    setError(err.message);
+    console.error("Step2 error:", err);
+  } finally {
+    setLoading(false);
+  }
+}
 
   const inputStyle = { width: "100%", boxSizing: "border-box" };
   const labelStyle = { fontSize: 13, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 };
