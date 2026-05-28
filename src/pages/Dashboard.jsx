@@ -100,6 +100,23 @@ export default function Dashboard() {
               Veja suas aulas geradas
             </p>
           </div>
+
+          <div style={{
+            background: "#fff",
+            border: "0.5px solid #d3d1c7",
+            borderRadius: 12,
+            padding: "1.5rem",
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(43,158,195,0.06)"
+          }} onClick={() => navigate("/escola")}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🏫</div>
+            <p style={{ fontWeight: 500, marginBottom: 4, color: "#2B9EC3" }}>
+              Minha escola
+            </p>
+            <p style={{ fontSize: 13, color: "#5f5e5a" }}>
+              Código de convite e professores
+            </p>
+          </div>
         </div>
       </main>
     </div>

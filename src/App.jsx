@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LessonProvider } from "./contexts/LessonContext";
 
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -9,6 +10,7 @@ import GenerateLesson from "./pages/GenerateLesson";
 import LessonResult from "./pages/LessonResult";
 import History from "./pages/History";
 import Students from "./pages/Students";
+import SchoolAdmin from "./pages/SchoolAdmin";
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -27,6 +29,9 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={
         <PublicRoute><Login /></PublicRoute>
+      } />
+      <Route path="/escola" element={
+        <PrivateRoute><SchoolAdmin /></PrivateRoute>
       } />
       <Route path="/cadastro" element={<Register />} />
       <Route path="/dashboard" element={
