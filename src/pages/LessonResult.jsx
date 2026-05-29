@@ -10,20 +10,17 @@ export default function LessonResult() {
   const { jobId, lesson, setLesson, status, setStatus } = useLesson();
   const intervalRef = useRef(null);
 
-  // Estados para as ações do professor
   const [aprovado, setAprovado] = useState(false);
   const [editando, setEditando] = useState(false);
   const [lessonEditada, setLessonEditada] = useState(null);
   const [salvando, setSalvando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
-  const [feedback, setFeedback] = useState(null); // mensagem de sucesso/erro
+  const [feedback, setFeedback] = useState(null);
 
-  // Polling: verifica o status da aula a cada 3s até completar
   useEffect(() => {
     if (!jobId) { navigate("/gerar"); return; }
     if (status === "done") return;
-
     intervalRef.current = setInterval(async () => {
       try {
         const res = await getLessonStatus(jobId);
@@ -37,19 +34,12 @@ export default function LessonResult() {
         setStatus("error");
       }
     }, 3000);
-
     return () => clearInterval(intervalRef.current);
   }, [jobId]);
 
-  // ── AÇÕES DO PROFESSOR ────────────────────────────────────────
-
-  // Dar aval positivo: marca a aula como aprovada no banco
   async function handleAprovar() {
     try {
-      await supabase
-        .from("lessons")
-        .update({ aprovado: true })
-        .eq("id", jobId);
+      await supabase.from("lessons").update({ aprovado: true }).eq("id", jobId);
       setAprovado(true);
       mostrarFeedback("✅ Aula aprovada com sucesso!");
     } catch {
@@ -57,20 +47,15 @@ export default function LessonResult() {
     }
   }
 
-  // Entrar no modo de edição: copia a aula atual para estado local editável
   function handleEditar() {
     setLessonEditada(JSON.parse(JSON.stringify(lesson)));
     setEditando(true);
   }
 
-  // Salvar edição: persiste as alterações no banco via coluna result (jsonb)
   async function handleSalvarEdicao() {
     setSalvando(true);
     try {
-      await supabase
-        .from("lessons")
-        .update({ result: lessonEditada })
-        .eq("id", jobId);
+      await supabase.from("lessons").update({ result: lessonEditada }).eq("id", jobId);
       setLesson(lessonEditada);
       setEditando(false);
       mostrarFeedback("✅ Aula salva com sucesso!");
@@ -81,14 +66,10 @@ export default function LessonResult() {
     }
   }
 
-  // Excluir: remove a aula do banco e volta para o dashboard
   async function handleExcluir() {
     setExcluindo(true);
     try {
-      await supabase
-        .from("lessons")
-        .delete()
-        .eq("id", jobId);
+      await supabase.from("lessons").delete().eq("id", jobId);
       navigate("/dashboard");
     } catch {
       mostrarFeedback("Erro ao excluir a aula.", "erro");
@@ -97,28 +78,65 @@ export default function LessonResult() {
     }
   }
 
-  // Download: gera um arquivo .txt com todo o conteúdo da aula
   async function handleDownload() {
     try {
-      const pdf = await getLessonPDF(jobId);
-      const blob = new Blob([pdf], { type: "text/plain" });
+      const conteudo = gerarTextoAula(lesson);
+      const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `aula-inclusivaula-${jobId}.txt`;
       a.click();
+      URL.revokeObjectURL(url);
     } catch {
       mostrarFeedback("Erro ao baixar a aula.", "erro");
     }
   }
 
-  // Exibe mensagem de feedback por 3 segundos
+  // Gera o texto completo da aula para download
+  // sem depender do endpoint de PDF do backend
+  function gerarTextoAula(l) {
+    if (!l) return "";
+    let txt = "";
+    txt += `INCLUSIVAULA — PLANO DE AULA\n`;
+    txt += `${"=".repeat(50)}\n\n`;
+    if (l.titulo) txt += `TÍTULO: ${l.titulo}\n\n`;
+    if (l.estrategia) txt += `ESTRATÉGIA PEDAGÓGICA:\n${l.estrategia}\n\n`;
+    if (l.bncc?.length) {
+      txt += `HABILIDADES BNCC:\n`;
+      l.bncc.forEach(b => { txt += `  [${b.codigo}] ${b.descricao}\n`; });
+      txt += "\n";
+    }
+    if (l.explicacao) txt += `EXPLICAÇÃO:\n${l.explicacao}\n\n`;
+    if (l.atividades?.length) {
+      txt += `ATIVIDADES:\n`;
+      l.atividades.forEach((a, i) => {
+        const texto = typeof a === "string" ? a : a.descricao || "";
+        txt += `  ${i + 1}. ${texto.replace(/^atividade\s*\d+[:\-]?\s*/i, "")}\n`;
+      });
+      txt += "\n";
+    }
+    if (l.adaptacoes?.length) {
+      txt += `ADAPTAÇÕES INCLUSIVAS:\n`;
+      l.adaptacoes.forEach(a => { txt += `  • ${typeof a === "string" ? a : JSON.stringify(a)}\n`; });
+      txt += "\n";
+    }
+    if (l.recursos?.length) {
+      txt += `RECURSOS DIDÁTICOS:\n`;
+      l.recursos.forEach(r => { txt += `  • ${typeof r === "string" ? r : JSON.stringify(r)}\n`; });
+      txt += "\n";
+    }
+    if (l.avaliacao) txt += `AVALIAÇÃO:\n${l.avaliacao}\n\n`;
+    if (l.base_legal) txt += `BASE LEGAL E CIENTÍFICA:\n${l.base_legal}\n\n`;
+    txt += `${"=".repeat(50)}\n`;
+    txt += `Gerado por InclusivAula — www.inclusivaula.com.br\n`;
+    return txt;
+  }
+
   function mostrarFeedback(msg, tipo = "sucesso") {
     setFeedback({ msg, tipo });
     setTimeout(() => setFeedback(null), 3000);
   }
-
-  // ── TELA DE CARREGAMENTO ──────────────────────────────────────
 
   if (status !== "done") {
     return (
@@ -138,15 +156,12 @@ export default function LessonResult() {
     );
   }
 
-  // Fonte de dados: usa a versão editada se estiver no modo edição
   const dados = editando ? lessonEditada : lesson;
-
-  // ── TELA PRINCIPAL ────────────────────────────────────────────
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
 
-      {/* Feedback flutuante de ações */}
+      {/* Feedback flutuante */}
       {feedback && (
         <div style={{
           position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)",
@@ -204,7 +219,7 @@ export default function LessonResult() {
       <header style={{
         background: "#fff", borderBottom: "0.5px solid #d3d1c7",
         padding: "1rem 2rem", display: "flex",
-        justifyContent: "space-between", alignItems: "center"
+        justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <button onClick={() => navigate("/dashboard")} style={{ fontSize: 13 }}>
@@ -218,15 +233,12 @@ export default function LessonResult() {
           </div>
         </div>
 
-        {/* Barra de ações do professor */}
+        {/* Barra de ações */}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-
-          {/* Aprovar */}
           {!editando && (
             <button
               onClick={handleAprovar}
               disabled={aprovado}
-              title="Dar aval pedagógico para esta aula"
               style={{
                 fontSize: 13, padding: "8px 14px",
                 background: aprovado ? "#edfff6" : "#fff",
@@ -239,11 +251,9 @@ export default function LessonResult() {
             </button>
           )}
 
-          {/* Editar / Salvar edição */}
           {!editando ? (
             <button
               onClick={handleEditar}
-              title="Editar o conteúdo desta aula"
               style={{
                 fontSize: 13, padding: "8px 14px", background: "#fff",
                 color: "#5f5e5a", border: "0.5px solid #d3d1c7",
@@ -278,11 +288,9 @@ export default function LessonResult() {
             </>
           )}
 
-          {/* Baixar */}
           {!editando && (
             <button
               onClick={handleDownload}
-              title="Baixar esta aula em arquivo de texto"
               style={{
                 fontSize: 13, padding: "8px 14px", background: "#fff",
                 color: "#5f5e5a", border: "0.5px solid #d3d1c7",
@@ -293,11 +301,9 @@ export default function LessonResult() {
             </button>
           )}
 
-          {/* Excluir */}
           {!editando && (
             <button
               onClick={() => setConfirmandoExclusao(true)}
-              title="Excluir esta aula permanentemente"
               style={{
                 fontSize: 13, padding: "8px 14px", background: "#fff",
                 color: "#a32d2d", border: "0.5px solid #f7c1c1",
@@ -308,7 +314,6 @@ export default function LessonResult() {
             </button>
           )}
 
-          {/* Gerar nova */}
           {!editando && (
             <button
               onClick={() => navigate("/gerar")}
@@ -330,11 +335,10 @@ export default function LessonResult() {
           background: "#faeeda", borderBottom: "0.5px solid #BA7517",
           padding: "10px 2rem", fontSize: 13, color: "#854F0B"
         }}>
-          ✏️ Modo edição ativo — edite os campos abaixo e clique em <strong>Salvar</strong> para confirmar as alterações.
+          ✏️ Modo edição ativo — edite os campos abaixo e clique em <strong>Salvar</strong> para confirmar.
         </div>
       )}
 
-      {/* Conteúdo principal */}
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "2rem 1rem" }}>
 
         {/* Badge de aprovação */}
@@ -376,9 +380,9 @@ export default function LessonResult() {
               onChange={e => setLessonEditada(p => ({ ...p, estrategia: e.target.value }))}
               rows={3}
               style={{
-                width: "100%", boxSizing: "border-box", fontSize: 14,
-                marginBottom: 24, border: "0.5px solid #2B9EC3",
-                borderRadius: 8, padding: "10px 12px", resize: "vertical"
+                width: "100%", boxSizing: "border-box", fontSize: 14, marginBottom: 24,
+                border: "0.5px solid #2B9EC3", borderRadius: 8,
+                padding: "10px 12px", resize: "vertical"
               }}
             />
           ) : (
@@ -444,3 +448,138 @@ export default function LessonResult() {
           <Section title="Atividades" emoji="✏️" color="#4CAF82">
             {dados.atividades.map((a, i) => (
               <div key={i} style={{
+                background: "#fff", border: "0.5px solid #d3d1c7",
+                borderLeft: "3px solid #4CAF82",
+                borderRadius: 8, padding: "12px 16px", marginBottom: 10, fontSize: 14
+              }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#4CAF82", marginRight: 8 }}>
+                  Atividade {i + 1}
+                </span>
+                {editando ? (
+                  <textarea
+                    value={typeof lessonEditada.atividades[i] === "string"
+                      ? lessonEditada.atividades[i]
+                      : lessonEditada.atividades[i].descricao || ""}
+                    onChange={e => {
+                      const novas = [...lessonEditada.atividades];
+                      novas[i] = e.target.value;
+                      setLessonEditada(p => ({ ...p, atividades: novas }));
+                    }}
+                    rows={3}
+                    style={{
+                      width: "100%", boxSizing: "border-box", fontSize: 13, marginTop: 6,
+                      border: "0.5px solid #4CAF82", borderRadius: 6,
+                      padding: "8px 10px", resize: "vertical"
+                    }}
+                  />
+                ) : (
+                  <span>
+                    {typeof a === "string"
+                      ? a.replace(/^atividade\s*\d+[:\-]?\s*/i, "")
+                      : a.descricao || JSON.stringify(a)}
+                  </span>
+                )}
+              </div>
+            ))}
+          </Section>
+        )}
+
+        {/* Adaptações */}
+        {dados?.adaptacoes?.length > 0 && (
+          <Section title="Adaptações inclusivas" emoji="♿" color="#2B9EC3">
+            {dados.adaptacoes.map((a, i) => (
+              <div key={i} style={{
+                background: "#e8f7fd", border: "0.5px solid #2B9EC3",
+                borderRadius: 8, padding: "12px 16px", marginBottom: 10,
+                fontSize: 14, color: "#1a6e8a"
+              }}>
+                {editando ? (
+                  <textarea
+                    value={typeof lessonEditada.adaptacoes[i] === "string"
+                      ? lessonEditada.adaptacoes[i]
+                      : JSON.stringify(lessonEditada.adaptacoes[i])}
+                    onChange={e => {
+                      const novas = [...lessonEditada.adaptacoes];
+                      novas[i] = e.target.value;
+                      setLessonEditada(p => ({ ...p, adaptacoes: novas }));
+                    }}
+                    rows={2}
+                    style={{
+                      width: "100%", boxSizing: "border-box", fontSize: 13,
+                      border: "0.5px solid #2B9EC3", borderRadius: 6,
+                      padding: "8px 10px", resize: "vertical", color: "#1a6e8a"
+                    }}
+                  />
+                ) : (
+                  typeof a === "string" ? a : JSON.stringify(a)
+                )}
+              </div>
+            ))}
+          </Section>
+        )}
+
+        {/* Recursos */}
+        {dados?.recursos?.length > 0 && (
+          <Section title="Recursos didáticos" emoji="🎯" color="#4CAF82">
+            {dados.recursos.map((r, i) => (
+              <div key={i} style={{
+                background: "#edfff6", border: "0.5px solid #4CAF82",
+                borderRadius: 8, padding: "12px 16px", marginBottom: 10,
+                fontSize: 14, color: "#2a7a55"
+              }}>
+                {typeof r === "string" ? r : JSON.stringify(r)}
+              </div>
+            ))}
+          </Section>
+        )}
+
+        {/* Avaliação */}
+        {dados?.avaliacao && (
+          <Section title="Avaliação" emoji="📊" color="#2B9EC3">
+            {editando ? (
+              <textarea
+                value={lessonEditada.avaliacao}
+                onChange={e => setLessonEditada(p => ({ ...p, avaliacao: e.target.value }))}
+                rows={4}
+                style={{
+                  width: "100%", boxSizing: "border-box", fontSize: 14,
+                  border: "0.5px solid #2B9EC3", borderRadius: 8,
+                  padding: "10px 12px", resize: "vertical"
+                }}
+              />
+            ) : (
+              <p style={{ fontSize: 15, lineHeight: 1.8, color: "#2c2c2a" }}>
+                {dados.avaliacao}
+              </p>
+            )}
+          </Section>
+        )}
+
+        {/* Base legal */}
+        {dados?.base_legal && (
+          <Section title="Base legal e científica" emoji="⚖️" color="#888780">
+            <div style={{
+              background: "#f1efe8", border: "0.5px solid #d3d1c7",
+              borderRadius: 8, padding: "14px 16px",
+              fontSize: 13, color: "#5f5e5a", lineHeight: 1.8
+            }}>
+              {dados.base_legal}
+            </div>
+          </Section>
+        )}
+
+      </main>
+    </div>
+  );
+}
+
+function Section({ title, emoji, color, children }) {
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 14, color }}>
+        {emoji} {title}
+      </h3>
+      {children}
+    </div>
+  );
+}
