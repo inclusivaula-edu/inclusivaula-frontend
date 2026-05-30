@@ -12,6 +12,8 @@ import History from "./pages/History";
 import Students from "./pages/Students";
 import SchoolAdmin from "./pages/SchoolAdmin";
 import Exercises from "./pages/Exercises";
+import Reports from "./pages/Reports";
+
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -53,7 +55,10 @@ function AppRoutes() {
       <Route path="*" element={<Navigate to="/" />} />
       <Route path="/exercicios" element={
         <PrivateRoute><Exercises /></PrivateRoute>
-} />
+      } />
+      <Route path="/relatorios" element={
+        <PrivateRoute><Reports /></PrivateRoute>
+      } />
     </Routes>
   );
 }

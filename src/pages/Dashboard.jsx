@@ -117,6 +117,18 @@ export default function Dashboard() {
               Código de convite e professores
             </p>
           </div>
+          <div style={{
+            background: "#fff", border: "0.5px solid #d3d1c7",
+            borderRadius: 12, padding: "1.5rem",
+            cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(186,117,23,0.06)"
+          }} onClick={() => navigate("/relatorios")}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>📄</div>
+            <p style={{ fontWeight: 500, marginBottom: 4, color: "#BA7517" }}>Relatórios</p>
+            <p style={{ fontSize: 13, color: "#5f5e5a" }}>
+              Relatórios obrigatórios com IA
+            </p>
+          </div>
         </div>
       </main>
     </div>
