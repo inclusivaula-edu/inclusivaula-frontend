@@ -93,8 +93,6 @@ export default function LessonResult() {
     }
   }
 
-  // Gera o texto completo da aula para download
-  // sem depender do endpoint de PDF do backend
   function gerarTextoAula(l) {
     if (!l) return "";
     let txt = "";
@@ -161,7 +159,6 @@ export default function LessonResult() {
   return (
     <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
 
-      {/* Feedback flutuante */}
       {feedback && (
         <div style={{
           position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)",
@@ -174,7 +171,6 @@ export default function LessonResult() {
         </div>
       )}
 
-      {/* Modal de confirmação de exclusão */}
       {confirmandoExclusao && (
         <div style={{
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
@@ -186,27 +182,17 @@ export default function LessonResult() {
             boxShadow: "0 8px 32px rgba(0,0,0,0.15)"
           }}>
             <div style={{ fontSize: 40, marginBottom: 16 }}>⚠️</div>
-            <h3 style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>
-              Excluir esta aula?
-            </h3>
+            <h3 style={{ fontSize: 18, fontWeight: 500, marginBottom: 8 }}>Excluir esta aula?</h3>
             <p style={{ fontSize: 14, color: "#5f5e5a", marginBottom: 24 }}>
               Esta ação não pode ser desfeita. A aula será removida permanentemente.
             </p>
             <div style={{ display: "flex", gap: 12 }}>
-              <button
-                onClick={() => setConfirmandoExclusao(false)}
-                style={{ flex: 1, padding: "10px", fontSize: 14 }}
-              >
+              <button onClick={() => setConfirmandoExclusao(false)} style={{ flex: 1, padding: "10px", fontSize: 14 }}>
                 Cancelar
               </button>
               <button
-                onClick={handleExcluir}
-                disabled={excluindo}
-                style={{
-                  flex: 1, padding: "10px", fontSize: 14,
-                  background: "#a32d2d", color: "#fff",
-                  border: "none", borderRadius: 8, cursor: "pointer"
-                }}
+                onClick={handleExcluir} disabled={excluindo}
+                style={{ flex: 1, padding: "10px", fontSize: 14, background: "#a32d2d", color: "#fff", border: "none", borderRadius: 8, cursor: "pointer" }}
               >
                 {excluindo ? "Excluindo..." : "Sim, excluir"}
               </button>
@@ -215,16 +201,13 @@ export default function LessonResult() {
         </div>
       )}
 
-      {/* Header */}
       <header style={{
         background: "#fff", borderBottom: "0.5px solid #d3d1c7",
         padding: "1rem 2rem", display: "flex",
         justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <button onClick={() => navigate("/dashboard")} style={{ fontSize: 13 }}>
-            ← Dashboard
-          </button>
+          <button onClick={() => navigate("/dashboard")} style={{ fontSize: 13 }}>← Dashboard</button>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <img src={icone} alt="InclusivAula" style={{ height: 32 }} />
             <span style={{ fontSize: 16, fontWeight: 600, color: "#2B9EC3" }}>
@@ -233,103 +216,96 @@ export default function LessonResult() {
           </div>
         </div>
 
-        {/* Barra de ações */}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+
           {!editando && (
-            <button
-              onClick={handleAprovar}
-              disabled={aprovado}
-              style={{
-                fontSize: 13, padding: "8px 14px",
-                background: aprovado ? "#edfff6" : "#fff",
-                color: aprovado ? "#0F6E56" : "#5f5e5a",
-                border: `0.5px solid ${aprovado ? "#4CAF82" : "#d3d1c7"}`,
-                borderRadius: 8, cursor: aprovado ? "default" : "pointer"
-              }}
-            >
+            <button onClick={handleAprovar} disabled={aprovado} style={{
+              fontSize: 13, padding: "8px 14px",
+              background: aprovado ? "#edfff6" : "#fff",
+              color: aprovado ? "#0F6E56" : "#5f5e5a",
+              border: `0.5px solid ${aprovado ? "#4CAF82" : "#d3d1c7"}`,
+              borderRadius: 8, cursor: aprovado ? "default" : "pointer"
+            }}>
               {aprovado ? "✅ Aprovada" : "👍 Aprovar"}
             </button>
           )}
 
           {!editando ? (
-            <button
-              onClick={handleEditar}
-              style={{
-                fontSize: 13, padding: "8px 14px", background: "#fff",
-                color: "#5f5e5a", border: "0.5px solid #d3d1c7",
-                borderRadius: 8, cursor: "pointer"
-              }}
-            >
+            <button onClick={handleEditar} style={{
+              fontSize: 13, padding: "8px 14px", background: "#fff",
+              color: "#5f5e5a", border: "0.5px solid #d3d1c7", borderRadius: 8, cursor: "pointer"
+            }}>
               ✏️ Editar
             </button>
           ) : (
             <>
-              <button
-                onClick={() => setEditando(false)}
-                style={{
-                  fontSize: 13, padding: "8px 14px", background: "#fff",
-                  color: "#5f5e5a", border: "0.5px solid #d3d1c7",
-                  borderRadius: 8, cursor: "pointer"
-                }}
-              >
+              <button onClick={() => setEditando(false)} style={{
+                fontSize: 13, padding: "8px 14px", background: "#fff",
+                color: "#5f5e5a", border: "0.5px solid #d3d1c7", borderRadius: 8, cursor: "pointer"
+              }}>
                 Cancelar
               </button>
-              <button
-                onClick={handleSalvarEdicao}
-                disabled={salvando}
-                style={{
-                  fontSize: 13, padding: "8px 14px",
-                  background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
-                  color: "#fff", border: "none", borderRadius: 8, cursor: "pointer"
-                }}
-              >
+              <button onClick={handleSalvarEdicao} disabled={salvando} style={{
+                fontSize: 13, padding: "8px 14px",
+                background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+                color: "#fff", border: "none", borderRadius: 8, cursor: "pointer"
+              }}>
                 {salvando ? "Salvando..." : "💾 Salvar"}
               </button>
             </>
           )}
 
+          {/* Exercícios — passa contexto da aula para a tela de exercícios */}
           {!editando && (
             <button
-              onClick={handleDownload}
+              onClick={() => navigate("/exercicios", {
+                state: {
+                  lessonId: jobId,
+                  lessonTitulo: lesson?.titulo,
+                  studentId: lesson?.student_id || null,
+                  studentNome: null
+                }
+              })}
               style={{
                 fontSize: 13, padding: "8px 14px", background: "#fff",
-                color: "#5f5e5a", border: "0.5px solid #d3d1c7",
+                color: "#534AB7", border: "0.5px solid #534AB7",
                 borderRadius: 8, cursor: "pointer"
               }}
             >
+              📝 Exercícios
+            </button>
+          )}
+
+          {!editando && (
+            <button onClick={handleDownload} style={{
+              fontSize: 13, padding: "8px 14px", background: "#fff",
+              color: "#5f5e5a", border: "0.5px solid #d3d1c7", borderRadius: 8, cursor: "pointer"
+            }}>
               ⬇️ Baixar
             </button>
           )}
 
           {!editando && (
-            <button
-              onClick={() => setConfirmandoExclusao(true)}
-              style={{
-                fontSize: 13, padding: "8px 14px", background: "#fff",
-                color: "#a32d2d", border: "0.5px solid #f7c1c1",
-                borderRadius: 8, cursor: "pointer"
-              }}
-            >
+            <button onClick={() => setConfirmandoExclusao(true)} style={{
+              fontSize: 13, padding: "8px 14px", background: "#fff",
+              color: "#a32d2d", border: "0.5px solid #f7c1c1", borderRadius: 8, cursor: "pointer"
+            }}>
               🗑️ Excluir
             </button>
           )}
 
           {!editando && (
-            <button
-              onClick={() => navigate("/gerar")}
-              style={{
-                fontSize: 13, padding: "8px 14px",
-                background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
-                color: "#fff", border: "none", borderRadius: 8, cursor: "pointer"
-              }}
-            >
+            <button onClick={() => navigate("/gerar")} style={{
+              fontSize: 13, padding: "8px 14px",
+              background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+              color: "#fff", border: "none", borderRadius: 8, cursor: "pointer"
+            }}>
               + Nova aula
             </button>
           )}
         </div>
       </header>
 
-      {/* Aviso de modo edição */}
       {editando && (
         <div style={{
           background: "#faeeda", borderBottom: "0.5px solid #BA7517",
@@ -341,7 +317,6 @@ export default function LessonResult() {
 
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "2rem 1rem" }}>
 
-        {/* Badge de aprovação */}
         {aprovado && (
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 6,
@@ -353,216 +328,119 @@ export default function LessonResult() {
           </div>
         )}
 
-        {/* Título */}
         {dados?.titulo && (
           editando ? (
-            <input
-              value={lessonEditada.titulo}
+            <input value={lessonEditada.titulo}
               onChange={e => setLessonEditada(p => ({ ...p, titulo: e.target.value }))}
-              style={{
-                width: "100%", boxSizing: "border-box", fontSize: 20,
-                fontWeight: 600, color: "#2B9EC3", marginBottom: 16,
-                border: "0.5px solid #2B9EC3", borderRadius: 8, padding: "8px 12px"
-              }}
+              style={{ width: "100%", boxSizing: "border-box", fontSize: 20, fontWeight: 600, color: "#2B9EC3", marginBottom: 16, border: "0.5px solid #2B9EC3", borderRadius: 8, padding: "8px 12px" }}
             />
           ) : (
-            <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 8, color: "#2B9EC3" }}>
-              {dados.titulo}
-            </h2>
+            <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 8, color: "#2B9EC3" }}>{dados.titulo}</h2>
           )
         )}
 
-        {/* Estratégia */}
         {dados?.estrategia && (
           editando ? (
-            <textarea
-              value={lessonEditada.estrategia}
+            <textarea value={lessonEditada.estrategia}
               onChange={e => setLessonEditada(p => ({ ...p, estrategia: e.target.value }))}
-              rows={3}
-              style={{
-                width: "100%", boxSizing: "border-box", fontSize: 14, marginBottom: 24,
-                border: "0.5px solid #2B9EC3", borderRadius: 8,
-                padding: "10px 12px", resize: "vertical"
-              }}
+              rows={3} style={{ width: "100%", boxSizing: "border-box", fontSize: 14, marginBottom: 24, border: "0.5px solid #2B9EC3", borderRadius: 8, padding: "10px 12px", resize: "vertical" }}
             />
           ) : (
-            <div style={{
-              background: "linear-gradient(135deg, #e8f7fd, #edfff6)",
-              border: "0.5px solid #2B9EC3", borderRadius: 8,
-              padding: "12px 16px", fontSize: 14, color: "#1a6e8a", marginBottom: 24
-            }}>
+            <div style={{ background: "linear-gradient(135deg, #e8f7fd, #edfff6)", border: "0.5px solid #2B9EC3", borderRadius: 8, padding: "12px 16px", fontSize: 14, color: "#1a6e8a", marginBottom: 24 }}>
               {dados.estrategia}
             </div>
           )
         )}
 
-        {/* BNCC */}
         {dados?.bncc?.length > 0 && (
           <Section title="Habilidades BNCC" emoji="📋" color="#534AB7">
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {dados.bncc.map((item, i) => (
-                <div key={i} style={{
-                  background: "#fff", border: "0.5px solid #d3d1c7",
-                  borderLeft: "3px solid #534AB7", borderRadius: 8, padding: "12px 16px"
-                }}>
-                  <span style={{
-                    display: "inline-block", fontSize: 12, fontWeight: 600,
-                    background: "#EEEDFE", color: "#534AB7",
-                    padding: "2px 10px", borderRadius: 20, marginBottom: 6
-                  }}>
+                <div key={i} style={{ background: "#fff", border: "0.5px solid #d3d1c7", borderLeft: "3px solid #534AB7", borderRadius: 8, padding: "12px 16px" }}>
+                  <span style={{ display: "inline-block", fontSize: 12, fontWeight: 600, background: "#EEEDFE", color: "#534AB7", padding: "2px 10px", borderRadius: 20, marginBottom: 6 }}>
                     {item.codigo}
                   </span>
-                  <p style={{ fontSize: 14, color: "#2c2c2a", margin: 0, lineHeight: 1.6 }}>
-                    {item.descricao}
-                  </p>
+                  <p style={{ fontSize: 14, color: "#2c2c2a", margin: 0, lineHeight: 1.6 }}>{item.descricao}</p>
                 </div>
               ))}
             </div>
           </Section>
         )}
 
-        {/* Explicação */}
         {dados?.explicacao && (
           <Section title="Explicação" emoji="📖" color="#2B9EC3">
             {editando ? (
-              <textarea
-                value={lessonEditada.explicacao}
+              <textarea value={lessonEditada.explicacao}
                 onChange={e => setLessonEditada(p => ({ ...p, explicacao: e.target.value }))}
-                rows={5}
-                style={{
-                  width: "100%", boxSizing: "border-box", fontSize: 14,
-                  border: "0.5px solid #2B9EC3", borderRadius: 8,
-                  padding: "10px 12px", resize: "vertical"
-                }}
+                rows={5} style={{ width: "100%", boxSizing: "border-box", fontSize: 14, border: "0.5px solid #2B9EC3", borderRadius: 8, padding: "10px 12px", resize: "vertical" }}
               />
             ) : (
-              <p style={{ fontSize: 15, lineHeight: 1.8, color: "#2c2c2a" }}>
-                {dados.explicacao}
-              </p>
+              <p style={{ fontSize: 15, lineHeight: 1.8, color: "#2c2c2a" }}>{dados.explicacao}</p>
             )}
           </Section>
         )}
 
-        {/* Atividades */}
         {dados?.atividades?.length > 0 && (
           <Section title="Atividades" emoji="✏️" color="#4CAF82">
             {dados.atividades.map((a, i) => (
-              <div key={i} style={{
-                background: "#fff", border: "0.5px solid #d3d1c7",
-                borderLeft: "3px solid #4CAF82",
-                borderRadius: 8, padding: "12px 16px", marginBottom: 10, fontSize: 14
-              }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "#4CAF82", marginRight: 8 }}>
-                  Atividade {i + 1}
-                </span>
+              <div key={i} style={{ background: "#fff", border: "0.5px solid #d3d1c7", borderLeft: "3px solid #4CAF82", borderRadius: 8, padding: "12px 16px", marginBottom: 10, fontSize: 14 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: "#4CAF82", marginRight: 8 }}>Atividade {i + 1}</span>
                 {editando ? (
                   <textarea
-                    value={typeof lessonEditada.atividades[i] === "string"
-                      ? lessonEditada.atividades[i]
-                      : lessonEditada.atividades[i].descricao || ""}
-                    onChange={e => {
-                      const novas = [...lessonEditada.atividades];
-                      novas[i] = e.target.value;
-                      setLessonEditada(p => ({ ...p, atividades: novas }));
-                    }}
-                    rows={3}
-                    style={{
-                      width: "100%", boxSizing: "border-box", fontSize: 13, marginTop: 6,
-                      border: "0.5px solid #4CAF82", borderRadius: 6,
-                      padding: "8px 10px", resize: "vertical"
-                    }}
+                    value={typeof lessonEditada.atividades[i] === "string" ? lessonEditada.atividades[i] : lessonEditada.atividades[i].descricao || ""}
+                    onChange={e => { const novas = [...lessonEditada.atividades]; novas[i] = e.target.value; setLessonEditada(p => ({ ...p, atividades: novas })); }}
+                    rows={3} style={{ width: "100%", boxSizing: "border-box", fontSize: 13, marginTop: 6, border: "0.5px solid #4CAF82", borderRadius: 6, padding: "8px 10px", resize: "vertical" }}
                   />
                 ) : (
-                  <span>
-                    {typeof a === "string"
-                      ? a.replace(/^atividade\s*\d+[:\-]?\s*/i, "")
-                      : a.descricao || JSON.stringify(a)}
-                  </span>
+                  <span>{typeof a === "string" ? a.replace(/^atividade\s*\d+[:\-]?\s*/i, "") : a.descricao || JSON.stringify(a)}</span>
                 )}
               </div>
             ))}
           </Section>
         )}
 
-        {/* Adaptações */}
         {dados?.adaptacoes?.length > 0 && (
           <Section title="Adaptações inclusivas" emoji="♿" color="#2B9EC3">
             {dados.adaptacoes.map((a, i) => (
-              <div key={i} style={{
-                background: "#e8f7fd", border: "0.5px solid #2B9EC3",
-                borderRadius: 8, padding: "12px 16px", marginBottom: 10,
-                fontSize: 14, color: "#1a6e8a"
-              }}>
+              <div key={i} style={{ background: "#e8f7fd", border: "0.5px solid #2B9EC3", borderRadius: 8, padding: "12px 16px", marginBottom: 10, fontSize: 14, color: "#1a6e8a" }}>
                 {editando ? (
                   <textarea
-                    value={typeof lessonEditada.adaptacoes[i] === "string"
-                      ? lessonEditada.adaptacoes[i]
-                      : JSON.stringify(lessonEditada.adaptacoes[i])}
-                    onChange={e => {
-                      const novas = [...lessonEditada.adaptacoes];
-                      novas[i] = e.target.value;
-                      setLessonEditada(p => ({ ...p, adaptacoes: novas }));
-                    }}
-                    rows={2}
-                    style={{
-                      width: "100%", boxSizing: "border-box", fontSize: 13,
-                      border: "0.5px solid #2B9EC3", borderRadius: 6,
-                      padding: "8px 10px", resize: "vertical", color: "#1a6e8a"
-                    }}
+                    value={typeof lessonEditada.adaptacoes[i] === "string" ? lessonEditada.adaptacoes[i] : JSON.stringify(lessonEditada.adaptacoes[i])}
+                    onChange={e => { const novas = [...lessonEditada.adaptacoes]; novas[i] = e.target.value; setLessonEditada(p => ({ ...p, adaptacoes: novas })); }}
+                    rows={2} style={{ width: "100%", boxSizing: "border-box", fontSize: 13, border: "0.5px solid #2B9EC3", borderRadius: 6, padding: "8px 10px", resize: "vertical", color: "#1a6e8a" }}
                   />
-                ) : (
-                  typeof a === "string" ? a : JSON.stringify(a)
-                )}
+                ) : (typeof a === "string" ? a : JSON.stringify(a))}
               </div>
             ))}
           </Section>
         )}
 
-        {/* Recursos */}
         {dados?.recursos?.length > 0 && (
           <Section title="Recursos didáticos" emoji="🎯" color="#4CAF82">
             {dados.recursos.map((r, i) => (
-              <div key={i} style={{
-                background: "#edfff6", border: "0.5px solid #4CAF82",
-                borderRadius: 8, padding: "12px 16px", marginBottom: 10,
-                fontSize: 14, color: "#2a7a55"
-              }}>
+              <div key={i} style={{ background: "#edfff6", border: "0.5px solid #4CAF82", borderRadius: 8, padding: "12px 16px", marginBottom: 10, fontSize: 14, color: "#2a7a55" }}>
                 {typeof r === "string" ? r : JSON.stringify(r)}
               </div>
             ))}
           </Section>
         )}
 
-        {/* Avaliação */}
         {dados?.avaliacao && (
           <Section title="Avaliação" emoji="📊" color="#2B9EC3">
             {editando ? (
-              <textarea
-                value={lessonEditada.avaliacao}
+              <textarea value={lessonEditada.avaliacao}
                 onChange={e => setLessonEditada(p => ({ ...p, avaliacao: e.target.value }))}
-                rows={4}
-                style={{
-                  width: "100%", boxSizing: "border-box", fontSize: 14,
-                  border: "0.5px solid #2B9EC3", borderRadius: 8,
-                  padding: "10px 12px", resize: "vertical"
-                }}
+                rows={4} style={{ width: "100%", boxSizing: "border-box", fontSize: 14, border: "0.5px solid #2B9EC3", borderRadius: 8, padding: "10px 12px", resize: "vertical" }}
               />
             ) : (
-              <p style={{ fontSize: 15, lineHeight: 1.8, color: "#2c2c2a" }}>
-                {dados.avaliacao}
-              </p>
+              <p style={{ fontSize: 15, lineHeight: 1.8, color: "#2c2c2a" }}>{dados.avaliacao}</p>
             )}
           </Section>
         )}
 
-        {/* Base legal */}
         {dados?.base_legal && (
           <Section title="Base legal e científica" emoji="⚖️" color="#888780">
-            <div style={{
-              background: "#f1efe8", border: "0.5px solid #d3d1c7",
-              borderRadius: 8, padding: "14px 16px",
-              fontSize: 13, color: "#5f5e5a", lineHeight: 1.8
-            }}>
+            <div style={{ background: "#f1efe8", border: "0.5px solid #d3d1c7", borderRadius: 8, padding: "14px 16px", fontSize: 13, color: "#5f5e5a", lineHeight: 1.8 }}>
               {dados.base_legal}
             </div>
           </Section>
@@ -576,9 +454,7 @@ export default function LessonResult() {
 function Section({ title, emoji, color, children }) {
   return (
     <div style={{ marginBottom: 28 }}>
-      <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 14, color }}>
-        {emoji} {title}
-      </h3>
+      <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 14, color }}>{emoji} {title}</h3>
       {children}
     </div>
   );

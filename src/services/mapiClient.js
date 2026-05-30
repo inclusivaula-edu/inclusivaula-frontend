@@ -19,6 +19,8 @@ async function request(endpoint, options = {}) {
   return data;
 }
 
+// ── AULAS ────────────────────────────────────────────────────────
+
 export async function generateLesson(payload) {
   return request("/api/generate-lesson", {
     method: "POST",
@@ -32,4 +34,42 @@ export async function getLessonStatus(jobId) {
 
 export async function getLessonPDF(jobId) {
   return request(`/api/lesson-pdf/${jobId}`);
+}
+
+// ── EXERCÍCIOS ───────────────────────────────────────────────────
+
+// Gera exercícios adaptados a partir de uma aula aprovada
+export async function generateExercises(lessonId, studentId = null, quantidade = 5) {
+  return request("/api/exercises/generate", {
+    method: "POST",
+    body: JSON.stringify({ lessonId, studentId, quantidade })
+  });
+}
+
+// Busca exercícios já gerados de uma aula
+export async function getExercisesByLesson(lessonId) {
+  return request(`/api/exercises/lesson/${lessonId}`);
+}
+
+// Registra a nota de um aluno em um exercício
+export async function registerGrade(activityId, studentId, score, feedback = "") {
+  return request("/api/exercises/grade", {
+    method: "POST",
+    body: JSON.stringify({ activityId, studentId, score, feedback })
+  });
+}
+
+// ── RELATÓRIOS ───────────────────────────────────────────────────
+
+// Gera relatório com IA por tipo — semestral, familia, aee ou pei
+export async function generateReport(studentId, tipo = "semestral", periodo = null) {
+  return request("/api/reports/generate", {
+    method: "POST",
+    body: JSON.stringify({ studentId, tipo, periodo })
+  });
+}
+
+// Busca relatórios já gerados de um aluno
+export async function getReportsByStudent(studentId) {
+  return request(`/api/reports/student/${studentId}`);
 }
