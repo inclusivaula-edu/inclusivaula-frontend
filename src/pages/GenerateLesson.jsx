@@ -17,6 +17,13 @@ const SERIES = [
   "1º EM", "2º EM", "3º EM"
 ];
 
+const PERIODOS = [
+  "1º Bimestre", "2º Bimestre", "3º Bimestre", "4º Bimestre",
+  "1º Trimestre", "2º Trimestre", "3º Trimestre",
+  "1º Semestre", "2º Semestre",
+  "Anual"
+];
+
 export default function GenerateLesson() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -27,19 +34,16 @@ export default function GenerateLesson() {
     deficiencia: "Geral",
     serie: "1º ano",
     duracao: 50,
-    objetivo: ""
+    objetivo: "",
+    periodo: "1º Bimestre"
   });
 
-  // Aluno selecionado — quando preenchido, substitui o dropdown
-  // de perfil e série pelos dados reais do aluno cadastrado
   const [alunoSelecionado, setAlunoSelecionado] = useState(null);
   const [alunos, setAlunos] = useState([]);
   const [loadingAlunos, setLoadingAlunos] = useState(false);
-
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState(null);
 
-  // Carrega os alunos da escola do professor logado
   useEffect(() => {
     async function carregarAlunos() {
       setLoadingAlunos(true);
@@ -66,9 +70,6 @@ export default function GenerateLesson() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  // Quando o professor seleciona um aluno, preenche automaticamente
-  // o perfil e a série com os dados cadastrados — mas mantém editável
-  // caso queira ajustar antes de gerar
   function handleSelecionarAluno(e) {
     const id = e.target.value;
     if (!id) {
@@ -101,8 +102,7 @@ export default function GenerateLesson() {
         serie: form.serie,
         duracao: Number(form.duracao),
         objetivo: form.objetivo,
-        // Passa o ID e os dados completos do aluno quando vinculado —
-        // o Nexus7 usa essas informações para personalizar o conteúdo
+        periodo: form.periodo,
         student_id: alunoSelecionado?.id || null,
         student: alunoSelecionado || null
       });
@@ -162,7 +162,7 @@ export default function GenerateLesson() {
           boxShadow: "0 2px 8px rgba(43,158,195,0.06)"
         }}>
 
-          {/* Seleção de aluno — campo novo */}
+          {/* Aluno específico */}
           <div>
             <label style={labelStyle}>
               Aluno específico
@@ -188,7 +188,6 @@ export default function GenerateLesson() {
               ))}
             </select>
 
-            {/* Card de confirmação do aluno selecionado */}
             {alunoSelecionado && (
               <div style={{
                 marginTop: 10,
@@ -221,7 +220,22 @@ export default function GenerateLesson() {
             />
           </div>
 
-          {/* Perfil e série — preenchidos automaticamente quando há aluno */}
+          {/* Período letivo — campo novo */}
+          <div>
+            <label style={labelStyle}>Período letivo</label>
+            <select
+              name="periodo"
+              value={form.periodo}
+              onChange={handleChange}
+              style={inputFull}
+            >
+              {PERIODOS.map(p => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Perfil e série */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div>
               <label style={labelStyle}>
