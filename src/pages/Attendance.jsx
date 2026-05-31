@@ -9,7 +9,7 @@ export default function Attendance() {
   const navigate = useNavigate();
   const [alunos, setAlunos] = useState([]);
   const [schoolId, setSchoolId] = useState(null);
-  const [data, setData] = useState(new Date().toISOString().split("T")[0]);
+  const [dataSelecionada, setDataSelecionada] = useState(new Date().toISOString().split("T")[0]);
   const [presencas, setPresencas] = useState({});
   const [historico, setHistorico] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +37,7 @@ export default function Attendance() {
           .from("attendance")
           .select("*")
           .eq("school_id", profile.school_id)
-          .order("date", { ascending: false })
+          .order("attendance_date", { ascending: false })
           .limit(200);
         setHistorico(histData || []);
       }
@@ -58,37 +58,43 @@ export default function Attendance() {
     setSalvando(true);
     try {
       // Para cada aluno, verifica se já existe registro nessa data
-      // e faz update se existir, insert se não existir
-      const operacoes = Object.entries(presencas).map(async ([student_id, present]) => {
+      // e faz update se existir, insert se não
+      const operacoes = Object.entries(presencas).map(async ([student_id, presente]) => {
+        const status = presente ? "present" : "absent";
+
         const { data: existing } = await supabase
           .from("attendance")
           .select("id")
           .eq("student_id", student_id)
-          .eq("date", data)
-          .single();
+          .eq("attendance_date", dataSelecionada)
+          .maybeSingle();
 
         if (existing?.id) {
-          // Atualiza registro existente
           return supabase
             .from("attendance")
-            .update({ present, school_id: schoolId })
+            .update({ status, present: presente, school_id: schoolId })
             .eq("id", existing.id);
         } else {
-          // Cria novo registro
           return supabase
             .from("attendance")
-            .insert([{ student_id, school_id: schoolId, date: data, present }]);
+            .insert([{
+              student_id,
+              school_id: schoolId,
+              attendance_date: dataSelecionada,
+              status,
+              present: presente
+            }]);
         }
       });
 
       await Promise.all(operacoes);
 
-      // Recarrega o histórico
+      // Recarrega histórico
       const { data: histData } = await supabase
         .from("attendance")
         .select("*")
         .eq("school_id", schoolId)
-        .order("date", { ascending: false })
+        .order("attendance_date", { ascending: false })
         .limit(200);
       setHistorico(histData || []);
       setPresencas({});
@@ -103,7 +109,7 @@ export default function Attendance() {
   function calcularFrequencia(alunoId) {
     const registros = historico.filter(h => h.student_id === alunoId);
     if (registros.length === 0) return null;
-    const presentes = registros.filter(h => h.present).length;
+    const presentes = registros.filter(h => h.status === "present" || h.present === true).length;
     return {
       presentes,
       total: registros.length,
@@ -116,8 +122,7 @@ export default function Attendance() {
     setTimeout(() => setFeedback(null), 3000);
   }
 
-  // Pega os últimos 10 dias com registro para exibir no histórico
-  const diasUnicos = [...new Set(historico.map(h => h.date))]
+  const diasUnicos = [...new Set(historico.map(h => h.attendance_date))]
     .sort().reverse().slice(0, 10);
   const nomesAlunos = Object.fromEntries(alunos.map(a => [a.id, a.full_name]));
 
@@ -152,10 +157,10 @@ export default function Attendance() {
       <main style={{ maxWidth: 800, margin: "0 auto", padding: "2rem 1rem" }}>
         <h2 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>Frequência e faltas</h2>
         <p style={{ fontSize: 13, color: "#5f5e5a", marginBottom: 20 }}>
-          Registre a presença dos alunos por data e acompanhe o percentual de frequência
+          Registre presenças e faltas e acompanhe o percentual por aluno
         </p>
 
-        {/* Abas de navegação */}
+        {/* Abas */}
         <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
           {[
             { id: "registrar", label: "📋 Registrar" },
@@ -187,8 +192,8 @@ export default function Attendance() {
               </label>
               <input
                 type="date"
-                value={data}
-                onChange={e => setData(e.target.value)}
+                value={dataSelecionada}
+                onChange={e => setDataSelecionada(e.target.value)}
                 style={{ width: 200, boxSizing: "border-box" }}
               />
             </div>
@@ -201,33 +206,16 @@ export default function Attendance() {
               </p>
             ) : (
               <>
-                {/* Atalhos para marcar todos */}
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 12 }}>
                   <button
-                    onClick={() => {
-                      const p = {};
-                      alunos.forEach(a => { p[a.id] = true; });
-                      setPresencas(p);
-                    }}
-                    style={{
-                      fontSize: 12, padding: "4px 12px",
-                      background: "#edfff6", color: "#0F6E56",
-                      border: "0.5px solid #4CAF82", borderRadius: 6, cursor: "pointer"
-                    }}
+                    onClick={() => { const p = {}; alunos.forEach(a => { p[a.id] = true; }); setPresencas(p); }}
+                    style={{ fontSize: 12, padding: "4px 12px", background: "#edfff6", color: "#0F6E56", border: "0.5px solid #4CAF82", borderRadius: 6, cursor: "pointer" }}
                   >
                     ✅ Todos presentes
                   </button>
                   <button
-                    onClick={() => {
-                      const p = {};
-                      alunos.forEach(a => { p[a.id] = false; });
-                      setPresencas(p);
-                    }}
-                    style={{
-                      fontSize: 12, padding: "4px 12px",
-                      background: "#fcebeb", color: "#791f1f",
-                      border: "0.5px solid #a32d2d", borderRadius: 6, cursor: "pointer"
-                    }}
+                    onClick={() => { const p = {}; alunos.forEach(a => { p[a.id] = false; }); setPresencas(p); }}
+                    style={{ fontSize: 12, padding: "4px 12px", background: "#fcebeb", color: "#791f1f", border: "0.5px solid #a32d2d", borderRadius: 6, cursor: "pointer" }}
                   >
                     ❌ Todos ausentes
                   </button>
@@ -250,43 +238,29 @@ export default function Attendance() {
                         </p>
                       </div>
                       <div style={{ display: "flex", gap: 8 }}>
-                        <button
-                          onClick={() => togglePresenca(a.id, true)}
-                          style={{
-                            fontSize: 12, padding: "6px 14px",
-                            background: presencas[a.id] === true ? "#4CAF82" : "#fff",
-                            color: presencas[a.id] === true ? "#fff" : "#4CAF82",
-                            border: "0.5px solid #4CAF82", borderRadius: 6, cursor: "pointer"
-                          }}
-                        >
-                          ✅ Presente
-                        </button>
-                        <button
-                          onClick={() => togglePresenca(a.id, false)}
-                          style={{
-                            fontSize: 12, padding: "6px 14px",
-                            background: presencas[a.id] === false ? "#a32d2d" : "#fff",
-                            color: presencas[a.id] === false ? "#fff" : "#a32d2d",
-                            border: "0.5px solid #a32d2d", borderRadius: 6, cursor: "pointer"
-                          }}
-                        >
-                          ❌ Falta
-                        </button>
+                        <button onClick={() => togglePresenca(a.id, true)} style={{
+                          fontSize: 12, padding: "6px 14px",
+                          background: presencas[a.id] === true ? "#4CAF82" : "#fff",
+                          color: presencas[a.id] === true ? "#fff" : "#4CAF82",
+                          border: "0.5px solid #4CAF82", borderRadius: 6, cursor: "pointer"
+                        }}>✅ Presente</button>
+                        <button onClick={() => togglePresenca(a.id, false)} style={{
+                          fontSize: 12, padding: "6px 14px",
+                          background: presencas[a.id] === false ? "#a32d2d" : "#fff",
+                          color: presencas[a.id] === false ? "#fff" : "#a32d2d",
+                          border: "0.5px solid #a32d2d", borderRadius: 6, cursor: "pointer"
+                        }}>❌ Falta</button>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <button
-                  onClick={handleSalvar}
-                  disabled={salvando}
-                  style={{
-                    width: "100%", padding: "12px",
-                    background: salvando ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
-                    color: "#fff", border: "none", borderRadius: 8,
-                    fontSize: 15, fontWeight: 500, cursor: salvando ? "not-allowed" : "pointer"
-                  }}
-                >
+                <button onClick={handleSalvar} disabled={salvando} style={{
+                  width: "100%", padding: "12px",
+                  background: salvando ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+                  color: "#fff", border: "none", borderRadius: 8,
+                  fontSize: 15, fontWeight: 500, cursor: salvando ? "not-allowed" : "pointer"
+                }}>
                   {salvando ? "Salvando..." : "💾 Salvar frequência"}
                 </button>
               </>
@@ -303,39 +277,36 @@ export default function Attendance() {
             {diasUnicos.length === 0 ? (
               <p style={{ fontSize: 14, color: "#5f5e5a" }}>Nenhuma frequência registrada ainda.</p>
             ) : diasUnicos.map(dia => {
-              const registrosDia = historico.filter(h => h.date === dia);
-              const presentes = registrosDia.filter(h => h.present).length;
+              const registrosDia = historico.filter(h => h.attendance_date === dia);
+              const presentes = registrosDia.filter(h => h.status === "present" || h.present === true).length;
               return (
                 <div key={dia} style={{ marginBottom: 24 }}>
-                  <div style={{
-                    display: "flex", justifyContent: "space-between",
-                    alignItems: "center", marginBottom: 10
-                  }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                     <p style={{ fontWeight: 500, fontSize: 14, margin: 0 }}>
                       {new Date(dia + "T12:00:00").toLocaleDateString("pt-BR", {
                         weekday: "long", day: "2-digit", month: "long"
                       })}
                     </p>
-                    <span style={{
-                      fontSize: 12, padding: "3px 10px",
-                      background: "#e8f7fd", color: "#1a6e8a", borderRadius: 20
-                    }}>
+                    <span style={{ fontSize: 12, padding: "3px 10px", background: "#e8f7fd", color: "#1a6e8a", borderRadius: 20 }}>
                       {presentes}/{registrosDia.length} presentes
                     </span>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {registrosDia.map(r => (
-                      <div key={r.id} style={{
-                        display: "flex", justifyContent: "space-between",
-                        padding: "8px 12px", borderRadius: 6, fontSize: 13,
-                        background: r.present ? "#edfff6" : "#fcebeb"
-                      }}>
-                        <span>{nomesAlunos[r.student_id] || "Aluno"}</span>
-                        <span style={{ color: r.present ? "#0F6E56" : "#791f1f" }}>
-                          {r.present ? "✅ Presente" : "❌ Falta"}
-                        </span>
-                      </div>
-                    ))}
+                    {registrosDia.map(r => {
+                      const presente = r.status === "present" || r.present === true;
+                      return (
+                        <div key={r.id} style={{
+                          display: "flex", justifyContent: "space-between",
+                          padding: "8px 12px", borderRadius: 6, fontSize: 13,
+                          background: presente ? "#edfff6" : "#fcebeb"
+                        }}>
+                          <span>{nomesAlunos[r.student_id] || "Aluno"}</span>
+                          <span style={{ color: presente ? "#0F6E56" : "#791f1f" }}>
+                            {presente ? "✅ Presente" : "❌ Falta"}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -343,7 +314,7 @@ export default function Attendance() {
           </div>
         )}
 
-        {/* ABA: RESUMO — percentual de frequência por aluno */}
+        {/* ABA: RESUMO */}
         {aba === "resumo" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {alunos.length === 0 ? (
@@ -369,14 +340,10 @@ export default function Attendance() {
                       <p style={{
                         fontSize: 22, fontWeight: 600, margin: 0,
                         color: freq.pct >= 75 ? "#4CAF82" : "#a32d2d"
-                      }}>
-                        {freq.pct}%
-                      </p>
+                      }}>{freq.pct}%</p>
                       <p style={{ fontSize: 11, color: "#5f5e5a", margin: 0 }}>
                         {freq.presentes}/{freq.total} aulas
-                        {freq.pct < 75 && (
-                          <span style={{ color: "#a32d2d" }}> ⚠️ Abaixo de 75%</span>
-                        )}
+                        {freq.pct < 75 && <span style={{ color: "#a32d2d" }}> ⚠️ Abaixo de 75%</span>}
                       </p>
                     </div>
                   ) : (
