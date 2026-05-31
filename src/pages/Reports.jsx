@@ -33,6 +33,13 @@ const TIPOS_RELATORIO = [
     descricao: "Metas e estratégias para a equipe multidisciplinar",
     emoji: "📋",
     cor: "#BA7517"
+  },
+  {
+    id: "paee",
+    label: "PAEE — Plano de AEE",
+    descricao: "Plano de Atendimento Educacional Especializado",
+    emoji: "📁",
+    cor: "#0F6E56"
   }
 ];
 

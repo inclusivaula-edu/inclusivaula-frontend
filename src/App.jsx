@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LessonProvider } from "./contexts/LessonContext";
 
-
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -13,7 +12,9 @@ import Students from "./pages/Students";
 import SchoolAdmin from "./pages/SchoolAdmin";
 import Exercises from "./pages/Exercises";
 import Reports from "./pages/Reports";
-
+import SavedReports from "./pages/SavedReports";
+import Attendance from "./pages/Attendance";
+import Assessments from "./pages/Assessments";
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -30,35 +31,20 @@ function PublicRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={
-        <PublicRoute><Login /></PublicRoute>
-      } />
-      <Route path="/escola" element={
-        <PrivateRoute><SchoolAdmin /></PrivateRoute>
-      } />
+      <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/cadastro" element={<Register />} />
-      <Route path="/dashboard" element={
-        <PrivateRoute><Dashboard /></PrivateRoute>
-      } />
-      <Route path="/gerar" element={
-        <PrivateRoute><GenerateLesson /></PrivateRoute>
-      } />
-      <Route path="/resultado" element={
-        <PrivateRoute><LessonResult /></PrivateRoute>
-      } />
-      <Route path="/historico" element={
-        <PrivateRoute><History /></PrivateRoute>
-      } />
-      <Route path="/alunos" element={
-        <PrivateRoute><Students /></PrivateRoute>
-      } />
+      <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+      <Route path="/gerar" element={<PrivateRoute><GenerateLesson /></PrivateRoute>} />
+      <Route path="/resultado" element={<PrivateRoute><LessonResult /></PrivateRoute>} />
+      <Route path="/historico" element={<PrivateRoute><History /></PrivateRoute>} />
+      <Route path="/alunos" element={<PrivateRoute><Students /></PrivateRoute>} />
+      <Route path="/escola" element={<PrivateRoute><SchoolAdmin /></PrivateRoute>} />
+      <Route path="/exercicios" element={<PrivateRoute><Exercises /></PrivateRoute>} />
+      <Route path="/relatorios" element={<PrivateRoute><Reports /></PrivateRoute>} />
+      <Route path="/relatorios/salvos" element={<PrivateRoute><SavedReports /></PrivateRoute>} />
+      <Route path="/frequencia" element={<PrivateRoute><Attendance /></PrivateRoute>} />
+      <Route path="/avaliacoes" element={<PrivateRoute><Assessments /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
-      <Route path="/exercicios" element={
-        <PrivateRoute><Exercises /></PrivateRoute>
-      } />
-      <Route path="/relatorios" element={
-        <PrivateRoute><Reports /></PrivateRoute>
-      } />
     </Routes>
   );
 }
