@@ -6,9 +6,12 @@ import { generateExercises } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
 const PERIODOS = [
-  "1º Bimestre", "2º Bimestre", "3º Bimestre", "4º Bimestre",
-  "1º Trimestre", "2º Trimestre", "3º Trimestre",
-  "1º Semestre", "2º Semestre", "Anual"
+  "1º Bimestre 2026", "2º Bimestre 2026", "3º Bimestre 2026", "4º Bimestre 2026",
+  "1º Trimestre 2026", "2º Trimestre 2026", "3º Trimestre 2026",
+  "1º Semestre 2026", "2º Semestre 2026",
+  "Ano letivo 2026",
+  "1º Bimestre 2025", "2º Bimestre 2025", "3º Bimestre 2025", "4º Bimestre 2025",
+  "1º Semestre 2025", "2º Semestre 2025"
 ];
 
 const DISCIPLINAS = [
@@ -21,7 +24,8 @@ export default function Assessments() {
   const navigate = useNavigate();
 
   const [alunos, setAlunos] = useState([]);
-  const [aulas, setAulas] = useState([]); // aulas salvas para o professor
+  const [aulas, setAulas] = useState([]);
+  const [avaliacoesSalvas, setAvaliacoesSalvas] = useState([]);
   const [schoolId, setSchoolId] = useState(null);
   const [avaliacao, setAvaliacao] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -29,11 +33,16 @@ export default function Assessments() {
   const [feedback, setFeedback] = useState(null);
   const [notas, setNotas] = useState({});
   const [notasSalvas, setNotasSalvas] = useState({});
+  const [aba, setAba] = useState("gerar"); // "gerar" ou "salvas"
+
+  // Estado de edição da avaliação gerada
+  const [editando, setEditando] = useState(false);
+  const [avaliacaoEditada, setAvaliacaoEditada] = useState(null);
 
   const [form, setForm] = useState({
     alunoId: "",
-    lessonId: "",       // aula selecionada como base
-    periodo: "1º Bimestre",
+    lessonId: "",
+    periodo: "1º Bimestre 2026",
     disciplina: "Matemática",
     quantidade: 5
   });
@@ -46,7 +55,6 @@ export default function Assessments() {
       if (profile?.school_id) {
         setSchoolId(profile.school_id);
 
-        // Carrega alunos da escola
         const { data: alunosData } = await supabase
           .from("students")
           .select("id, full_name, grade, disability_type, notes")
@@ -54,7 +62,6 @@ export default function Assessments() {
           .order("full_name");
         setAlunos(alunosData || []);
 
-        // Carrega aulas já geradas pelo professor (filtrando pelo user_id dentro do jsonb input)
         const { data: aulasData } = await supabase
           .from("lessons")
           .select("id, result, input, created_at")
@@ -62,41 +69,52 @@ export default function Assessments() {
           .order("created_at", { ascending: false })
           .limit(50);
 
-        // Filtra as aulas que pertencem a esse professor
-        const minhasAulas = (aulasData || []).filter(
-          a => a.input?.user_id === user.id
-        );
+        const minhasAulas = (aulasData || []).filter(a => a.input?.user_id === user.id);
         setAulas(minhasAulas);
+
+        // Carrega avaliações já salvas na tabela activities
+        const { data: atividadesData } = await supabase
+          .from("activities")
+          .select("*")
+          .eq("school_id", profile.school_id)
+          .eq("activity_type", "exercicios_adaptados")
+          .order("created_at", { ascending: false });
+        setAvaliacoesSalvas(atividadesData || []);
       }
     }
     if (user) carregar();
   }, [user]);
 
   async function handleGerar() {
-    if (!form.lessonId) {
-      setError("Selecione uma aula como base para a avaliação.");
-      return;
-    }
+    if (!form.lessonId) { setError("Selecione uma aula como base para a avaliação."); return; }
     setError(null);
     setLoading(true);
     try {
       const aluno = alunos.find(a => a.id === form.alunoId) || null;
+      const res = await generateExercises(form.lessonId, form.alunoId || null, form.quantidade);
 
-      // Chama o endpoint de geração de exercícios passando o lessonId real
-      // O Nexus7 vai usar o conteúdo dessa aula para criar as questões
-      const res = await generateExercises(
-        form.lessonId,
-        form.alunoId || null,
-        form.quantidade
-      );
+      // Atualiza a tabela activities com período e disciplina
+      if (res.activityId) {
+        await supabase.from("activities")
+          .update({
+            description: `${form.disciplina} · ${form.periodo} · ${res.data.instrucoes || ""}`,
+            activity_type: "exercicios_adaptados"
+          })
+          .eq("id", res.activityId);
+      }
 
-      setAvaliacao({
-        ...res.data,
-        activityId: res.activityId,
-        aluno,
-        periodo: form.periodo,
-        disciplina: form.disciplina
-      });
+      const novaAvaliacao = { ...res.data, activityId: res.activityId, aluno, periodo: form.periodo, disciplina: form.disciplina };
+      setAvaliacao(novaAvaliacao);
+
+      // Recarrega lista de avaliações salvas
+      const { data: atividadesData } = await supabase
+        .from("activities").select("*")
+        .eq("school_id", schoolId)
+        .eq("activity_type", "exercicios_adaptados")
+        .order("created_at", { ascending: false });
+      setAvaliacoesSalvas(atividadesData || []);
+
+      mostrarFeedback("✅ Avaliação gerada e salva com sucesso!");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -104,12 +122,24 @@ export default function Assessments() {
     }
   }
 
+  // Salva edições feitas pelo professor nas questões da avaliação
+  async function handleSalvarEdicao() {
+    if (!avaliacao?.activityId) return;
+    try {
+      await supabase.from("activities")
+        .update({ questions: avaliacaoEditada.exercicios })
+        .eq("id", avaliacao.activityId);
+      setAvaliacao(prev => ({ ...prev, ...avaliacaoEditada }));
+      setEditando(false);
+      mostrarFeedback("✅ Avaliação editada e salva!");
+    } catch {
+      mostrarFeedback("Erro ao salvar edição.", "erro");
+    }
+  }
+
   async function handleSalvarNota(alunoId) {
     const nota = notas[alunoId];
-    if (nota === undefined || nota === "") {
-      mostrarFeedback("Digite uma nota entre 0 e 10.", "erro");
-      return;
-    }
+    if (nota === undefined || nota === "") { mostrarFeedback("Digite uma nota entre 0 e 10.", "erro"); return; }
     try {
       await supabase.from("evaluations").insert([{
         student_id: alunoId,
@@ -127,28 +157,46 @@ export default function Assessments() {
     }
   }
 
+  function handleEditar() {
+    // Cria uma cópia profunda para edição sem modificar o original
+    setAvaliacaoEditada(JSON.parse(JSON.stringify(avaliacao)));
+    setEditando(true);
+  }
+
+  function abrirAvaliacaoSalva(atividade) {
+    // Reconstrói o objeto de avaliação a partir da atividade salva no banco
+    const questoes = atividade.questions || [];
+    const partes = atividade.description?.split(" · ") || [];
+    setAvaliacao({
+      titulo: atividade.title,
+      instrucoes: partes[2] || atividade.description,
+      exercicios: questoes,
+      activityId: atividade.id,
+      disciplina: partes[0] || "—",
+      periodo: partes[1] || "—",
+      criterios_avaliacao: atividade.gabarito?.criterios || "",
+      pontuacao_maxima: atividade.gabarito?.pontuacao_maxima || 10
+    });
+    setAba("gerar");
+  }
+
   function mostrarFeedback(msg, tipo = "sucesso") {
     setFeedback({ msg, tipo });
     setTimeout(() => setFeedback(null), 3000);
   }
 
   const nivelColor = { basico: "#4CAF82", intermediario: "#BA7517", avancado: "#a32d2d" };
-  const tipoLabel = {
-    multipla_escolha: "Múltipla escolha",
-    verdadeiro_falso: "V ou F",
-    dissertativo: "Dissertativo"
-  };
+  const tipoLabel = { multipla_escolha: "Múltipla escolha", verdadeiro_falso: "V ou F", dissertativo: "Dissertativo" };
 
-  // Formata a label da aula para exibição no dropdown
   function labelAula(aula) {
     const titulo = aula.result?.titulo || aula.input?.tema || "Aula sem título";
-    const data = new Date(aula.created_at).toLocaleDateString("pt-BR", {
-      day: "2-digit", month: "short"
-    });
+    const data = new Date(aula.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
     const serie = aula.input?.serie || "";
     const periodo = aula.input?.periodo || "";
     return `${titulo}${serie ? ` · ${serie}` : ""}${periodo ? ` · ${periodo}` : ""} (${data})`;
   }
+
+  const dadosAvaliacao = editando ? avaliacaoEditada : avaliacao;
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
@@ -157,108 +205,156 @@ export default function Assessments() {
           position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)",
           background: feedback.tipo === "erro" ? "#791f1f" : "#0F6E56",
           color: "#fff", padding: "10px 24px", borderRadius: 8,
-          fontSize: 14, fontWeight: 500, zIndex: 999,
-          boxShadow: "0 4px 16px rgba(0,0,0,0.15)"
+          fontSize: 14, fontWeight: 500, zIndex: 999, boxShadow: "0 4px 16px rgba(0,0,0,0.15)"
         }}>{feedback.msg}</div>
       )}
 
       <header style={{
         background: "#fff", borderBottom: "0.5px solid #d3d1c7",
-        padding: "1rem 2rem", display: "flex", alignItems: "center", gap: 16
+        padding: "1rem 2rem", display: "flex",
+        justifyContent: "space-between", alignItems: "center"
       }}>
-        <button onClick={() => navigate("/dashboard")} style={{ fontSize: 13 }}>← Voltar</button>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src={icone} alt="InclusivAula" style={{ height: 32 }} />
-          <span style={{ fontSize: 16, fontWeight: 600, color: "#2B9EC3" }}>
-            Inclusiv<span style={{ color: "#4CAF82" }}>Aula</span>
-          </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <button onClick={() => navigate("/dashboard")} style={{ fontSize: 13 }}>← Voltar</button>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <img src={icone} alt="InclusivAula" style={{ height: 32 }} />
+            <span style={{ fontSize: 16, fontWeight: 600, color: "#2B9EC3" }}>
+              Inclusiv<span style={{ color: "#4CAF82" }}>Aula</span>
+            </span>
+          </div>
         </div>
+        {/* Ações quando há avaliação aberta */}
+        {avaliacao && (
+          <div style={{ display: "flex", gap: 8 }}>
+            {!editando ? (
+              <button onClick={handleEditar} style={{
+                fontSize: 13, padding: "8px 14px", background: "#fff",
+                color: "#BA7517", border: "0.5px solid #BA7517",
+                borderRadius: 8, cursor: "pointer"
+              }}>✏️ Editar</button>
+            ) : (
+              <>
+                <button onClick={() => setEditando(false)} style={{
+                  fontSize: 13, padding: "8px 14px", background: "#fff",
+                  color: "#5f5e5a", border: "0.5px solid #d3d1c7",
+                  borderRadius: 8, cursor: "pointer"
+                }}>Cancelar</button>
+                <button onClick={handleSalvarEdicao} style={{
+                  fontSize: 13, padding: "8px 14px",
+                  background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+                  color: "#fff", border: "none", borderRadius: 8, cursor: "pointer"
+                }}>💾 Salvar edição</button>
+              </>
+            )}
+          </div>
+        )}
       </header>
+
+      {editando && (
+        <div style={{ background: "#faeeda", borderBottom: "0.5px solid #BA7517", padding: "10px 2rem", fontSize: 13, color: "#854F0B" }}>
+          ✏️ Modo edição ativo — edite as questões abaixo e clique em <strong>Salvar edição</strong>.
+        </div>
+      )}
 
       <main style={{ maxWidth: 720, margin: "0 auto", padding: "2rem 1rem" }}>
         <h2 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>Avaliações por período</h2>
-        <p style={{ fontSize: 13, color: "#5f5e5a", marginBottom: 24 }}>
+        <p style={{ fontSize: 13, color: "#5f5e5a", marginBottom: 20 }}>
           Gere avaliações com gabarito baseadas nas aulas já aplicadas no período
         </p>
 
-        {!avaliacao ? (
-          <div style={{
-            background: "#fff", border: "0.5px solid #d3d1c7",
-            borderRadius: 12, padding: "1.5rem",
-            boxShadow: "0 2px 8px rgba(43,158,195,0.06)"
-          }}>
+        {/* Abas */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+          {[
+            { id: "gerar", label: "📝 Gerar nova" },
+            { id: "salvas", label: `🗂️ Avaliações salvas (${avaliacoesSalvas.length})` }
+          ].map(tab => (
+            <button key={tab.id} onClick={() => { setAba(tab.id); if (tab.id === "gerar" && avaliacao) {} }} style={{
+              padding: "8px 16px", fontSize: 13, borderRadius: 8,
+              background: aba === tab.id ? "linear-gradient(135deg, #2B9EC3, #4CAF82)" : "#fff",
+              color: aba === tab.id ? "#fff" : "#5f5e5a",
+              border: `0.5px solid ${aba === tab.id ? "transparent" : "#d3d1c7"}`,
+              cursor: "pointer"
+            }}>{tab.label}</button>
+          ))}
+        </div>
+
+        {/* ABA: AVALIAÇÕES SALVAS */}
+        {aba === "salvas" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {avaliacoesSalvas.length === 0 ? (
+              <div style={{ background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 12, padding: "2rem", textAlign: "center" }}>
+                <div style={{ fontSize: 40, marginBottom: 12 }}>📝</div>
+                <p style={{ fontSize: 15, color: "#5f5e5a" }}>Nenhuma avaliação gerada ainda.</p>
+              </div>
+            ) : avaliacoesSalvas.map(at => {
+              const partes = at.description?.split(" · ") || [];
+              const disciplina = partes[0] || "Disciplina";
+              const periodo = partes[1] || "Período";
+              return (
+                <div key={at.id} style={{
+                  background: "#fff", border: "0.5px solid #d3d1c7",
+                  borderLeft: "3px solid #534AB7", borderRadius: 10,
+                  padding: "14px 20px", cursor: "pointer"
+                }} onClick={() => abrirAvaliacaoSalva(at)}>
+                  <p style={{ fontWeight: 500, fontSize: 14, marginBottom: 4, color: "#534AB7" }}>
+                    📝 {at.title}
+                  </p>
+                  <p style={{ fontSize: 12, color: "#5f5e5a", margin: 0 }}>
+                    {disciplina} · {periodo} · {(at.questions || []).length} questões ·{" "}
+                    {new Date(at.created_at).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ABA: GERAR NOVA */}
+        {aba === "gerar" && !avaliacao && (
+          <div style={{ background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 12, padding: "1.5rem", boxShadow: "0 2px 8px rgba(43,158,195,0.06)" }}>
             {error && (
-              <div style={{
-                background: "#fcebeb", border: "0.5px solid #a32d2d",
-                borderRadius: 8, padding: "10px 14px",
-                fontSize: 13, color: "#791f1f", marginBottom: 16
-              }}>{error}</div>
+              <div style={{ background: "#fcebeb", border: "0.5px solid #a32d2d", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#791f1f", marginBottom: 16 }}>
+                {error}
+              </div>
             )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-
-              {/* Aula base — campo principal, carrega as aulas salvas */}
+              {/* Aula base */}
               <div>
                 <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
                   Aula base *
-                  <span style={{ color: "#888", marginLeft: 6, fontWeight: 400 }}>
-                    (a avaliação será gerada com base no conteúdo desta aula)
-                  </span>
+                  <span style={{ color: "#888", marginLeft: 6, fontWeight: 400 }}>(a avaliação usa o conteúdo desta aula)</span>
                 </label>
                 {aulas.length === 0 ? (
-                  <div style={{
-                    background: "#f1efe8", border: "0.5px solid #d3d1c7",
-                    borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#5f5e5a"
-                  }}>
-                    Nenhuma aula gerada ainda. Gere uma aula primeiro no card "Gerar nova aula".
+                  <div style={{ background: "#f1efe8", border: "0.5px solid #d3d1c7", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#5f5e5a" }}>
+                    Nenhuma aula gerada ainda. Gere uma aula primeiro.
                   </div>
                 ) : (
-                  <select
-                    value={form.lessonId}
-                    onChange={e => setForm(p => ({ ...p, lessonId: e.target.value }))}
-                    style={{ width: "100%", boxSizing: "border-box" }}
-                  >
+                  <select value={form.lessonId} onChange={e => setForm(p => ({ ...p, lessonId: e.target.value }))}
+                    style={{ width: "100%", boxSizing: "border-box" }}>
                     <option value="">— Selecione uma aula —</option>
-                    {aulas.map(a => (
-                      <option key={a.id} value={a.id}>{labelAula(a)}</option>
-                    ))}
+                    {aulas.map(a => <option key={a.id} value={a.id}>{labelAula(a)}</option>)}
                   </select>
                 )}
-
-                {/* Preview da aula selecionada */}
                 {form.lessonId && (() => {
                   const aulaSel = aulas.find(a => a.id === form.lessonId);
                   if (!aulaSel) return null;
                   return (
-                    <div style={{
-                      marginTop: 8, background: "linear-gradient(135deg, #e8f7fd, #edfff6)",
-                      border: "0.5px solid #2B9EC3", borderRadius: 8,
-                      padding: "10px 14px", fontSize: 13, color: "#1a6e8a"
-                    }}>
+                    <div style={{ marginTop: 8, background: "linear-gradient(135deg, #e8f7fd, #edfff6)", border: "0.5px solid #2B9EC3", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#1a6e8a" }}>
                       <strong>{aulaSel.result?.titulo || aulaSel.input?.tema}</strong>
-                      {aulaSel.result?.estrategia && (
-                        <p style={{ margin: "6px 0 0", fontSize: 12, opacity: 0.85 }}>
-                          {aulaSel.result.estrategia.slice(0, 120)}...
-                        </p>
-                      )}
+                      {aulaSel.result?.estrategia && <p style={{ margin: "6px 0 0", fontSize: 12, opacity: 0.85 }}>{aulaSel.result.estrategia.slice(0, 120)}...</p>}
                     </div>
                   );
                 })()}
               </div>
 
-              {/* Aluno (opcional) */}
+              {/* Aluno */}
               <div>
                 <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
-                  Aluno
-                  <span style={{ color: "#888", marginLeft: 6, fontWeight: 400 }}>
-                    (opcional — personaliza as adaptações)
-                  </span>
+                  Aluno <span style={{ color: "#888", fontWeight: 400 }}>(opcional)</span>
                 </label>
-                <select
-                  value={form.alunoId}
-                  onChange={e => setForm(p => ({ ...p, alunoId: e.target.value }))}
-                  style={{ width: "100%", boxSizing: "border-box" }}
-                >
+                <select value={form.alunoId} onChange={e => setForm(p => ({ ...p, alunoId: e.target.value }))}
+                  style={{ width: "100%", boxSizing: "border-box" }}>
                   <option value="">— Avaliação para turma geral —</option>
                   {alunos.map(a => (
                     <option key={a.id} value={a.id}>
@@ -271,128 +367,95 @@ export default function Assessments() {
               {/* Período e disciplina */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <div>
-                  <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
-                    Período *
-                  </label>
-                  <select
-                    value={form.periodo}
-                    onChange={e => setForm(p => ({ ...p, periodo: e.target.value }))}
-                    style={{ width: "100%", boxSizing: "border-box" }}
-                  >
+                  <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>Período *</label>
+                  <select value={form.periodo} onChange={e => setForm(p => ({ ...p, periodo: e.target.value }))}
+                    style={{ width: "100%", boxSizing: "border-box" }}>
                     {PERIODOS.map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
-                    Disciplina
-                  </label>
-                  <select
-                    value={form.disciplina}
-                    onChange={e => setForm(p => ({ ...p, disciplina: e.target.value }))}
-                    style={{ width: "100%", boxSizing: "border-box" }}
-                  >
+                  <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>Disciplina</label>
+                  <select value={form.disciplina} onChange={e => setForm(p => ({ ...p, disciplina: e.target.value }))}
+                    style={{ width: "100%", boxSizing: "border-box" }}>
                     {DISCIPLINAS.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
               </div>
 
-              {/* Quantidade de questões */}
+              {/* Quantidade */}
               <div>
                 <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
                   Quantidade de questões: {form.quantidade}
                 </label>
-                <input
-                  type="range" min="3" max="10" step="1"
-                  value={form.quantidade}
+                <input type="range" min="3" max="10" step="1" value={form.quantidade}
                   onChange={e => setForm(p => ({ ...p, quantidade: Number(e.target.value) }))}
-                  style={{ width: "100%", accentColor: "#2B9EC3" }}
-                />
+                  style={{ width: "100%", accentColor: "#2B9EC3" }} />
               </div>
 
-              <button
-                onClick={handleGerar}
-                disabled={loading || !form.lessonId}
-                style={{
-                  width: "100%", padding: "12px",
-                  background: loading || !form.lessonId ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
-                  color: "#fff", border: "none", borderRadius: 8,
-                  fontSize: 15, fontWeight: 500,
-                  cursor: loading || !form.lessonId ? "not-allowed" : "pointer"
-                }}
-              >
+              <button onClick={handleGerar} disabled={loading || !form.lessonId} style={{
+                width: "100%", padding: "12px",
+                background: loading || !form.lessonId ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+                color: "#fff", border: "none", borderRadius: 8,
+                fontSize: 15, fontWeight: 500, cursor: loading || !form.lessonId ? "not-allowed" : "pointer"
+              }}>
                 {loading ? "Nexus7 gerando avaliação..." : "📝 Gerar avaliação"}
               </button>
             </div>
           </div>
+        )}
 
-        ) : (
+        {/* RESULTADO DA AVALIAÇÃO */}
+        {aba === "gerar" && avaliacao && (
           <>
-            <button
-              onClick={() => { setAvaliacao(null); setNotas({}); setNotasSalvas({}); }}
-              style={{
-                fontSize: 13, marginBottom: 20, color: "#2B9EC3",
-                background: "none", border: "none", cursor: "pointer", padding: 0
-              }}
-            >
+            <button onClick={() => { setAvaliacao(null); setEditando(false); setNotas({}); setNotasSalvas({}); }}
+              style={{ fontSize: 13, marginBottom: 20, color: "#2B9EC3", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
               ← Gerar outra avaliação
             </button>
 
-            {/* Cabeçalho da avaliação gerada */}
-            <div style={{
-              background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
-              borderRadius: 12, padding: "1.2rem 1.5rem", marginBottom: 20, color: "#fff"
-            }}>
-              <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
-                {avaliacao.titulo}
-              </h3>
+            {/* Cabeçalho */}
+            <div style={{ background: "linear-gradient(135deg, #2B9EC3, #4CAF82)", borderRadius: 12, padding: "1.2rem 1.5rem", marginBottom: 20, color: "#fff" }}>
+              <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>{dadosAvaliacao.titulo}</h3>
               <p style={{ fontSize: 13, opacity: 0.9, margin: 0 }}>
-                {avaliacao.disciplina} · {avaliacao.periodo}
-                {avaliacao.aluno ? ` · ${avaliacao.aluno.full_name}` : " · Turma geral"}
+                {dadosAvaliacao.disciplina} · {dadosAvaliacao.periodo}
+                {dadosAvaliacao.aluno ? ` · ${dadosAvaliacao.aluno.full_name}` : " · Turma geral"}
               </p>
             </div>
 
-            {/* Instruções da avaliação */}
-            {avaliacao.instrucoes && (
-              <div style={{
-                background: "#f1efe8", border: "0.5px solid #d3d1c7",
-                borderRadius: 8, padding: "12px 16px", marginBottom: 20,
-                fontSize: 13, color: "#5f5e5a"
-              }}>
-                📋 {avaliacao.instrucoes}
+            {dadosAvaliacao.instrucoes && (
+              <div style={{ background: "#f1efe8", border: "0.5px solid #d3d1c7", borderRadius: 8, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: "#5f5e5a" }}>
+                📋 {dadosAvaliacao.instrucoes}
               </div>
             )}
 
             {/* Questões */}
-            {avaliacao.exercicios?.map((ex, i) => (
-              <div key={i} style={{
-                background: "#fff", border: "0.5px solid #d3d1c7",
-                borderLeft: "3px solid #534AB7",
-                borderRadius: 10, padding: "16px 20px", marginBottom: 14
-              }}>
+            {dadosAvaliacao.exercicios?.map((ex, i) => (
+              <div key={i} style={{ background: "#fff", border: "0.5px solid #d3d1c7", borderLeft: "3px solid #534AB7", borderRadius: 10, padding: "16px 20px", marginBottom: 14 }}>
                 <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-                  <span style={{
-                    fontSize: 11, padding: "2px 10px",
-                    background: "#EEEDFE", color: "#534AB7",
-                    borderRadius: 20, fontWeight: 500
-                  }}>
+                  <span style={{ fontSize: 11, padding: "2px 10px", background: "#EEEDFE", color: "#534AB7", borderRadius: 20, fontWeight: 500 }}>
                     Questão {ex.numero}
                   </span>
-                  <span style={{
-                    fontSize: 11, padding: "2px 10px",
-                    background: "#f1efe8", color: "#5f5e5a", borderRadius: 20
-                  }}>
+                  <span style={{ fontSize: 11, padding: "2px 10px", background: "#f1efe8", color: "#5f5e5a", borderRadius: 20 }}>
                     {tipoLabel[ex.tipo] || ex.tipo}
                   </span>
-                  <span style={{
-                    fontSize: 11, padding: "2px 10px",
-                    background: "#f1efe8",
-                    color: nivelColor[ex.nivel] || "#5f5e5a", borderRadius: 20
-                  }}>
+                  <span style={{ fontSize: 11, padding: "2px 10px", background: "#f1efe8", color: nivelColor[ex.nivel] || "#5f5e5a", borderRadius: 20 }}>
                     {ex.nivel}
                   </span>
                 </div>
 
-                <p style={{ fontSize: 14, lineHeight: 1.7, marginBottom: 12 }}>{ex.enunciado}</p>
+                {editando ? (
+                  <textarea
+                    value={avaliacaoEditada.exercicios[i]?.enunciado || ""}
+                    onChange={e => {
+                      const novasQuestoes = [...avaliacaoEditada.exercicios];
+                      novasQuestoes[i] = { ...novasQuestoes[i], enunciado: e.target.value };
+                      setAvaliacaoEditada(prev => ({ ...prev, exercicios: novasQuestoes }));
+                    }}
+                    rows={3}
+                    style={{ width: "100%", boxSizing: "border-box", fontSize: 14, marginBottom: 10, border: "0.5px solid #534AB7", borderRadius: 6, padding: "8px 10px", resize: "vertical" }}
+                  />
+                ) : (
+                  <p style={{ fontSize: 14, lineHeight: 1.7, marginBottom: 12 }}>{ex.enunciado}</p>
+                )}
 
                 {ex.opcoes?.length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
@@ -402,101 +465,60 @@ export default function Assessments() {
                         background: op.startsWith(ex.resposta_correta) ? "#edfff6" : "#f5f9ff",
                         border: `0.5px solid ${op.startsWith(ex.resposta_correta) ? "#4CAF82" : "#d3d1c7"}`
                       }}>
-                        {op}
-                        {op.startsWith(ex.resposta_correta) && (
-                          <span style={{ color: "#4CAF82", marginLeft: 8, fontSize: 11 }}>✓ correta</span>
-                        )}
+                        {op} {op.startsWith(ex.resposta_correta) && <span style={{ color: "#4CAF82", fontSize: 11 }}>✓ correta</span>}
                       </div>
                     ))}
                   </div>
                 )}
 
-                <div style={{
-                  background: "#f5f9ff", border: "0.5px solid #d3d1c7",
-                  borderRadius: 6, padding: "8px 12px", fontSize: 12, color: "#5f5e5a"
-                }}>
+                <div style={{ background: "#f5f9ff", border: "0.5px solid #d3d1c7", borderRadius: 6, padding: "8px 12px", fontSize: 12, color: "#5f5e5a" }}>
                   <strong>Gabarito:</strong> {ex.resposta_correta} — {ex.justificativa}
                 </div>
-
                 {ex.adaptacao && (
-                  <div style={{
-                    marginTop: 8, fontSize: 11, color: "#1a6e8a",
-                    background: "#e8f7fd", borderRadius: 6, padding: "6px 10px"
-                  }}>
+                  <div style={{ marginTop: 8, fontSize: 11, color: "#1a6e8a", background: "#e8f7fd", borderRadius: 6, padding: "6px 10px" }}>
                     ♿ {ex.adaptacao}
                   </div>
                 )}
               </div>
             ))}
 
-            {/* Critérios de avaliação */}
-            {avaliacao.criterios_avaliacao && (
-              <div style={{
-                background: "#f1efe8", border: "0.5px solid #d3d1c7",
-                borderRadius: 8, padding: "12px 16px", marginBottom: 20,
-                fontSize: 13, color: "#5f5e5a"
-              }}>
-                <strong>📊 Critérios:</strong> {avaliacao.criterios_avaliacao}
-              </div>
-            )}
-
-            {/* Registro de notas por aluno */}
-            <div style={{
-              background: "#fff", border: "0.5px solid #d3d1c7",
-              borderRadius: 12, padding: "1.5rem"
-            }}>
-              <h3 style={{ fontSize: 15, fontWeight: 500, color: "#2B9EC3", marginBottom: 16 }}>
-                📝 Registrar notas — {form.disciplina} · {form.periodo}
-              </h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {alunos.map(a => (
-                  <div key={a.id} style={{
-                    display: "flex", alignItems: "center",
-                    justifyContent: "space-between", gap: 12,
-                    padding: "10px 14px", background: "#f5f9ff",
-                    border: "0.5px solid #d3d1c7", borderRadius: 8
-                  }}>
-                    <div>
-                      <p style={{ fontWeight: 500, fontSize: 14, margin: 0 }}>{a.full_name}</p>
-                      <p style={{ fontSize: 12, color: "#5f5e5a", margin: 0 }}>
-                        {a.grade}{a.disability_type ? ` · ${a.disability_type}` : ""}
-                      </p>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      {notasSalvas[a.id] !== undefined ? (
-                        <span style={{
-                          fontSize: 13, padding: "4px 12px",
-                          background: "#edfff6", color: "#0F6E56",
-                          borderRadius: 20, fontWeight: 500
-                        }}>
-                          ✅ {notasSalvas[a.id]}/10
-                        </span>
-                      ) : (
-                        <>
-                          <input
-                            type="number" min="0" max="10" step="0.5"
-                            placeholder="nota"
-                            value={notas[a.id] || ""}
-                            onChange={e => setNotas(prev => ({ ...prev, [a.id]: e.target.value }))}
-                            style={{ width: 70, textAlign: "center", fontSize: 14, padding: "6px 8px" }}
-                          />
-                          <button
-                            onClick={() => handleSalvarNota(a.id)}
-                            style={{
+            {/* Registro de notas */}
+            {!editando && (
+              <div style={{ background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 12, padding: "1.5rem", marginTop: 8 }}>
+                <h3 style={{ fontSize: 15, fontWeight: 500, color: "#2B9EC3", marginBottom: 16 }}>
+                  📝 Registrar notas — {dadosAvaliacao.disciplina} · {dadosAvaliacao.periodo}
+                </h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  {alunos.map(a => (
+                    <div key={a.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 14px", background: "#f5f9ff", border: "0.5px solid #d3d1c7", borderRadius: 8 }}>
+                      <div>
+                        <p style={{ fontWeight: 500, fontSize: 14, margin: 0 }}>{a.full_name}</p>
+                        <p style={{ fontSize: 12, color: "#5f5e5a", margin: 0 }}>{a.grade}</p>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        {notasSalvas[a.id] !== undefined ? (
+                          <span style={{ fontSize: 13, padding: "4px 12px", background: "#edfff6", color: "#0F6E56", borderRadius: 20, fontWeight: 500 }}>
+                            ✅ {notasSalvas[a.id]}/10
+                          </span>
+                        ) : (
+                          <>
+                            <input type="number" min="0" max="10" step="0.5" placeholder="nota"
+                              value={notas[a.id] || ""}
+                              onChange={e => setNotas(prev => ({ ...prev, [a.id]: e.target.value }))}
+                              style={{ width: 70, textAlign: "center", fontSize: 14, padding: "6px 8px" }} />
+                            <button onClick={() => handleSalvarNota(a.id)} style={{
                               fontSize: 12, padding: "6px 14px",
                               background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
                               color: "#fff", border: "none", borderRadius: 6, cursor: "pointer"
-                            }}
-                          >
-                            Salvar
-                          </button>
-                        </>
-                      )}
+                            }}>Salvar</button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
       </main>
