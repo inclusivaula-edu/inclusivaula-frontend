@@ -33,7 +33,23 @@ export async function getLessonStatus(jobId) {
 }
 
 export async function getLessonPDF(jobId) {
-  return request(`/api/lesson-pdf/${jobId}`);
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  const res = await fetch(`${BASE_URL}/api/lesson-pdf/${jobId}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erro ao gerar PDF");
+  return res.blob();
+}
+
+export async function getReportPDF(reportId) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  const res = await fetch(`${BASE_URL}/api/reports/${reportId}/pdf`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erro ao gerar PDF do relatório");
+  return res.blob();
 }
 
 // ── EXERCÍCIOS ───────────────────────────────────────────────────

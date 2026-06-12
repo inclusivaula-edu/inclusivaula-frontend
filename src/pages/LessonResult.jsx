@@ -80,16 +80,15 @@ export default function LessonResult() {
 
   async function handleDownload() {
     try {
-      const conteudo = gerarTextoAula(lesson);
-      const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
+      const blob = await getLessonPDF(jobId);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `aula-inclusivaula-${jobId}.txt`;
+      a.download = `aula-inclusivaula-${jobId}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      mostrarFeedback("Erro ao baixar a aula.", "erro");
+      mostrarFeedback("Erro ao baixar PDF.", "erro");
     }
   }
 

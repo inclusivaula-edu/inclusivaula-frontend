@@ -7,10 +7,10 @@ import icone from "../assets/icone.png";
 
 const TIPOS_RELATORIO = [
   { id: "semestral", label: "Relatório Semestral", descricao: "Progresso acadêmico e social do período", emoji: "📊", cor: "#2B9EC3" },
-  { id: "familia",   label: "Relatório para a Família", descricao: "Linguagem acessível para pais e responsáveis", emoji: "👨‍👩‍👧", cor: "#4CAF82" },
-  { id: "aee",       label: "Relatório para o AEE", descricao: "Técnico especializado para o atendimento educacional", emoji: "🎓", cor: "#534AB7" },
-  { id: "pei",       label: "PEI", descricao: "Plano Educacional Individualizado", emoji: "📋", cor: "#BA7517" },
-  { id: "paee",      label: "PAEE", descricao: "Plano de Atendimento Educacional Especializado", emoji: "📁", cor: "#0F6E56" }
+  { id: "familia", label: "Relatório para a Família", descricao: "Linguagem acessível para pais e responsáveis", emoji: "👨‍👩‍👧", cor: "#4CAF82" },
+  { id: "aee", label: "Relatório para o AEE", descricao: "Técnico especializado para o atendimento educacional", emoji: "🎓", cor: "#534AB7" },
+  { id: "pei", label: "PEI", descricao: "Plano Educacional Individualizado", emoji: "📋", cor: "#BA7517" },
+  { id: "paee", label: "PAEE", descricao: "Plano de Atendimento Educacional Especializado", emoji: "📁", cor: "#0F6E56" }
 ];
 
 const TIPO_MAP = Object.fromEntries(TIPOS_RELATORIO.map(t => [t.id, t]));
@@ -128,25 +128,20 @@ export default function Reports() {
     mostrarFeedback("Relatório excluído.");
   }
 
-  function handleDownload(rel) {
-    const aluno = alunosMap[rel.student_id];
-    const rep = rel.content?.report || rel.content;
-    if (!rep) return;
-    let txt = `INCLUSIVAULA — ${rep.titulo || "RELATÓRIO PEDAGÓGICO"}\n${"=".repeat(60)}\n\n`;
-    txt += `Aluno: ${rep.aluno?.nome || aluno?.full_name || ""}\nSérie: ${rep.aluno?.serie || ""}\nNEE: ${rep.aluno?.nee || ""}\nPeríodo: ${rel.period}\n\n`;
-    const campos = [["SUMÁRIO EXECUTIVO", rep.sumario_executivo], ["DESENVOLVIMENTO ACADÊMICO", rep.desenvolvimento_academico], ["DESENVOLVIMENTO SOCIAL", rep.desenvolvimento_social], ["ADAPTAÇÕES APLICADAS", rep.adaptacoes_aplicadas], ["OBSERVAÇÕES FINAIS", rep.observacoes_finais], ["BASE LEGAL", rep.base_legal]];
-    campos.forEach(([t, v]) => { if (v) txt += `${t}:\n${v}\n\n`; });
-    if (rep.pontos_positivos?.length) { txt += `PONTOS POSITIVOS:\n`; rep.pontos_positivos.forEach(p => { txt += `  • ${p}\n`; }); txt += "\n"; }
-    if (rep.recomendacoes?.length) { txt += `RECOMENDAÇÕES:\n`; rep.recomendacoes.forEach(r => { txt += `  • ${r}\n`; }); txt += "\n"; }
-    if (rep.metas_proxima_periodo?.length) { txt += `METAS:\n`; rep.metas_proxima_periodo.forEach(m => { txt += `  • ${m}\n`; }); txt += "\n"; }
-    txt += `${"=".repeat(60)}\nGerado por InclusivAula — www.inclusivaula.com.br\n`;
-    const blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `relatorio-${aluno?.full_name?.replace(/ /g, "_") || "aluno"}-${rel.report_type}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+  async function handleDownload(rel) {
+    try {
+      const { getReportPDF } = await import("../services/mapiClient");
+      const blob = await getReportPDF(rel.id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const aluno = alunosMap[rel.student_id];
+      a.download = `relatorio-${aluno?.full_name?.replace(/ /g, "-") || "aluno"}-${rel.report_type}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      mostrarFeedback("Erro ao baixar PDF.", "erro");
+    }
   }
 
   function mostrarFeedback(msg, tipo = "sucesso") {
