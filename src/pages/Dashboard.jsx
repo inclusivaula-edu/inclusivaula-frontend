@@ -127,7 +127,7 @@ export default function Dashboard() {
             {uso.plano === "free" && (
               <button
                 onClick={() => window.open(
-                  "https://wa.me/55SEU_NUMERO?text=Olá! Quero fazer upgrade do meu plano na InclusivAula.",
+                  "https://wa.me/5596999113575?text=Olá! Quero fazer upgrade do meu plano na InclusivAula.",
                   "_blank"
                 )}
                 style={{
