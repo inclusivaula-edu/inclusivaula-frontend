@@ -42,6 +42,39 @@ export async function getLessonPDF(jobId) {
   return res.blob();
 }
 
+// ── EXERCÍCIOS ───────────────────────────────────────────────────
+
+export async function generateExercises(lessonId, studentId = null, quantidade = 5) {
+  return request("/api/exercises/generate", {
+    method: "POST",
+    body: JSON.stringify({ lessonId, studentId, quantidade })
+  });
+}
+
+export async function getExercisesByLesson(lessonId) {
+  return request(`/api/exercises/lesson/${lessonId}`);
+}
+
+export async function registerGrade(activityId, studentId, score, feedback = "") {
+  return request("/api/exercises/grade", {
+    method: "POST",
+    body: JSON.stringify({ activityId, studentId, score, feedback })
+  });
+}
+
+// ── RELATÓRIOS ───────────────────────────────────────────────────
+
+export async function generateReport(studentId, tipo = "semestral", periodo = null) {
+  return request("/api/reports/generate", {
+    method: "POST",
+    body: JSON.stringify({ studentId, tipo, periodo })
+  });
+}
+
+export async function getReportsByStudent(studentId) {
+  return request(`/api/reports/student/${studentId}`);
+}
+
 export async function getReportPDF(reportId) {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
@@ -52,40 +85,8 @@ export async function getReportPDF(reportId) {
   return res.blob();
 }
 
-// ── EXERCÍCIOS ───────────────────────────────────────────────────
+// ── USO E PLANO ──────────────────────────────────────────────────
 
-// Gera exercícios adaptados a partir de uma aula aprovada
-export async function generateExercises(lessonId, studentId = null, quantidade = 5) {
-  return request("/api/exercises/generate", {
-    method: "POST",
-    body: JSON.stringify({ lessonId, studentId, quantidade })
-  });
-}
-
-// Busca exercícios já gerados de uma aula
-export async function getExercisesByLesson(lessonId) {
-  return request(`/api/exercises/lesson/${lessonId}`);
-}
-
-// Registra a nota de um aluno em um exercício
-export async function registerGrade(activityId, studentId, score, feedback = "") {
-  return request("/api/exercises/grade", {
-    method: "POST",
-    body: JSON.stringify({ activityId, studentId, score, feedback })
-  });
-}
-
-// ── RELATÓRIOS ───────────────────────────────────────────────────
-
-// Gera relatório com IA por tipo — semestral, familia, aee ou pei
-export async function generateReport(studentId, tipo = "semestral", periodo = null) {
-  return request("/api/reports/generate", {
-    method: "POST",
-    body: JSON.stringify({ studentId, tipo, periodo })
-  });
-}
-
-// Busca relatórios já gerados de um aluno
-export async function getReportsByStudent(studentId) {
-  return request(`/api/reports/student/${studentId}`);
+export async function getUsage() {
+  return request("/api/usage");
 }
