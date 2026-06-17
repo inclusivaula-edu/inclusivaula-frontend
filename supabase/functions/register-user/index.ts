@@ -11,113 +11,145 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const {
-      email, password, full_name, phone,
-      schoolMode, school, inviteCode
-    } = await req.json();
+    const { email, password, full_name, phone, schoolMode, school, inviteCode } = await req.json();
 
-    // Validações básicas
     if (!email || !password || !full_name) {
       return new Response(JSON.stringify({ error: "Dados obrigatórios faltando." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    // Client com service_role — ignora RLS, pode fazer qualquer operação
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // 1. Cria o usuário no Auth com email de confirmação
+    // 1. Cria o usuário
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: false, // exige confirmação de email
+      email_confirm: false,
       user_metadata: { full_name }
     });
 
     if (authError) throw new Error(authError.message);
     const userId = authData.user.id;
 
-    // 2. Resolve o school_id — cria escola nova ou entra via código
+    // 2. Resolve school_id
     let schoolId: string;
 
     if (schoolMode === "criar") {
       if (!school?.name || !school?.city) throw new Error("Nome e cidade da escola são obrigatórios.");
-
-      // Gera código de convite único de 6 caracteres
       const inviteCodeGerado = Math.random().toString(36).substring(2, 8).toUpperCase();
-
       const { data: newSchool, error: schoolError } = await supabaseAdmin
         .from("schools")
         .insert([{
-          name: school.name,
-          city: school.city,
-          state: school.state || "AP",
-          cnpj: school.cnpj || null,
-          phone: school.phone || null,
-          address: school.address || null,
-          admin_user_id: userId,
-          invite_code: inviteCodeGerado
+          name: school.name, city: school.city,
+          state: school.state || "AP", cnpj: school.cnpj || null,
+          phone: school.phone || null, address: school.address || null,
+          admin_user_id: userId, invite_code: inviteCodeGerado
         }])
         .select().single();
-
       if (schoolError) throw new Error(schoolError.message);
       schoolId = newSchool.id;
-
     } else if (schoolMode === "entrar") {
       if (!inviteCode) throw new Error("Código de convite obrigatório.");
-
       const { data: foundSchool, error: findError } = await supabaseAdmin
-        .from("schools")
-        .select("id")
-        .eq("invite_code", inviteCode.trim().toUpperCase())
-        .single();
-
+        .from("schools").select("id")
+        .eq("invite_code", inviteCode.trim().toUpperCase()).single();
       if (findError || !foundSchool) throw new Error("Código de convite inválido.");
       schoolId = foundSchool.id;
-
     } else {
       throw new Error("Modo de escola inválido.");
     }
 
-    // 3. Insere dados relacionais — tudo com service_role, RLS não interfere
+    // 3. Insere dados relacionais
     await supabaseAdmin.from("profiles").upsert([{
-      id: userId,
-      email,
-      full_name,
-      role: "teacher",
-      school_id: schoolId
+      id: userId, email, full_name, role: "teacher", school_id: schoolId
     }]);
-
     await supabaseAdmin.from("users").upsert([{
-      id: userId,
-      email,
-      full_name,
-      role: "teacher",
-      school_id: schoolId
+      id: userId, email, full_name, role: "teacher", school_id: schoolId
     }]);
-
     await supabaseAdmin.from("teachers").insert([{
-      user_id: userId,
-      school_id: schoolId,
-      full_name,
-      email,
-      phone: phone || null,
-      specialization: ""
+      user_id: userId, school_id: schoolId,
+      full_name, email, phone: phone || null, specialization: ""
     }]);
 
-    // 4. Envia email de confirmação via Supabase Auth
-    await supabaseAdmin.auth.admin.generateLink({
+    // 4. Gera o link de confirmação
+    const siteUrl = Deno.env.get("SITE_URL") || "https://www.inclusivaula.com.br";
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: "signup",
       email,
-      options: {
-        redirectTo: `${Deno.env.get("SITE_URL")}/`
-      }
+      options: { redirectTo: `${siteUrl}/` }
     });
 
-    return new Response(JSON.stringify({ success: true, message: "Cadastro realizado! Confirme seu e-mail para acessar." }), {
+    if (linkError) throw new Error("Erro ao gerar link de confirmação: " + linkError.message);
+
+    const confirmationUrl = linkData?.properties?.action_link;
+    if (!confirmationUrl) throw new Error("Link de confirmação não gerado.");
+
+    // 5. Envia o email via Resend diretamente
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) throw new Error("RESEND_API_KEY não configurada.");
+
+    const emailRes = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: "InclusivAula <noreply@inclusivaula.com.br>",
+        to: [email],
+        subject: "Confirme seu cadastro na InclusivAula",
+        html: `
+<div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px; background: #f5f9ff;">
+  <div style="text-align: center; margin-bottom: 24px;">
+    <h1 style="color: #2B9EC3; font-size: 24px; margin: 0;">
+      Inclusiv<span style="color: #4CAF82;">Aula</span>
+    </h1>
+    <p style="color: #5f5e5a; font-size: 13px; margin: 4px 0 0;">Educação adaptada. Inclusão de verdade.</p>
+  </div>
+
+  <div style="background: #fff; border-radius: 12px; padding: 24px; border: 1px solid #d3d1c7;">
+    <h2 style="color: #2c2c2a; font-size: 18px; margin: 0 0 12px;">Olá, ${full_name}! 👋</h2>
+    <p style="color: #5f5e5a; font-size: 14px; line-height: 1.6; margin: 0 0 8px;">
+      Seu cadastro na InclusivAula foi realizado com sucesso!
+    </p>
+    <p style="color: #5f5e5a; font-size: 14px; line-height: 1.6; margin: 0 0 24px;">
+      Clique no botão abaixo para confirmar seu e-mail e acessar a plataforma:
+    </p>
+    <div style="text-align: center; margin-bottom: 24px;">
+      <a href="${confirmationUrl}"
+        style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #2B9EC3, #4CAF82); color: #fff; border-radius: 8px; text-decoration: none; font-size: 15px; font-weight: 600;">
+        ✅ Confirmar e-mail
+      </a>
+    </div>
+    <p style="color: #888; font-size: 12px; text-align: center; margin: 0;">
+      Se você não criou uma conta na InclusivAula, ignore este e-mail.
+    </p>
+  </div>
+
+  <p style="color: #aaa; font-size: 11px; text-align: center; margin-top: 20px;">
+    InclusivAula · www.inclusivaula.com.br
+  </p>
+</div>
+        `
+      })
+    });
+
+    const emailData = await emailRes.json();
+    if (!emailRes.ok) {
+      console.error("Erro Resend:", JSON.stringify(emailData));
+      throw new Error("Erro ao enviar email de confirmação.");
+    }
+
+    console.log("✅ Email enviado via Resend:", emailData.id);
+
+    return new Response(JSON.stringify({
+      success: true,
+      message: "Cadastro realizado! Verifique seu e-mail para confirmar o acesso."
+    }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });

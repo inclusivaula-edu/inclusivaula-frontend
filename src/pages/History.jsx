@@ -25,8 +25,7 @@ export default function History() {
         .order("created_at", { ascending: false });
 
       if (!error && data) {
-        const minhas = data.filter(a => a.input?.user_id === user.id);
-        setAulas(minhas);
+        setAulas(data);
       }
       setLoading(false);
     }
