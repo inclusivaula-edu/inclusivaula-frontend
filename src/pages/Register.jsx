@@ -1,146 +1,116 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabaseClient";
-import { createSchool, createTeacher } from "../services/schoolClient";
 import logo from "../assets/logo.png";
 
 const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
+const EDGE_URL = "https://mauafavxvwzcvcotdjdi.supabase.co/functions/v1/register-user";
+
 export default function Register() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [schoolMode, setSchoolMode] = useState(null); // "criar" ou "entrar"
+  const [schoolMode, setSchoolMode] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [auth, setAuth] = useState({ email: "", password: "", full_name: "", phone: "" });
+  const [auth, setAuth] = useState({ email: "", password: "", confirmPassword: "", full_name: "", phone: "" });
   const [school, setSchool] = useState({ name: "", city: "", state: "AP", cnpj: "", phone: "", address: "" });
   const [inviteCode, setInviteCode] = useState("");
-  const [userId, setUserId] = useState(null);
 
   function handleAuth(e) { setAuth(prev => ({ ...prev, [e.target.name]: e.target.value })); }
   function handleSchool(e) { setSchool(prev => ({ ...prev, [e.target.name]: e.target.value })); }
 
-  // Etapa 1: cria a conta no Supabase Auth e faz logout imediato
-  // para evitar que o AuthContext redirecione para o dashboard
-  // antes de completar as etapas 2 e 3.
-  async function handleStep1() {
-    if (!auth.email || !auth.password || !auth.full_name) {
-      setError("Preencha nome, e-mail e senha.");
-      return;
-    }
-    setError(null);
-    setLoading(true);
-    try {
-      const response = await supabase.auth.signUp({ email: auth.email, password: auth.password });
-      if (response.error) throw response.error;
-      if (!response.data?.user?.id) throw new Error("Falha ao criar usuário.");
-      await supabase.auth.signOut(); // logout imediato — login real só no final
-      setUserId(response.data.user.id);
-      setStep(2);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  function validateStep1() {
+    if (!auth.full_name.trim()) return "Informe seu nome completo.";
+    if (!auth.email.trim()) return "Informe seu e-mail.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(auth.email)) return "E-mail inválido.";
+    if (!auth.password) return "Informe uma senha.";
+    if (auth.password.length < 6) return "A senha deve ter pelo menos 6 caracteres.";
+    if (auth.password !== auth.confirmPassword) return "As senhas não coincidem.";
+    return null;
   }
 
-  // Etapa 2a: professor cria uma escola nova
-  async function handleCriarEscola() {
-    if (!school.name || !school.city) {
+  function handleStep1() {
+    const err = validateStep1();
+    if (err) { setError(err); return; }
+    setError(null);
+    setStep(2);
+  }
+
+  async function handleFinalizar() {
+    if (schoolMode === "criar" && (!school.name.trim() || !school.city.trim())) {
       setError("Preencha nome e cidade da escola.");
       return;
     }
-    setError(null);
-    setLoading(true);
-    try {
-      const newSchool = await createSchool({ ...school, admin_user_id: userId });
-      await finalizarCadastro(newSchool.id);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // Etapa 2b: professor entra em escola existente via código de convite
-  async function handleEntrarEscola() {
-    if (!inviteCode.trim()) {
-      setError("Digite o código de convite da sua escola.");
+    if (schoolMode === "entrar" && !inviteCode.trim()) {
+      setError("Digite o código de convite.");
       return;
     }
+
     setError(null);
     setLoading(true);
+
     try {
-      // Busca a escola pelo código — case insensitive
-      const { data: foundSchool, error: searchError } = await supabase
-        .from("schools")
-        .select("id, name")
-        .eq("invite_code", inviteCode.trim().toUpperCase())
-        .single();
+      const res = await fetch(EDGE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: auth.email,
+          password: auth.password,
+          full_name: auth.full_name,
+          phone: auth.phone,
+          schoolMode,
+          school: schoolMode === "criar" ? school : null,
+          inviteCode: schoolMode === "entrar" ? inviteCode : null
+        })
+      });
 
-      if (searchError || !foundSchool) {
-        throw new Error("Código de convite inválido. Verifique com o administrador da sua escola.");
-      }
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || "Erro no cadastro.");
 
-      await finalizarCadastro(foundSchool.id);
+      // Sucesso — vai para tela de confirmação de email
+      setStep(3);
+
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  }
-
-  // Função compartilhada: vincula o professor à escola,
-  // cria o perfil e faz o login real.
-  async function finalizarCadastro(schoolId) {
-    await supabase.from("users").upsert({
-      id: userId, school_id: schoolId,
-      full_name: auth.full_name, email: auth.email, role: "teacher"
-    });
-    await createTeacher({
-      user_id: userId, school_id: schoolId,
-      full_name: auth.full_name, email: auth.email,
-      phone: auth.phone, specialization: ""
-    });
-    await supabase.from("profiles").upsert({
-      id: userId, email: auth.email,
-      role: "teacher", school_id: schoolId, full_name: auth.full_name
-    });
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: auth.email, password: auth.password
-    });
-    if (signInError) throw signInError;
-    setStep(3);
   }
 
   const inputStyle = { width: "100%", boxSizing: "border-box" };
-  const labelStyle = { fontSize: 13, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 };
+  const labelStyle = { fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 };
 
   return (
     <div style={{
       minHeight: "100vh", display: "flex", alignItems: "center",
-      justifyContent: "center", background: "linear-gradient(135deg, #f0f9ff 0%, #f0fff8 100%)"
+      justifyContent: "center", background: "linear-gradient(135deg, #f0f9ff 0%, #f0fff8 100%)",
+      padding: "1rem"
     }}>
       <div style={{
         background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 16,
         padding: "2.5rem", width: "100%", maxWidth: 480,
         boxShadow: "0 4px 24px rgba(43,158,195,0.08)"
       }}>
+        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 28 }}>
           <img src={logo} alt="InclusivAula" style={{ height: 52, marginBottom: 8 }} />
         </div>
 
-        {/* Barra de progresso das 3 etapas */}
-        <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
-          {[1, 2, 3].map(s => (
-            <div key={s} style={{
-              flex: 1, height: 4, borderRadius: 2,
-              background: s <= step ? "linear-gradient(135deg, #2B9EC3, #4CAF82)" : "#d3d1c7"
-            }} />
-          ))}
-        </div>
+        {/* Barra de progresso */}
+        {step < 3 && (
+          <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
+            {[1, 2].map(s => (
+              <div key={s} style={{
+                flex: 1, height: 4, borderRadius: 2,
+                background: s <= step ? "linear-gradient(135deg, #2B9EC3, #4CAF82)" : "#d3d1c7"
+              }} />
+            ))}
+          </div>
+        )}
 
+        {/* Erro */}
         {error && (
           <div style={{
             background: "#fcebeb", border: "0.5px solid #a32d2d", borderRadius: 8,
@@ -150,93 +120,139 @@ export default function Register() {
           </div>
         )}
 
-        {/* Etapa 1 — Dados pessoais do professor */}
+        {/* ETAPA 1 — Dados pessoais */}
         {step === 1 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 500, margin: 0, color: "#2B9EC3" }}>Seus dados</h2>
+            <div>
+              <h2 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 4px", color: "#2B9EC3" }}>
+                Criar sua conta
+              </h2>
+              <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
+                Etapa 1 de 2 — Seus dados pessoais
+              </p>
+            </div>
+
             <div>
               <label style={labelStyle}>Nome completo *</label>
-              <input name="full_name" value={auth.full_name} onChange={handleAuth} placeholder="Maria Silva" style={inputStyle} />
+              <input name="full_name" value={auth.full_name} onChange={handleAuth}
+                placeholder="Maria da Silva" style={inputStyle} autoComplete="name" />
             </div>
+
             <div>
-              <label style={labelStyle}>E-mail *</label>
-              <input name="email" type="email" value={auth.email} onChange={handleAuth} placeholder="professor@escola.com" style={inputStyle} />
+              <label style={labelStyle}>E-mail profissional *</label>
+              <input name="email" type="email" value={auth.email} onChange={handleAuth}
+                placeholder="professor@escola.com.br" style={inputStyle} autoComplete="email" />
             </div>
-            <div>
-              <label style={labelStyle}>Senha *</label>
-              <input name="password" type="password" value={auth.password} onChange={handleAuth} placeholder="mínimo 6 caracteres" style={inputStyle} />
-            </div>
+
             <div>
               <label style={labelStyle}>Telefone</label>
-              <input name="phone" value={auth.phone} onChange={handleAuth} placeholder="(96) 99999-9999" style={inputStyle} />
+              <input name="phone" value={auth.phone} onChange={handleAuth}
+                placeholder="(96) 99999-9999" style={inputStyle} autoComplete="tel" />
             </div>
-            <button onClick={handleStep1} disabled={loading} style={{
-              width: "100%", padding: "12px", marginTop: 8,
-              background: loading ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+
+            <div>
+              <label style={labelStyle}>Senha * (mínimo 6 caracteres)</label>
+              <input name="password" type="password" value={auth.password} onChange={handleAuth}
+                placeholder="••••••••" style={inputStyle} autoComplete="new-password" />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Confirmar senha *</label>
+              <input name="confirmPassword" type="password" value={auth.confirmPassword} onChange={handleAuth}
+                placeholder="••••••••" style={inputStyle} autoComplete="new-password" />
+            </div>
+
+            <button onClick={handleStep1} style={{
+              width: "100%", padding: "12px", marginTop: 4,
+              background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
               color: "#fff", border: "none", borderRadius: 8,
-              fontSize: 15, fontWeight: 500, cursor: loading ? "not-allowed" : "pointer"
+              fontSize: 15, fontWeight: 500, cursor: "pointer"
             }}>
-              {loading ? "Criando conta..." : "Continuar →"}
+              Continuar →
             </button>
+
             <p style={{ fontSize: 13, textAlign: "center", color: "#5f5e5a" }}>
               Já tem conta?{" "}
-              <span style={{ color: "#2B9EC3", cursor: "pointer" }} onClick={() => navigate("/")}>Entrar</span>
+              <span style={{ color: "#2B9EC3", cursor: "pointer", fontWeight: 500 }}
+                onClick={() => navigate("/")}>
+                Entrar
+              </span>
             </p>
           </div>
         )}
 
-        {/* Etapa 2 — Escolha do caminho: criar ou entrar */}
+        {/* ETAPA 2 — Escola */}
         {step === 2 && !schoolMode && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 500, margin: 0, color: "#2B9EC3" }}>Sua escola</h2>
-            <p style={{ fontSize: 14, color: "#5f5e5a", margin: 0 }}>
-              Você quer criar uma escola nova ou entrar em uma que já está cadastrada?
-            </p>
+            <div>
+              <h2 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 4px", color: "#2B9EC3" }}>
+                Sua escola
+              </h2>
+              <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
+                Etapa 2 de 2 — Vincule-se a uma escola
+              </p>
+            </div>
+
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8 }}>
               <div onClick={() => { setSchoolMode("criar"); setError(null); }} style={{
-                border: "0.5px solid #d3d1c7", borderRadius: 12, padding: "1.2rem",
-                cursor: "pointer", transition: "border-color 0.2s"
+                border: "0.5px solid #d3d1c7", borderRadius: 12,
+                padding: "1.2rem", cursor: "pointer"
               }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = "#2B9EC3"}
                 onMouseLeave={e => e.currentTarget.style.borderColor = "#d3d1c7"}
               >
-                <p style={{ fontWeight: 500, marginBottom: 4, color: "#2B9EC3" }}>🏫 Criar escola nova</p>
+                <p style={{ fontWeight: 600, marginBottom: 4, color: "#2B9EC3" }}>🏫 Cadastrar escola nova</p>
                 <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
                   Sou o primeiro professor ou diretor a cadastrar minha escola.
                 </p>
               </div>
+
               <div onClick={() => { setSchoolMode("entrar"); setError(null); }} style={{
-                border: "0.5px solid #d3d1c7", borderRadius: 12, padding: "1.2rem",
-                cursor: "pointer", transition: "border-color 0.2s"
+                border: "0.5px solid #d3d1c7", borderRadius: 12,
+                padding: "1.2rem", cursor: "pointer"
               }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = "#4CAF82"}
                 onMouseLeave={e => e.currentTarget.style.borderColor = "#d3d1c7"}
               >
-                <p style={{ fontWeight: 500, marginBottom: 4, color: "#4CAF82" }}>🔑 Entrar com código de convite</p>
+                <p style={{ fontWeight: 600, marginBottom: 4, color: "#4CAF82" }}>🔑 Entrar com código de convite</p>
                 <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
                   Minha escola já está cadastrada. Tenho o código de convite.
                 </p>
               </div>
             </div>
+
+            <button onClick={() => { setStep(1); setError(null); }} style={{
+              background: "none", border: "none", color: "#5f5e5a",
+              fontSize: 13, cursor: "pointer", textAlign: "left"
+            }}>
+              ← Voltar
+            </button>
           </div>
         )}
 
-        {/* Etapa 2a — Formulário de criação de escola nova */}
+        {/* ETAPA 2a — Criar escola */}
         {step === 2 && schoolMode === "criar" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ cursor: "pointer", fontSize: 13, color: "#2B9EC3" }}
-                onClick={() => { setSchoolMode(null); setError(null); }}>← Voltar</span>
-              <h2 style={{ fontSize: 18, fontWeight: 500, margin: 0, color: "#2B9EC3" }}>Criar escola</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div>
+              <h2 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 4px", color: "#2B9EC3" }}>
+                Dados da escola
+              </h2>
+              <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
+                Você será o administrador desta escola
+              </p>
             </div>
+
             <div>
               <label style={labelStyle}>Nome da escola *</label>
-              <input name="name" value={school.name} onChange={handleSchool} placeholder="E.E. Maria José" style={inputStyle} />
+              <input name="name" value={school.name} onChange={handleSchool}
+                placeholder="E.M. Prof. Maria Silva" style={inputStyle} />
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 100px", gap: 12 }}>
               <div>
                 <label style={labelStyle}>Cidade *</label>
-                <input name="city" value={school.city} onChange={handleSchool} placeholder="Macapá" style={inputStyle} />
+                <input name="city" value={school.city} onChange={handleSchool}
+                  placeholder="Macapá" style={inputStyle} />
               </div>
               <div>
                 <label style={labelStyle}>Estado</label>
@@ -245,72 +261,117 @@ export default function Register() {
                 </select>
               </div>
             </div>
-            <div>
-              <label style={labelStyle}>CNPJ</label>
-              <input name="cnpj" value={school.cnpj} onChange={handleSchool} placeholder="00.000.000/0000-00" style={inputStyle} />
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={labelStyle}>CNPJ</label>
+                <input name="cnpj" value={school.cnpj} onChange={handleSchool}
+                  placeholder="00.000.000/0000-00" style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>Telefone</label>
+                <input name="phone" value={school.phone} onChange={handleSchool}
+                  placeholder="(96) 3000-0000" style={inputStyle} />
+              </div>
             </div>
+
             <div>
               <label style={labelStyle}>Endereço</label>
-              <input name="address" value={school.address} onChange={handleSchool} placeholder="Rua, número, bairro" style={inputStyle} />
+              <input name="address" value={school.address} onChange={handleSchool}
+                placeholder="Rua, número, bairro" style={inputStyle} />
             </div>
-            <button onClick={handleCriarEscola} disabled={loading} style={{
-              width: "100%", padding: "12px",
+
+            <button onClick={handleFinalizar} disabled={loading} style={{
+              width: "100%", padding: "12px", marginTop: 4,
               background: loading ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
               color: "#fff", border: "none", borderRadius: 8,
               fontSize: 15, fontWeight: 500, cursor: loading ? "not-allowed" : "pointer"
             }}>
-              {loading ? "Salvando..." : "Finalizar cadastro →"}
+              {loading ? "Criando cadastro..." : "✅ Finalizar cadastro"}
+            </button>
+
+            <button onClick={() => { setSchoolMode(null); setError(null); }} style={{
+              background: "none", border: "none", color: "#5f5e5a",
+              fontSize: 13, cursor: "pointer", textAlign: "left"
+            }}>
+              ← Voltar
             </button>
           </div>
         )}
 
-        {/* Etapa 2b — Entrar com código de convite */}
+        {/* ETAPA 2b — Entrar com código */}
         {step === 2 && schoolMode === "entrar" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ cursor: "pointer", fontSize: 13, color: "#2B9EC3" }}
-                onClick={() => { setSchoolMode(null); setError(null); }}>← Voltar</span>
-              <h2 style={{ fontSize: 18, fontWeight: 500, margin: 0, color: "#4CAF82" }}>Código de convite</h2>
+            <div>
+              <h2 style={{ fontSize: 18, fontWeight: 600, margin: "0 0 4px", color: "#4CAF82" }}>
+                Código de convite
+              </h2>
+              <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
+                Solicite o código ao administrador da sua escola
+              </p>
             </div>
-            <p style={{ fontSize: 14, color: "#5f5e5a", margin: 0 }}>
-              Peça o código de convite para o administrador da sua escola. Ele tem 8 letras e números, como <strong>ESCOLA42</strong>.
-            </p>
+
             <div>
               <label style={labelStyle}>Código de convite *</label>
               <input
                 value={inviteCode}
                 onChange={e => setInviteCode(e.target.value.toUpperCase())}
-                placeholder="Ex: ESCOLA42"
+                placeholder="Ex: AB12CD"
                 maxLength={8}
-                style={{ ...inputStyle, letterSpacing: 4, fontSize: 18, textAlign: "center", fontWeight: 500 }}
+                style={{
+                  ...inputStyle,
+                  fontFamily: "monospace", fontSize: 22,
+                  letterSpacing: 4, textAlign: "center",
+                  textTransform: "uppercase"
+                }}
               />
             </div>
-            <button onClick={handleEntrarEscola} disabled={loading} style={{
+
+            <button onClick={handleFinalizar} disabled={loading} style={{
               width: "100%", padding: "12px",
               background: loading ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
               color: "#fff", border: "none", borderRadius: 8,
               fontSize: 15, fontWeight: 500, cursor: loading ? "not-allowed" : "pointer"
             }}>
-              {loading ? "Verificando..." : "Entrar na escola →"}
+              {loading ? "Verificando código..." : "✅ Entrar na escola"}
+            </button>
+
+            <button onClick={() => { setSchoolMode(null); setError(null); }} style={{
+              background: "none", border: "none", color: "#5f5e5a",
+              fontSize: 13, cursor: "pointer", textAlign: "left"
+            }}>
+              ← Voltar
             </button>
           </div>
         )}
 
-        {/* Etapa 3 — Confirmação de sucesso */}
+        {/* ETAPA 3 — Confirmação de email enviado */}
         {step === 3 && (
           <div style={{ textAlign: "center", padding: "1rem 0" }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>🎉</div>
-            <h2 style={{ fontSize: 20, fontWeight: 500, color: "#4CAF82", marginBottom: 8 }}>Cadastro realizado!</h2>
-            <p style={{ fontSize: 14, color: "#5f5e5a", marginBottom: 24 }}>
-              Sua escola e perfil foram criados com sucesso.
+            <div style={{ fontSize: 56, marginBottom: 16 }}>📧</div>
+            <h2 style={{ fontSize: 20, fontWeight: 600, color: "#2B9EC3", marginBottom: 8 }}>
+              Confirme seu e-mail
+            </h2>
+            <p style={{ fontSize: 14, color: "#5f5e5a", marginBottom: 8, lineHeight: 1.6 }}>
+              Enviamos um link de confirmação para:
             </p>
-            <button onClick={() => navigate("/")} style={{
-              width: "100%", padding: "12px",
-              background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
-              color: "#fff", border: "none", borderRadius: 8,
-              fontSize: 15, fontWeight: 500, cursor: "pointer"
-            }}>
-              Fazer login
+            <p style={{ fontSize: 15, fontWeight: 600, color: "#2c2c2a", marginBottom: 20 }}>
+              {auth.email}
+            </p>
+            <p style={{ fontSize: 13, color: "#5f5e5a", marginBottom: 24, lineHeight: 1.6 }}>
+              Clique no link que enviamos por e-mail para ativar sua conta e acessar a plataforma.
+              Verifique também a pasta de spam.
+            </p>
+            <button
+              onClick={() => navigate("/")}
+              style={{
+                width: "100%", padding: "12px",
+                background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+                color: "#fff", border: "none", borderRadius: 8,
+                fontSize: 15, fontWeight: 500, cursor: "pointer"
+              }}
+            >
+              Ir para o login
             </button>
           </div>
         )}
