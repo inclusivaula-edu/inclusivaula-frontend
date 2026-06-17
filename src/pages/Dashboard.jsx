@@ -6,13 +6,13 @@ import { getUsage } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
 const CARDS = [
-  { emoji: "🧠", label: "Gerar nova aula",    desc: "Crie uma aula adaptada com IA",       rota: "/gerar",       cor: "#2B9EC3" },
-  { emoji: "👨‍🎓", label: "Alunos",            desc: "Gerencie seus alunos",                 rota: "/alunos",      cor: "#4CAF82" },
-  { emoji: "📚", label: "Histórico",          desc: "Veja suas aulas geradas",              rota: "/historico",   cor: "#4CAF82" },
-  { emoji: "✏️", label: "Avaliações",         desc: "Avaliações por bimestre/semestre",     rota: "/avaliacoes",  cor: "#534AB7" },
-  { emoji: "📅", label: "Frequência",         desc: "Registre presenças e faltas",          rota: "/frequencia",  cor: "#2B9EC3" },
-  { emoji: "📄", label: "Relatórios",         desc: "Relatórios obrigatórios com IA",       rota: "/relatorios",  cor: "#BA7517" },
-  { emoji: "🏫", label: "Minha escola",       desc: "Código de convite e professores",      rota: "/escola",      cor: "#2B9EC3" },
+  { emoji: "🧠", label: "Gerar nova aula", desc: "Crie uma aula adaptada com IA", rota: "/gerar", cor: "#2B9EC3" },
+  { emoji: "👨‍🎓", label: "Alunos", desc: "Gerencie seus alunos", rota: "/alunos", cor: "#4CAF82" },
+  { emoji: "📚", label: "Histórico", desc: "Veja suas aulas geradas", rota: "/historico", cor: "#4CAF82" },
+  { emoji: "✏️", label: "Avaliações", desc: "Avaliações por bimestre/semestre", rota: "/avaliacoes", cor: "#534AB7" },
+  { emoji: "📅", label: "Frequência", desc: "Registre presenças e faltas", rota: "/frequencia", cor: "#2B9EC3" },
+  { emoji: "📄", label: "Relatórios", desc: "Relatórios obrigatórios com IA", rota: "/relatorios", cor: "#BA7517" },
+  { emoji: "🏫", label: "Minha escola", desc: "Código de convite e professores", rota: "/escola", cor: "#2B9EC3" },
 ];
 
 const PLANO_LABELS = {
@@ -29,7 +29,7 @@ export default function Dashboard() {
   const [uso, setUso] = useState(null);
 
   useEffect(() => {
-    getUsage().then(res => setUso(res.data)).catch(() => {});
+    getUsage().then(res => setUso(res.data)).catch(() => { });
   }, []);
 
   function handleCard(rota) {
@@ -125,12 +125,18 @@ export default function Dashboard() {
 
             {/* Botão upgrade — só aparece no plano free */}
             {uso.plano === "free" && (
-              <button style={{
-                fontSize: 12, padding: "6px 16px",
-                background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
-                color: "#fff", border: "none", borderRadius: 6, cursor: "pointer",
-                fontWeight: 500
-              }}>
+              <button
+                onClick={() => window.open(
+                  "https://wa.me/55SEU_NUMERO?text=Olá! Quero fazer upgrade do meu plano na InclusivAula.",
+                  "_blank"
+                )}
+                style={{
+                  fontSize: 12, padding: "6px 16px",
+                  background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+                  color: "#fff", border: "none", borderRadius: 6, cursor: "pointer",
+                  fontWeight: 500
+                }}
+              >
                 ⚡ Fazer upgrade
               </button>
             )}
