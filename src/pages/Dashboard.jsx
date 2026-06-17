@@ -6,7 +6,7 @@ import { getUsage } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
 const CARDS = [
-  { emoji: "🧠", label: "Gerar nova aula", desc: "Crie uma aula adaptada com IA", rota: "/gerar", cor: "#2B9EC3" },
+  { emoji: "🧠", label: "Gerar Plano de aula", desc: "Crie uma aula adaptada com IA", rota: "/gerar", cor: "#2B9EC3" },
   { emoji: "👨‍🎓", label: "Alunos", desc: "Gerencie seus alunos", rota: "/alunos", cor: "#4CAF82" },
   { emoji: "📚", label: "Histórico", desc: "Veja suas aulas geradas", rota: "/historico", cor: "#4CAF82" },
   { emoji: "✏️", label: "Avaliações", desc: "Avaliações por bimestre/semestre", rota: "/avaliacoes", cor: "#534AB7" },
@@ -17,7 +17,7 @@ const CARDS = [
 ];
 
 const PLANO_LABELS = {
-  free: { label: "Gratuito", cor: "#5f5e5a", bg: "#f1efe8" },
+  free: { label: "Gratuito", cor: "#ad3e3e", bg: "#f1efe8" },
   professor: { label: "Professor", cor: "#2B9EC3", bg: "#e8f7fd" },
   escola: { label: "Escola", cor: "#4CAF82", bg: "#edfff6" },
   rede: { label: "Rede", cor: "#534AB7", bg: "#EEEDFE" }
