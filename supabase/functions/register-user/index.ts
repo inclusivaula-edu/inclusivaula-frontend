@@ -7,6 +7,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
 };
 
+function validarCNPJ(cnpj: string): boolean {
+  const n = cnpj.replace(/\D/g, "");
+  if (n.length !== 14 || /^(\d)\1+$/.test(n)) return false;
+  const calc = (len: number): boolean => {
+    let sum = 0, pos = len - 7;
+    for (let i = len; i >= 1; i--) {
+      sum += parseInt(n.charAt(len - i)) * pos--;
+      if (pos < 2) pos = 9;
+    }
+    const r = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+    return r === parseInt(n.charAt(len));
+  };
+  return calc(12) && calc(13);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -42,6 +57,7 @@ Deno.serve(async (req) => {
 
     if (schoolMode === "criar") {
       if (!school?.name || !school?.city) throw new Error("Nome e cidade da escola são obrigatórios.");
+      if (school.cnpj && !validarCNPJ(school.cnpj)) throw new Error("CNPJ inválido.");
       const bytes = new Uint8Array(8);
       crypto.getRandomValues(bytes);
       const inviteCodeGerado = Array.from(bytes).map(b => b.toString(36)).join("").toUpperCase().substring(0, 10);

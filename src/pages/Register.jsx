@@ -21,13 +21,34 @@ export default function Register() {
   function handleAuth(e) { setAuth(prev => ({ ...prev, [e.target.name]: e.target.value })); }
   function handleSchool(e) { setSchool(prev => ({ ...prev, [e.target.name]: e.target.value })); }
 
+  function validarCNPJ(cnpj) {
+    const n = cnpj.replace(/\D/g, "");
+    if (n.length !== 14 || /^(\d)\1+$/.test(n)) return false;
+    const calc = (len) => {
+      let sum = 0, pos = len - 7;
+      for (let i = len; i >= 1; i--) {
+        sum += parseInt(n.charAt(len - i)) * pos--;
+        if (pos < 2) pos = 9;
+      }
+      const r = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+      return r === parseInt(n.charAt(len));
+    };
+    return calc(12) && calc(13);
+  }
+
   function validateStep1() {
     if (!auth.full_name.trim()) return "Informe seu nome completo.";
     if (!auth.email.trim()) return "Informe seu e-mail.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(auth.email)) return "E-mail inválido.";
     if (!auth.password) return "Informe uma senha.";
-    if (auth.password.length < 6) return "A senha deve ter pelo menos 6 caracteres.";
+    if (auth.password.length < 8) return "A senha deve ter pelo menos 8 caracteres.";
     if (auth.password !== auth.confirmPassword) return "As senhas não coincidem.";
+    return null;
+  }
+
+  function validateSchool() {
+    if (!school.name.trim() || !school.city.trim()) return "Preencha nome e cidade da escola.";
+    if (school.cnpj && !validarCNPJ(school.cnpj)) return "CNPJ inválido. Verifique os dígitos.";
     return null;
   }
 
@@ -39,9 +60,9 @@ export default function Register() {
   }
 
   async function handleFinalizar() {
-    if (schoolMode === "criar" && (!school.name.trim() || !school.city.trim())) {
-      setError("Preencha nome e cidade da escola.");
-      return;
+    if (schoolMode === "criar") {
+      const errSchool = validateSchool();
+      if (errSchool) { setError(errSchool); return; }
     }
     if (schoolMode === "entrar" && !inviteCode.trim()) {
       setError("Digite o código de convite.");
