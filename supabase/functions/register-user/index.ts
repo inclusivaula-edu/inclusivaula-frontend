@@ -1,7 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const ALLOWED_ORIGIN = Deno.env.get("SITE_URL") || "https://www.inclusivaula.com.br";
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
 };
 
@@ -40,7 +42,9 @@ Deno.serve(async (req) => {
 
     if (schoolMode === "criar") {
       if (!school?.name || !school?.city) throw new Error("Nome e cidade da escola são obrigatórios.");
-      const inviteCodeGerado = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const bytes = new Uint8Array(8);
+      crypto.getRandomValues(bytes);
+      const inviteCodeGerado = Array.from(bytes).map(b => b.toString(36)).join("").toUpperCase().substring(0, 10);
       const { data: newSchool, error: schoolError } = await supabaseAdmin
         .from("schools")
         .insert([{
@@ -141,7 +145,14 @@ Deno.serve(async (req) => {
     const emailData = await emailRes.json();
     if (!emailRes.ok) {
       console.error("Erro Resend:", JSON.stringify(emailData));
-      throw new Error("Erro ao enviar email de confirmação.");
+      // Usuário já foi criado — não falhar o cadastro por falha de email
+      return new Response(JSON.stringify({
+        success: true,
+        message: "Cadastro realizado! O email de confirmação pode demorar alguns minutos."
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
     console.log("✅ Email enviado via Resend:", emailData.id);
