@@ -1,0 +1,396 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { generateAEE, getAEEStatus, listAEEs } from "../services/mapiClient";
+import { supabase } from "../services/supabaseClient";
+import icone from "../assets/icone.png";
+
+const PERIODOS = [
+  "1º Bimestre", "2º Bimestre", "3º Bimestre", "4º Bimestre",
+  "1º Semestre", "2º Semestre", "Anual"
+];
+
+export default function AEE() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const [alunos, setAlunos] = useState([]);
+  const [loadingAlunos, setLoadingAlunos] = useState(false);
+  const [alunoId, setAlunoId] = useState("");
+  const [periodo, setPeriodo] = useState("1º Semestre");
+  const [escola, setEscola] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState(null);
+
+  const [tab, setTab] = useState("gerar");
+  const [historico, setHistorico] = useState([]);
+  const [loadingHist, setLoadingHist] = useState(false);
+
+  const [jobId, setJobId] = useState(null);
+  const [status, setStatus] = useState(null);
+  const [resultado, setResultado] = useState(null);
+
+  useEffect(() => {
+    async function carregarAlunos() {
+      setLoadingAlunos(true);
+      const { data: profile } = await supabase
+        .from("profiles").select("school_id").eq("id", user.id).single();
+      if (profile?.school_id) {
+        const { data } = await supabase
+          .from("students")
+          .select("id, full_name, grade, disability_type, notes, turma")
+          .eq("school_id", profile.school_id)
+          .order("full_name");
+        setAlunos(data || []);
+      }
+      setLoadingAlunos(false);
+    }
+    if (user) carregarAlunos();
+  }, [user]);
+
+  useEffect(() => {
+    if (!jobId || status === "completed" || status === "error") return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await getAEEStatus(jobId);
+        if (res.status === "completed") {
+          setStatus("completed");
+          setResultado(res.data);
+          clearInterval(interval);
+        } else if (res.status === "error") {
+          setStatus("error");
+          setLocalError("Erro ao gerar Plano AEE. Tente novamente.");
+          clearInterval(interval);
+        }
+      } catch { /* retry */ }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [jobId, status]);
+
+  async function loadHistorico() {
+    setLoadingHist(true);
+    try {
+      const res = await listAEEs();
+      setHistorico(res.data || []);
+    } catch { }
+    setLoadingHist(false);
+  }
+
+  function handleTabChange(t) {
+    setTab(t);
+    if (t === "historico") loadHistorico();
+  }
+
+  async function handleSubmit() {
+    if (!alunoId) { setLocalError("Selecione um aluno."); return; }
+    setLocalError(null);
+    setLoading(true);
+    setResultado(null);
+    setStatus(null);
+    try {
+      const res = await generateAEE(alunoId, periodo, escola);
+      setJobId(res.jobId);
+      setStatus("processing");
+    } catch (err) {
+      setLocalError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleVerHistorico(id) {
+    try {
+      const res = await getAEEStatus(id);
+      if (res.status === "completed") {
+        setResultado(res.data);
+        setStatus("completed");
+        setTab("gerar");
+      }
+    } catch { }
+  }
+
+  const alunoSelecionado = alunos.find(a => a.id === alunoId);
+  const labelStyle = { fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 };
+  const inputFull = { width: "100%", boxSizing: "border-box" };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
+      <header style={{
+        background: "#fff", borderBottom: "0.5px solid #d3d1c7",
+        padding: "1rem 2rem", display: "flex", alignItems: "center", gap: 16
+      }}>
+        <button onClick={() => navigate("/dashboard")} style={{ fontSize: 13 }}>← Voltar</button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img src={icone} alt="InclusivAula" style={{ height: 32 }} />
+          <span style={{ fontSize: 16, fontWeight: 600, color: "#2B9EC3" }}>
+            Inclusiv<span style={{ color: "#4CAF82" }}>Aula</span>
+          </span>
+        </div>
+      </header>
+
+      <main style={{ maxWidth: 720, margin: "0 auto", padding: "2rem 1rem" }}>
+        <h2 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>🏫 AEE — Atendimento Educacional Especializado</h2>
+        <p style={{ fontSize: 13, color: "#5f5e5a", marginBottom: 20 }}>
+          Obrigatório pelo Decreto 7.611/2011 — plano de atendimento complementar para cada aluno
+        </p>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+          {["gerar", "historico"].map(t => (
+            <button key={t} onClick={() => handleTabChange(t)} style={{
+              padding: "8px 20px", borderRadius: 8, border: "0.5px solid #d3d1c7",
+              background: tab === t ? "#534AB7" : "#fff",
+              color: tab === t ? "#fff" : "#5f5e5a",
+              fontSize: 13, fontWeight: 500, cursor: "pointer"
+            }}>
+              {t === "gerar" ? "Gerar Plano AEE" : "Histórico"}
+            </button>
+          ))}
+        </div>
+
+        {localError && (
+          <div style={{ background: "#fcebeb", border: "0.5px solid #a32d2d", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#791f1f", marginBottom: 20 }}>
+            {localError}
+          </div>
+        )}
+
+        {tab === "gerar" && !resultado && (
+          <div style={{
+            background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 12, padding: "1.5rem",
+            display: "flex", flexDirection: "column", gap: 20,
+            boxShadow: "0 2px 8px rgba(43,158,195,0.06)"
+          }}>
+            <div>
+              <label style={labelStyle}>Aluno *</label>
+              <select value={alunoId} onChange={e => setAlunoId(e.target.value)}
+                disabled={loadingAlunos} style={inputFull}>
+                <option value="">{loadingAlunos ? "Carregando..." : "— Selecione um aluno —"}</option>
+                {alunos.map(a => (
+                  <option key={a.id} value={a.id}>
+                    {a.full_name}{a.turma ? ` · ${a.turma}` : ""}{a.disability_type ? ` · ${a.disability_type}` : ""}
+                  </option>
+                ))}
+              </select>
+              {alunoSelecionado && (
+                <div style={{ marginTop: 10, background: "linear-gradient(135deg, #EEEDFE, #e8f7fd)", border: "0.5px solid #534AB7", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#3b3480" }}>
+                  <strong>{alunoSelecionado.full_name}</strong>
+                  {alunoSelecionado.grade && ` · ${alunoSelecionado.grade}`}
+                  {alunoSelecionado.disability_type && ` · ${alunoSelecionado.disability_type}`}
+                  {alunoSelecionado.notes && <p style={{ margin: "6px 0 0", fontSize: 12, opacity: 0.85 }}>📝 {alunoSelecionado.notes}</p>}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Período letivo *</label>
+              <select value={periodo} onChange={e => setPeriodo(e.target.value)} style={inputFull}>
+                {PERIODOS.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Nome da escola (opcional)</label>
+              <input value={escola} onChange={e => setEscola(e.target.value)}
+                placeholder="Ex: Escola Municipal..." style={inputFull} />
+            </div>
+
+            <button onClick={handleSubmit} disabled={loading || status === "processing"} style={{
+              width: "100%", padding: "12px",
+              background: (loading || status === "processing") ? "#ccc" : "linear-gradient(135deg, #534AB7, #2B9EC3)",
+              color: "#fff", border: "none", borderRadius: 8,
+              fontSize: 15, fontWeight: 500, cursor: (loading || status === "processing") ? "not-allowed" : "pointer"
+            }}>
+              {status === "processing" ? "⏳ Gerando Plano AEE..." : loading ? "Enviando..." : "🏫 Gerar Plano AEE"}
+            </button>
+          </div>
+        )}
+
+        {status === "processing" && !resultado && (
+          <div style={{
+            background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 12,
+            padding: "2rem", textAlign: "center", marginTop: 20,
+            boxShadow: "0 2px 8px rgba(43,158,195,0.06)"
+          }}>
+            <div style={{ fontSize: 40, marginBottom: 12 }}>⏳</div>
+            <p style={{ fontSize: 15, fontWeight: 500, color: "#534AB7" }}>Gerando Plano AEE com inteligência artificial...</p>
+            <p style={{ fontSize: 13, color: "#5f5e5a", marginTop: 8 }}>
+              O Nexus7 está elaborando o plano de atendimento especializado.
+              Isso pode levar até 30 segundos.
+            </p>
+          </div>
+        )}
+
+        {resultado && status === "completed" && (
+          <div style={{ marginTop: 20 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 500, color: "#534AB7" }}>Plano AEE Gerado</h3>
+              <button onClick={() => { setResultado(null); setStatus(null); setJobId(null); }}
+                style={{ fontSize: 13, color: "#534AB7", background: "none", border: "none", cursor: "pointer" }}>
+                ← Gerar outro
+              </button>
+            </div>
+
+            {renderAEE(resultado)}
+          </div>
+        )}
+
+        {tab === "historico" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {loadingHist && <p style={{ fontSize: 13, color: "#5f5e5a" }}>Carregando...</p>}
+            {!loadingHist && historico.length === 0 && (
+              <p style={{ fontSize: 13, color: "#5f5e5a" }}>Nenhum Plano AEE gerado ainda.</p>
+            )}
+            {historico.map(h => (
+              <div key={h.id} style={{
+                background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 10,
+                padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center"
+              }}>
+                <div>
+                  <span style={{ fontSize: 13, fontWeight: 500 }}>{h.periodo}</span>
+                  <span style={{
+                    marginLeft: 10, fontSize: 11, padding: "2px 8px", borderRadius: 12,
+                    background: h.status === "completed" ? "#edfff6" : h.status === "error" ? "#fcebeb" : "#fff8e6",
+                    color: h.status === "completed" ? "#0F6E56" : h.status === "error" ? "#791f1f" : "#8a6d1b"
+                  }}>
+                    {h.status === "completed" ? "Concluído" : h.status === "error" ? "Erro" : "Processando"}
+                  </span>
+                  <p style={{ fontSize: 11, color: "#888", margin: "4px 0 0" }}>
+                    {new Date(h.created_at).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+                {h.status === "completed" && (
+                  <button onClick={() => handleVerHistorico(h.id)} style={{
+                    fontSize: 12, color: "#534AB7", background: "none", border: "0.5px solid #534AB7",
+                    borderRadius: 6, padding: "4px 12px", cursor: "pointer"
+                  }}>
+                    Ver
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+function renderAEE(aee) {
+  const sectionStyle = {
+    background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 10,
+    padding: "16px 20px", marginBottom: 14,
+    boxShadow: "0 1px 4px rgba(83,74,183,0.04)"
+  };
+  const titleStyle = { fontSize: 14, fontWeight: 600, color: "#534AB7", marginBottom: 10 };
+  const textStyle = { fontSize: 13, color: "#333", lineHeight: 1.6 };
+  const listStyle = { fontSize: 13, color: "#333", lineHeight: 1.8, paddingLeft: 20 };
+
+  return (
+    <div>
+      {aee.identificacao && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>Identificação</h4>
+          <div style={{ ...textStyle, display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 20px" }}>
+            <span><strong>Aluno:</strong> {aee.identificacao.nome_aluno}</span>
+            <span><strong>Série:</strong> {aee.identificacao.serie}</span>
+            <span><strong>Escola:</strong> {aee.identificacao.escola}</span>
+            <span><strong>Período:</strong> {aee.identificacao.periodo}</span>
+            <span><strong>NEE:</strong> {aee.identificacao.deficiencia_nee}</span>
+            <span><strong>Tipo:</strong> {aee.identificacao.tipo_atendimento}</span>
+          </div>
+        </div>
+      )}
+
+      {aee.avaliacao_inicial && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>Avaliação Inicial</h4>
+          <p style={textStyle}><strong>Necessidades específicas:</strong> {aee.avaliacao_inicial.necessidades_especificas}</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 10 }}>
+            <div>
+              <strong style={{ fontSize: 12, color: "#4CAF82" }}>Habilidades preservadas:</strong>
+              <ul style={listStyle}>{(aee.avaliacao_inicial.habilidades_preservadas || []).map((h, i) => <li key={i}>{h}</li>)}</ul>
+            </div>
+            <div>
+              <strong style={{ fontSize: 12, color: "#BA7517" }}>Barreiras:</strong>
+              <ul style={listStyle}>{(aee.avaliacao_inicial.barreiras_aprendizagem || []).map((b, i) => <li key={i}>{b}</li>)}</ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {aee.plano_atendimento && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>Plano de Atendimento</h4>
+          <p style={textStyle}><strong>Frequência:</strong> {aee.plano_atendimento.frequencia}</p>
+          <p style={textStyle}><strong>Local:</strong> {aee.plano_atendimento.local}</p>
+          <p style={textStyle}><strong>Agrupamento:</strong> {aee.plano_atendimento.agrupamento}</p>
+          <strong style={{ fontSize: 12 }}>Objetivos:</strong>
+          <ul style={listStyle}>{(aee.plano_atendimento.objetivos || []).map((o, i) => <li key={i}>{o}</li>)}</ul>
+          <strong style={{ fontSize: 12, marginTop: 8, display: "block" }}>Atividades:</strong>
+          {(aee.plano_atendimento.atividades || []).map((at, i) => (
+            <div key={i} style={{ margin: "8px 0", padding: "10px 14px", background: "#f9f9f7", borderRadius: 8 }}>
+              <strong style={{ fontSize: 13 }}>{at.atividade}</strong>
+              <p style={{ fontSize: 12, color: "#555", margin: "4px 0" }}>{at.descricao}</p>
+              <p style={{ fontSize: 11, color: "#888" }}>⏱ {at.duracao} · 🎯 {at.objetivo}</p>
+              {at.materiais && <p style={{ fontSize: 11, color: "#888" }}>📦 {at.materiais.join(", ")}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {aee.tecnologia_assistiva && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>Tecnologia Assistiva</h4>
+          {aee.tecnologia_assistiva.map((ta, i) => (
+            <div key={i} style={{ marginBottom: 10, padding: "8px 12px", background: "#f9f9f7", borderRadius: 8 }}>
+              <strong style={{ fontSize: 13 }}>{ta.recurso}</strong>
+              <span style={{ fontSize: 11, color: "#888", marginLeft: 8 }}>({ta.categoria})</span>
+              <p style={{ fontSize: 12, color: "#555", margin: "4px 0" }}>No AEE: {ta.uso_no_aee}</p>
+              <p style={{ fontSize: 12, color: "#555" }}>Em sala: {ta.uso_em_sala}</p>
+              <p style={{ fontSize: 11, color: "#888" }}>📦 {ta.como_obter}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {aee.articulacao_sala_regular && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>Articulação com Sala Regular</h4>
+          <p style={textStyle}><strong>Reuniões:</strong> {aee.articulacao_sala_regular.frequencia_reuniao}</p>
+          <strong style={{ fontSize: 12 }}>Orientações para o professor:</strong>
+          <ul style={listStyle}>{(aee.articulacao_sala_regular.orientacoes_professor || []).map((o, i) => <li key={i}>{o}</li>)}</ul>
+          <strong style={{ fontSize: 12 }}>Adaptações sugeridas:</strong>
+          <ul style={listStyle}>{(aee.articulacao_sala_regular.adaptacoes_sugeridas || []).map((a, i) => <li key={i}>{a}</li>)}</ul>
+        </div>
+      )}
+
+      {aee.articulacao_familia && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>Articulação com a Família</h4>
+          <strong style={{ fontSize: 12 }}>Orientações:</strong>
+          <ul style={listStyle}>{(aee.articulacao_familia.orientacoes || []).map((o, i) => <li key={i}>{o}</li>)}</ul>
+          <strong style={{ fontSize: 12 }}>Atividades em casa:</strong>
+          <ul style={listStyle}>{(aee.articulacao_familia.atividades_em_casa || []).map((a, i) => <li key={i}>{a}</li>)}</ul>
+        </div>
+      )}
+
+      {aee.avaliacao_resultados && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>Avaliação de Resultados</h4>
+          <p style={textStyle}><strong>Revisão:</strong> {aee.avaliacao_resultados.revisao}</p>
+          <strong style={{ fontSize: 12 }}>Instrumentos:</strong>
+          <ul style={listStyle}>{(aee.avaliacao_resultados.instrumentos || []).map((i, idx) => <li key={idx}>{i}</li>)}</ul>
+          <strong style={{ fontSize: 12 }}>Indicadores de progresso:</strong>
+          <ul style={listStyle}>{(aee.avaliacao_resultados.indicadores_progresso || []).map((i, idx) => <li key={idx}>{i}</li>)}</ul>
+        </div>
+      )}
+
+      {aee.base_legal && (
+        <div style={{ ...sectionStyle, background: "#f9f9f7" }}>
+          <h4 style={{ ...titleStyle, color: "#888" }}>Base Legal</h4>
+          <p style={{ fontSize: 12, color: "#666" }}>{aee.base_legal}</p>
+        </div>
+      )}
+    </div>
+  );
+}

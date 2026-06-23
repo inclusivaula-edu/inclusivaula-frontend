@@ -7,8 +7,10 @@ import { supabase } from "../services/supabaseClient";
 import icone from "../assets/icone.png";
 
 const DEFICIENCIAS = [
-  "TDAH", "Autismo", "Dislexia", "Baixa visão",
-  "Deficiência auditiva", "Deficiência intelectual", "Geral"
+  "TDAH", "Autismo", "Dislexia", "Discalculia",
+  "Altas Habilidades", "TDL", "Paralisia Cerebral",
+  "Deficiência física", "Deficiência auditiva",
+  "Deficiência intelectual", "Baixa visão", "Geral"
 ];
 
 const SERIES = [

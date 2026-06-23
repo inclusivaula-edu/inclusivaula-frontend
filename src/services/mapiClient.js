@@ -85,6 +85,51 @@ export async function getReportPDF(reportId) {
   return res.blob();
 }
 
+// ── RUBRICA ─────────────────────────────────────────────────────
+
+export async function generateRubrica(lessonId, studentId = null) {
+  return request("/api/exercises/rubrica", {
+    method: "POST",
+    body: JSON.stringify({ lessonId, studentId })
+  });
+}
+
+// ── PEI (Plano Educacional Individualizado) ─────────────────────
+
+export async function generatePEI(student_id, periodo, escola = "") {
+  return request("/api/pei/generate", {
+    method: "POST",
+    body: JSON.stringify({ student_id, periodo, escola })
+  });
+}
+
+export async function getPEIStatus(jobId) {
+  return request(`/api/pei/${jobId}/status`);
+}
+
+export async function listPEIs(student_id = null) {
+  const qs = student_id ? `?student_id=${student_id}` : "";
+  return request(`/api/pei${qs}`);
+}
+
+// ── AEE (Atendimento Educacional Especializado) ─────────────────
+
+export async function generateAEE(student_id, periodo, escola = "") {
+  return request("/api/aee/generate", {
+    method: "POST",
+    body: JSON.stringify({ student_id, periodo, escola })
+  });
+}
+
+export async function getAEEStatus(jobId) {
+  return request(`/api/aee/${jobId}/status`);
+}
+
+export async function listAEEs(student_id = null) {
+  const qs = student_id ? `?student_id=${student_id}` : "";
+  return request(`/api/aee${qs}`);
+}
+
 // ── USO E PLANO ──────────────────────────────────────────────────
 
 export async function getUsage() {

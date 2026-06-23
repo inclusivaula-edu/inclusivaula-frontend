@@ -16,6 +16,8 @@ import SavedReports from "./pages/SavedReports";
 import Attendance from "./pages/Attendance";
 import Assessments from "./pages/Assessments";
 import Classes from "./pages/Classes";
+import PEI from "./pages/PEI";
+import AEE from "./pages/AEE";
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -46,6 +48,8 @@ function AppRoutes() {
       <Route path="/frequencia" element={<PrivateRoute><Attendance /></PrivateRoute>} />
       <Route path="/avaliacoes" element={<PrivateRoute><Assessments /></PrivateRoute>} />
       <Route path="/turmas" element={<PrivateRoute><Classes /></PrivateRoute>} />
+      <Route path="/pei" element={<PrivateRoute><PEI /></PrivateRoute>} />
+      <Route path="/aee" element={<PrivateRoute><AEE /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

@@ -14,6 +14,8 @@ const CARDS = [
   { emoji: "📄", label: "Relatórios", desc: "Relatórios obrigatórios com IA", rota: "/relatorios", cor: "#BA7517" },
   { emoji: "🏫", label: "Minha escola", desc: "Código de convite e professores", rota: "/escola", cor: "#2B9EC3" },
   { emoji: "🏫", label: "Turmas", desc: "Gerencie turmas e matrículas", rota: "/turmas", cor: "#534AB7" },
+  { emoji: "📋", label: "PEI", desc: "Plano Educacional Individualizado", rota: "/pei", cor: "#2B9EC3" },
+  { emoji: "🎓", label: "AEE", desc: "Atendimento Educacional Especializado", rota: "/aee", cor: "#534AB7" },
 ];
 
 const PLANO_LABELS = {
