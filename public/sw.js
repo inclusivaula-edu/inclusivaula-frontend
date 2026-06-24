@@ -24,14 +24,21 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
-  // API calls: network only
-  if (request.url.includes("/api/")) return;
+  // Só intercepta GET — PUT/POST/PATCH/DELETE não podem ser cacheados
+  if (request.method !== "GET") return;
 
-  // Navigation and static assets: network first, fallback to cache
+  // API calls e Supabase: sempre network
+  if (
+    request.url.includes("/api/") ||
+    request.url.includes("supabase.co") ||
+    request.url.includes("supabase.in")
+  ) return;
+
+  // Navegação e assets estáticos: network first, fallback para cache
   event.respondWith(
     fetch(request)
       .then((response) => {
-        if (response.ok) {
+        if (response.ok && response.type !== "opaque") {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
