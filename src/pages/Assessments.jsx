@@ -319,52 +319,12 @@ export default function Assessments() {
             )}
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {/* Aula base */}
-              <div>
-                <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
-                  Aula(s) base *
-                  <span style={{ color: "#888", marginLeft: 6, fontWeight: 400 }}>(selecione uma ou mais aulas como base)</span>
-                </label>
-                {aulas.length === 0 ? (
-                  <div style={{ background: "#f1efe8", border: "0.5px solid #d3d1c7", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#5f5e5a" }}>
-                    Nenhuma aula gerada ainda. Gere uma aula primeiro.
-                  </div>
-                ) : (
-                  <div style={{ border: "0.5px solid #d3d1c7", borderRadius: 8, maxHeight: 180, overflowY: "auto", background: "#fff" }}>
-                    {aulas.map(a => (
-                      <label key={a.id} style={{
-                        display: "flex", alignItems: "center", gap: 10,
-                        padding: "8px 14px", cursor: "pointer", fontSize: 13,
-                        background: form.lessonIds.includes(a.id) ? "#e8f7fd" : "transparent",
-                        borderBottom: "0.5px solid #f1efe8"
-                      }}>
-                        <input type="checkbox" checked={form.lessonIds.includes(a.id)}
-                          onChange={e => {
-                            setForm(p => ({
-                              ...p,
-                              lessonIds: e.target.checked
-                                ? [...p.lessonIds, a.id]
-                                : p.lessonIds.filter(id => id !== a.id)
-                            }));
-                          }} />
-                        <span>{labelAula(a)}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-                {form.lessonIds.length > 0 && (
-                  <div style={{ marginTop: 8, background: "linear-gradient(135deg, #e8f7fd, #edfff6)", border: "0.5px solid #2B9EC3", borderRadius: 8, padding: "8px 14px", fontSize: 12, color: "#1a6e8a" }}>
-                    {form.lessonIds.length} aula(s) selecionada(s) — a IA usará todo o conteúdo como base.
-                  </div>
-                )}
-              </div>
-
               {/* Aluno */}
               <div>
                 <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
                   Aluno <span style={{ color: "#888", fontWeight: 400 }}>(opcional)</span>
                 </label>
-                <select value={form.alunoId} onChange={e => setForm(p => ({ ...p, alunoId: e.target.value }))}
+                <select value={form.alunoId} onChange={e => setForm(p => ({ ...p, alunoId: e.target.value, lessonIds: [] }))}
                   style={{ width: "100%", boxSizing: "border-box" }}>
                   <option value="">— Avaliação para turma geral —</option>
                   {alunos.map(a => (
@@ -391,6 +351,57 @@ export default function Assessments() {
                     {DISCIPLINAS.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
+              </div>
+
+              {/* Aula(s) base — filtrada pelo aluno selecionado */}
+              <div>
+                <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
+                  Aula(s) base *
+                  <span style={{ color: "#888", marginLeft: 6, fontWeight: 400 }}>
+                    {form.alunoId ? "(aulas do aluno selecionado)" : "(selecione uma ou mais aulas como base)"}
+                  </span>
+                </label>
+                {(() => {
+                  const aulasFiltradas = form.alunoId
+                    ? aulas.filter(a => {
+                        const inp = typeof a.input === "string" ? (() => { try { return JSON.parse(a.input); } catch { return {}; } })() : (a.input || {});
+                        return inp.student_id === form.alunoId;
+                      })
+                    : aulas;
+                  if (aulasFiltradas.length === 0) return (
+                    <div style={{ background: "#f1efe8", border: "0.5px solid #d3d1c7", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#5f5e5a" }}>
+                      {form.alunoId ? "Nenhuma aula encontrada para este aluno." : "Nenhuma aula gerada ainda. Gere uma aula primeiro."}
+                    </div>
+                  );
+                  return (
+                    <div style={{ border: "0.5px solid #d3d1c7", borderRadius: 8, maxHeight: 180, overflowY: "auto", background: "#fff" }}>
+                      {aulasFiltradas.map(a => (
+                        <label key={a.id} style={{
+                          display: "flex", alignItems: "center", gap: 10,
+                          padding: "8px 14px", cursor: "pointer", fontSize: 13,
+                          background: form.lessonIds.includes(a.id) ? "#e8f7fd" : "transparent",
+                          borderBottom: "0.5px solid #f1efe8"
+                        }}>
+                          <input type="checkbox" checked={form.lessonIds.includes(a.id)}
+                            onChange={e => {
+                              setForm(p => ({
+                                ...p,
+                                lessonIds: e.target.checked
+                                  ? [...p.lessonIds, a.id]
+                                  : p.lessonIds.filter(id => id !== a.id)
+                              }));
+                            }} />
+                          <span>{labelAula(a)}</span>
+                        </label>
+                      ))}
+                    </div>
+                  );
+                })()}
+                {form.lessonIds.length > 0 && (
+                  <div style={{ marginTop: 8, background: "linear-gradient(135deg, #e8f7fd, #edfff6)", border: "0.5px solid #2B9EC3", borderRadius: 8, padding: "8px 14px", fontSize: 12, color: "#1a6e8a" }}>
+                    {form.lessonIds.length} aula(s) selecionada(s) — a IA usará todo o conteúdo como base.
+                  </div>
+                )}
               </div>
 
               {/* Quantidade */}

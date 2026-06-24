@@ -134,6 +134,17 @@ export default function PEI() {
     } catch { }
   }
 
+  async function handleExcluirPEI(id) {
+    if (!window.confirm("Excluir este PEI? Esta ação não pode ser desfeita.")) return;
+    try {
+      await supabase.from("pei_documents").delete().eq("id", id);
+      setHistorico(prev => prev.filter(h => h.id !== id));
+      mostrarFeedback("PEI excluído.");
+    } catch {
+      mostrarFeedback("Erro ao excluir.", "erro");
+    }
+  }
+
   function mostrarFeedback(msg, tipo = "sucesso") {
     setFeedback({ msg, tipo });
     setTimeout(() => setFeedback(null), 3500);
@@ -372,19 +383,28 @@ export default function PEI() {
                   }}>
                     {h.status === "completed" ? "Concluído" : h.status === "error" ? "Erro" : "Processando"}
                   </span>
-                  {h.aprovado && <span style={{ marginLeft: 8, fontSize: 11, color: "#0F6E56" }}>✅ Aprovado</span>}
+                  {h.aprovado && (
+                    <span style={{
+                      marginLeft: 8, fontSize: 11, padding: "2px 10px", borderRadius: 12,
+                      background: "#edfff6", color: "#0F6E56", border: "0.5px solid #4CAF82", fontWeight: 600
+                    }}>✅ Aprovado</span>
+                  )}
                   <p style={{ fontSize: 11, color: "#888", margin: "4px 0 0" }}>
                     {new Date(h.created_at).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
-                {h.status === "completed" && (
-                  <div style={{ display: "flex", gap: 6 }}>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {h.status === "completed" && (
                     <button onClick={() => handleVerHistorico(h.id)} style={{
                       fontSize: 12, color: "#2B9EC3", background: "none", border: "0.5px solid #2B9EC3",
                       borderRadius: 6, padding: "4px 12px", cursor: "pointer"
                     }}>Ver</button>
-                  </div>
-                )}
+                  )}
+                  <button onClick={() => handleExcluirPEI(h.id)} style={{
+                    fontSize: 12, color: "#a32d2d", background: "none", border: "0.5px solid #a32d2d",
+                    borderRadius: 6, padding: "4px 10px", cursor: "pointer"
+                  }}>🗑️</button>
+                </div>
               </div>
             ))}
           </div>

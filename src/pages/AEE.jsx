@@ -173,6 +173,17 @@ export default function AEE() {
     } catch { }
   }
 
+  async function handleExcluirAEE(id) {
+    if (!window.confirm("Excluir este Plano AEE? Esta ação não pode ser desfeita.")) return;
+    try {
+      await supabase.from("aee_documents").delete().eq("id", id);
+      setHistorico(prev => prev.filter(h => h.id !== id));
+      mostrarFeedback("Plano AEE excluído.");
+    } catch {
+      mostrarFeedback("Erro ao excluir.", "erro");
+    }
+  }
+
   function handleEditar() {
     setResultadoEdit(JSON.parse(JSON.stringify(resultado)));
     setEditando(true);
@@ -378,18 +389,28 @@ export default function AEE() {
                   }}>
                     {h.status === "completed" ? "Concluído" : h.status === "error" ? "Erro" : "Processando"}
                   </span>
+                  {h.aprovado && (
+                    <span style={{
+                      marginLeft: 8, fontSize: 11, padding: "2px 10px", borderRadius: 12,
+                      background: "#edfff6", color: "#0F6E56", border: "0.5px solid #4CAF82", fontWeight: 600
+                    }}>✅ Aprovado</span>
+                  )}
                   <p style={{ fontSize: 11, color: "#888", margin: "4px 0 0" }}>
                     {new Date(h.created_at).toLocaleDateString("pt-BR")}
                   </p>
                 </div>
-                {h.status === "completed" && (
-                  <button onClick={() => handleVerHistorico(h.id)} style={{
-                    fontSize: 12, color: "#534AB7", background: "none", border: "0.5px solid #534AB7",
-                    borderRadius: 6, padding: "4px 12px", cursor: "pointer"
-                  }}>
-                    Ver
-                  </button>
-                )}
+                <div style={{ display: "flex", gap: 6 }}>
+                  {h.status === "completed" && (
+                    <button onClick={() => handleVerHistorico(h.id)} style={{
+                      fontSize: 12, color: "#534AB7", background: "none", border: "0.5px solid #534AB7",
+                      borderRadius: 6, padding: "4px 12px", cursor: "pointer"
+                    }}>Ver</button>
+                  )}
+                  <button onClick={() => handleExcluirAEE(h.id)} style={{
+                    fontSize: 12, color: "#a32d2d", background: "none", border: "0.5px solid #a32d2d",
+                    borderRadius: 6, padding: "4px 10px", cursor: "pointer"
+                  }}>🗑️</button>
+                </div>
               </div>
             ))}
           </div>
