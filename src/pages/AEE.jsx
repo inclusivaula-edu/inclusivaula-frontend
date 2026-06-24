@@ -33,6 +33,9 @@ export default function AEE() {
   const [aprovado, setAprovado] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [baixandoPDF, setBaixandoPDF] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [resultadoEdit, setResultadoEdit] = useState(null);
+  const [salvandoEdit, setSalvandoEdit] = useState(false);
 
   const CARGOS_ADMIN = ["coordenador_municipal","coordenador_estadual","secretario_municipal","secretario_estadual","diretor","coordenador"];
 
@@ -162,9 +165,31 @@ export default function AEE() {
       if (res.status === "completed") {
         setResultado(res.data);
         setStatus("completed");
+        setJobId(id);
+        setAprovado(!!res.aprovado);
+        setEditando(false);
         setTab("gerar");
       }
     } catch { }
+  }
+
+  function handleEditar() {
+    setResultadoEdit(JSON.parse(JSON.stringify(resultado)));
+    setEditando(true);
+  }
+
+  async function handleSalvarEdicao() {
+    setSalvandoEdit(true);
+    try {
+      await supabase.from("aee_documents").update({ result: resultadoEdit }).eq("id", jobId);
+      setResultado(resultadoEdit);
+      setEditando(false);
+      mostrarFeedback("Plano AEE salvo!");
+    } catch {
+      mostrarFeedback("Erro ao salvar.", "erro");
+    } finally {
+      setSalvandoEdit(false);
+    }
   }
 
   const alunoSelecionado = alunos.find(a => a.id === alunoId);
@@ -296,10 +321,28 @@ export default function AEE() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16, alignItems: "center", justifyContent: "space-between" }}>
               <h3 style={{ fontSize: 18, fontWeight: 500, color: "#534AB7", margin: 0 }}>Plano AEE Gerado</h3>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <button onClick={() => { setResultado(null); setStatus(null); setJobId(null); setAprovado(false); }}
+                <button onClick={() => { setResultado(null); setStatus(null); setJobId(null); setAprovado(false); setEditando(false); }}
                   style={{ ...btnBase, background: "#fff", color: "#5f5e5a" }}>
                   ← Gerar outro
                 </button>
+                {!editando && (
+                  <button onClick={handleEditar}
+                    style={{ ...btnBase, background: "#fff", color: "#534AB7", borderColor: "#534AB7" }}>
+                    ✏️ Editar
+                  </button>
+                )}
+                {editando && (
+                  <>
+                    <button onClick={handleSalvarEdicao} disabled={salvandoEdit}
+                      style={{ ...btnBase, background: "#534AB7", color: "#fff", border: "none" }}>
+                      {salvandoEdit ? "Salvando..." : "💾 Salvar"}
+                    </button>
+                    <button onClick={() => { setEditando(false); setResultadoEdit(null); }}
+                      style={{ ...btnBase, background: "#fff", color: "#5f5e5a" }}>
+                      Cancelar
+                    </button>
+                  </>
+                )}
                 <button onClick={handleDownloadPDF} disabled={baixandoPDF}
                   style={{ ...btnBase, background: baixandoPDF ? "#ccc" : "#fff", color: "#534AB7", borderColor: "#534AB7" }}>
                   {baixandoPDF ? "Gerando..." : "📄 PDF"}
@@ -311,7 +354,7 @@ export default function AEE() {
               </div>
             </div>
 
-            {renderAEE(resultado)}
+            {editando ? renderAEEEdit(resultado, resultadoEdit, setResultadoEdit) : renderAEE(resultado)}
           </div>
         )}
 
@@ -352,6 +395,61 @@ export default function AEE() {
           </div>
         )}
       </main>
+    </div>
+  );
+}
+
+function renderAEEEdit(original, edit, setEdit) {
+  if (!edit) return null;
+  const textareaStyle = {
+    width: "100%", boxSizing: "border-box", fontSize: 12, padding: 8,
+    border: "0.5px solid #d3d1c7", borderRadius: 6, resize: "vertical", minHeight: 72, fontFamily: "inherit"
+  };
+  const sectionStyle = { background: "#fff", border: "0.5px solid #534AB7", borderRadius: 10, padding: "14px 18px", marginBottom: 14 };
+  const titleStyle = { fontSize: 13, fontWeight: 600, color: "#534AB7", marginBottom: 8, margin: "0 0 8px 0" };
+
+  function updatePath(path, value) {
+    const keys = path.split(".");
+    setEdit(prev => {
+      const copy = JSON.parse(JSON.stringify(prev));
+      let obj = copy;
+      for (let i = 0; i < keys.length - 1; i++) obj = obj[keys[i]] || {};
+      obj[keys[keys.length - 1]] = value;
+      return copy;
+    });
+  }
+
+  return (
+    <div>
+      {edit.avaliacao_inicial?.necessidades_especificas !== undefined && (
+        <div style={sectionStyle}>
+          <p style={titleStyle}>Necessidades Específicas</p>
+          <textarea style={textareaStyle} value={edit.avaliacao_inicial.necessidades_especificas}
+            onChange={e => updatePath("avaliacao_inicial.necessidades_especificas", e.target.value)} />
+        </div>
+      )}
+      {edit.plano_atendimento?.objetivos && (
+        <div style={sectionStyle}>
+          <p style={titleStyle}>Objetivos do Atendimento</p>
+          <textarea style={textareaStyle} value={(edit.plano_atendimento.objetivos || []).join("\n")}
+            onChange={e => updatePath("plano_atendimento.objetivos", e.target.value.split("\n"))} />
+        </div>
+      )}
+      {edit.articulacao_sala_regular?.orientacoes_professor && (
+        <div style={sectionStyle}>
+          <p style={titleStyle}>Orientações ao Professor</p>
+          <textarea style={textareaStyle} value={(edit.articulacao_sala_regular.orientacoes_professor || []).join("\n")}
+            onChange={e => updatePath("articulacao_sala_regular.orientacoes_professor", e.target.value.split("\n"))} />
+        </div>
+      )}
+      {edit.articulacao_familia?.orientacoes && (
+        <div style={sectionStyle}>
+          <p style={titleStyle}>Orientações à Família</p>
+          <textarea style={textareaStyle} value={(edit.articulacao_familia.orientacoes || []).join("\n")}
+            onChange={e => updatePath("articulacao_familia.orientacoes", e.target.value.split("\n"))} />
+        </div>
+      )}
+      <p style={{ fontSize: 12, color: "#888" }}>Edite os campos acima e clique em "Salvar".</p>
     </div>
   );
 }
