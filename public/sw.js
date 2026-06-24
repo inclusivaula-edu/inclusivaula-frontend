@@ -27,6 +27,9 @@ self.addEventListener("fetch", (event) => {
   // Só intercepta GET — PUT/POST/PATCH/DELETE não podem ser cacheados
   if (request.method !== "GET") return;
 
+  // Só cacheia http/https — chrome-extension, moz-extension, etc. causam erro
+  if (!request.url.startsWith("http")) return;
+
   // API calls e Supabase: sempre network
   if (
     request.url.includes("/api/") ||
@@ -44,6 +47,6 @@ self.addEventListener("fetch", (event) => {
         }
         return response;
       })
-      .catch(() => caches.match(request))
+      .catch(() => caches.match(request).then(r => r || fetch(request)))
   );
 });
