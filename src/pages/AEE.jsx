@@ -16,6 +16,7 @@ export default function AEE() {
 
   const [alunos, setAlunos] = useState([]);
   const [loadingAlunos, setLoadingAlunos] = useState(false);
+  const [escolas, setEscolas] = useState([]);
   const [alunoId, setAlunoId] = useState("");
   const [periodo, setPeriodo] = useState("1º Semestre");
   const [escola, setEscola] = useState("");
@@ -30,22 +31,42 @@ export default function AEE() {
   const [status, setStatus] = useState(null);
   const [resultado, setResultado] = useState(null);
 
+  const CARGOS_ADMIN = ["coordenador_municipal","coordenador_estadual","secretario_municipal","secretario_estadual","diretor","coordenador"];
+
   useEffect(() => {
-    async function carregarAlunos() {
+    async function carregarDados() {
       setLoadingAlunos(true);
       const { data: profile } = await supabase
-        .from("profiles").select("school_id").eq("id", user.id).single();
-      if (profile?.school_id) {
+        .from("profiles").select("school_id, cargo").eq("id", user.id).single();
+
+      const isAdmin = CARGOS_ADMIN.includes(profile?.cargo);
+
+      let escolasData = [];
+      if (isAdmin) {
+        const { data } = await supabase.from("schools").select("id, name").order("name");
+        escolasData = data || [];
+      } else if (profile?.school_id) {
+        const { data } = await supabase.from("schools").select("id, name").eq("id", profile.school_id).single();
+        if (data) escolasData = [data];
+      }
+      setEscolas(escolasData);
+      if (escolasData.length === 1) setEscola(escolasData[0].name);
+
+      const schoolIds = isAdmin
+        ? escolasData.map(e => e.id)
+        : profile?.school_id ? [profile.school_id] : [];
+
+      if (schoolIds.length > 0) {
         const { data } = await supabase
           .from("students")
           .select("id, full_name, grade, disability_type, notes, turma")
-          .eq("school_id", profile.school_id)
+          .in("school_id", schoolIds)
           .order("full_name");
         setAlunos(data || []);
       }
       setLoadingAlunos(false);
     }
-    if (user) carregarAlunos();
+    if (user) carregarDados();
   }, [user]);
 
   useEffect(() => {
@@ -83,6 +104,7 @@ export default function AEE() {
 
   async function handleSubmit() {
     if (!alunoId) { setLocalError("Selecione um aluno."); return; }
+    if (!escola) { setLocalError("Selecione a escola."); return; }
     setLocalError(null);
     setLoading(true);
     setResultado(null);
@@ -189,9 +211,13 @@ export default function AEE() {
             </div>
 
             <div>
-              <label style={labelStyle}>Nome da escola (opcional)</label>
-              <input value={escola} onChange={e => setEscola(e.target.value)}
-                placeholder="Ex: Escola Municipal..." style={inputFull} />
+              <label style={labelStyle}>Escola *</label>
+              <select value={escola} onChange={e => setEscola(e.target.value)} style={inputFull} required>
+                <option value="">— Selecione a escola —</option>
+                {escolas.map(e => (
+                  <option key={e.id} value={e.name}>{e.name}</option>
+                ))}
+              </select>
             </div>
 
             <button onClick={handleSubmit} disabled={loading || status === "processing"} style={{

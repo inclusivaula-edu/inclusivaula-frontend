@@ -26,6 +26,7 @@ export default function Students() {
   const navigate = useNavigate();
   const [students, setStudents] = useState([]);
   const [schoolId, setSchoolId] = useState(null);
+  const [turmas, setTurmas] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editandoAluno, setEditandoAluno] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -42,8 +43,12 @@ export default function Students() {
         .from("profiles").select("school_id").eq("id", user.id).single();
       if (profile?.school_id) {
         setSchoolId(profile.school_id);
-        const data = await getStudents(profile.school_id);
-        setStudents(data || []);
+        const [studentsData, turmasRes] = await Promise.all([
+          getStudents(profile.school_id),
+          supabase.from("classes").select("id, turma, grade, name").eq("school_id", profile.school_id).order("turma")
+        ]);
+        setStudents(studentsData || []);
+        setTurmas(turmasRes.data || []);
       }
       setLoading(false);
     }
@@ -211,8 +216,29 @@ export default function Students() {
                 </div>
                 <div>
                   <label style={labelStyle}>Turma</label>
-                  <input name="turma" value={form.turma} onChange={handleChange}
-                    placeholder="Ex: A, B, 7ºA..." style={inputStyle} />
+                  {turmas.length > 0 ? (
+                    <select
+                      value={turmas.some(t => t.turma === form.turma) ? form.turma : (form.turma ? "__outra__" : "")}
+                      onChange={e => {
+                        if (e.target.value === "__outra__") setForm(prev => ({ ...prev, turma: "" }));
+                        else setForm(prev => ({ ...prev, turma: e.target.value }));
+                      }}
+                      style={inputStyle}
+                    >
+                      <option value="">— Selecione —</option>
+                      {turmas.map(t => (
+                        <option key={t.id} value={t.turma}>
+                          {t.turma}{t.grade ? ` · ${t.grade}` : ""}
+                        </option>
+                      ))}
+                      <option value="__outra__">Outra (digitar)</option>
+                    </select>
+                  ) : null}
+                  {(turmas.length === 0 || !turmas.some(t => t.turma === form.turma)) && (
+                    <input name="turma" value={form.turma} onChange={handleChange}
+                      placeholder="Ex: A, B, 7ºA..."
+                      style={{ ...inputStyle, marginTop: turmas.length > 0 ? 6 : 0 }} />
+                  )}
                 </div>
               </div>
 

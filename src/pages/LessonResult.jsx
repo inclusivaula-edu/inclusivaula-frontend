@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLesson } from "../contexts/LessonContext";
-import { getLessonStatus, getLessonPDF } from "../services/mapiClient";
+import { getLessonStatus, getLessonPDF, indexApprovedLesson } from "../services/mapiClient";
 import { supabase } from "../services/supabaseClient";
 import icone from "../assets/icone.png";
 
@@ -42,6 +42,8 @@ export default function LessonResult() {
       await supabase.from("lessons").update({ aprovado: true }).eq("id", jobId);
       setAprovado(true);
       mostrarFeedback("✅ Aula aprovada com sucesso!");
+      // Indexa no RAG e memória em background (não bloqueia UI)
+      indexApprovedLesson(jobId).catch(() => {});
     } catch {
       mostrarFeedback("Erro ao aprovar a aula.", "erro");
     }

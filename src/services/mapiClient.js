@@ -135,3 +135,7 @@ export async function listAEEs(student_id = null) {
 export async function getUsage() {
   return request("/api/usage");
 }
+
+export async function indexApprovedLesson(lessonId) {
+  return request(`/api/lessons/${lessonId}/index-approved`, { method: "POST" });
+}
