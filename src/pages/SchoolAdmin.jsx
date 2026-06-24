@@ -17,6 +17,7 @@ export default function SchoolAdmin() {
   const [formEscola, setFormEscola] = useState({});
   const [salvando, setSalvando] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -38,7 +39,9 @@ export default function SchoolAdmin() {
         state: schoolData?.state || "AP",
         cnpj: schoolData?.cnpj || "",
         phone: schoolData?.phone || "",
-        address: schoolData?.address || ""
+        address: schoolData?.address || "",
+        inep_code: schoolData?.inep_code || "",
+        logo_url: schoolData?.logo_url || ""
       });
       setTeachers(teachersData || []);
       setLoading(false);
@@ -67,7 +70,9 @@ export default function SchoolAdmin() {
           state: formEscola.state,
           cnpj: formEscola.cnpj || null,
           phone: formEscola.phone || null,
-          address: formEscola.address || null
+          address: formEscola.address || null,
+          inep_code: formEscola.inep_code || null,
+          logo_url: formEscola.logo_url || null
         })
         .eq("id", school.id)
         .select().single();
@@ -80,6 +85,26 @@ export default function SchoolAdmin() {
       mostrarFeedback(err.message, "erro");
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function handleLogoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { mostrarFeedback("Arquivo muito grande. Máx 2 MB.", "erro"); return; }
+    setUploadingLogo(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `logos/${school.id}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("school-assets").upload(path, file, { upsert: true });
+      if (upErr) throw new Error(upErr.message);
+      const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(path);
+      setFormEscola(p => ({ ...p, logo_url: urlData.publicUrl }));
+      mostrarFeedback("✅ Logo carregada! Salve para aplicar.");
+    } catch (err) {
+      mostrarFeedback(err.message, "erro");
+    } finally {
+      setUploadingLogo(false);
     }
   }
 
@@ -196,8 +221,32 @@ export default function SchoolAdmin() {
                   placeholder="Rua, número, bairro" style={inputStyle} />
               </div>
 
+              <div>
+                <label style={labelStyle}>Código INEP</label>
+                <input value={formEscola.inep_code} onChange={e => setFormEscola(p => ({ ...p, inep_code: e.target.value }))}
+                  placeholder="Ex: 16000001" maxLength={8} style={inputStyle} />
+                <p style={{ fontSize: 11, color: "#5f5e5a", marginTop: 4 }}>
+                  8 dígitos · Consulte em <strong>educacenso.inep.gov.br</strong>
+                </p>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Logo da escola</label>
+                {formEscola.logo_url && (
+                  <div style={{ marginBottom: 8 }}>
+                    <img src={formEscola.logo_url} alt="Logo atual" style={{ height: 56, borderRadius: 8, border: "0.5px solid #d3d1c7", objectFit: "contain", background: "#f5f9ff", padding: 4 }} />
+                  </div>
+                )}
+                <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  onChange={handleLogoUpload}
+                  style={{ fontSize: 13, cursor: "pointer" }} />
+                <p style={{ fontSize: 11, color: "#5f5e5a", marginTop: 4 }}>
+                  PNG, JPG ou SVG · Máx 2 MB{uploadingLogo ? " · Enviando..." : ""}
+                </p>
+              </div>
+
               <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
-                <button onClick={() => { setEditando(false); setFormEscola({ name: school.name, city: school.city, state: school.state, cnpj: school.cnpj || "", phone: school.phone || "", address: school.address || "" }); }}
+                <button onClick={() => { setEditando(false); setFormEscola({ name: school.name, city: school.city, state: school.state, cnpj: school.cnpj || "", phone: school.phone || "", address: school.address || "", inep_code: school.inep_code || "", logo_url: school.logo_url || "" }); }}
                   style={{ flex: 1, padding: "10px", fontSize: 13 }}>
                   Cancelar
                 </button>
@@ -220,15 +269,19 @@ export default function SchoolAdmin() {
             boxShadow: "0 2px 8px rgba(43,158,195,0.06)"
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-              <div>
+              <div style={{ flex: 1 }}>
                 <h3 style={{ fontSize: 18, fontWeight: 600, color: "#2B9EC3", marginBottom: 4 }}>{school.name}</h3>
                 <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
                   {school.city}{school.state ? `, ${school.state}` : ""}
                   {school.cnpj ? ` · CNPJ: ${school.cnpj}` : ""}
                 </p>
+                {school.inep_code && <p style={{ fontSize: 13, color: "#5f5e5a", margin: "4px 0 0" }}>🏫 INEP: {school.inep_code}</p>}
                 {school.phone && <p style={{ fontSize: 13, color: "#5f5e5a", margin: "4px 0 0" }}>📞 {school.phone}</p>}
                 {school.address && <p style={{ fontSize: 13, color: "#5f5e5a", margin: "4px 0 0" }}>📍 {school.address}</p>}
               </div>
+              {school.logo_url && (
+                <img src={school.logo_url} alt="Logo da escola" style={{ height: 60, maxWidth: 100, objectFit: "contain", borderRadius: 8, border: "0.5px solid #d3d1c7", padding: 4, background: "#fff" }} />
+              )}
             </div>
 
             {/* Código de convite */}

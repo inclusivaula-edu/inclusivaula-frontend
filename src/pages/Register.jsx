@@ -14,7 +14,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [auth, setAuth] = useState({ email: "", password: "", confirmPassword: "", full_name: "", phone: "" });
+  const [auth, setAuth] = useState({ email: "", password: "", confirmPassword: "", full_name: "", phone: "", cargo: "professor" });
   const [school, setSchool] = useState({ name: "", city: "", state: "AP", cnpj: "", phone: "", address: "" });
   const [inviteCode, setInviteCode] = useState("");
 
@@ -81,6 +81,7 @@ export default function Register() {
           password: auth.password,
           full_name: auth.full_name,
           phone: auth.phone,
+          cargo: auth.cargo,
           schoolMode,
           school: schoolMode === "criar" ? school : null,
           inviteCode: schoolMode === "entrar" ? inviteCode : null
@@ -169,6 +170,22 @@ export default function Register() {
               <label style={labelStyle}>Telefone</label>
               <input name="phone" value={auth.phone} onChange={handleAuth}
                 placeholder="(96) 99999-9999" style={inputStyle} autoComplete="tel" />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Cargo / função *</label>
+              <select name="cargo" value={auth.cargo} onChange={handleAuth} style={inputStyle}>
+                <option value="professor">Professor(a)</option>
+                <option value="coordenador">Coordenador(a) pedagógico(a)</option>
+                <option value="diretor">Diretor(a)</option>
+                <option value="coordenador_municipal">Coordenador(a) municipal</option>
+                <option value="coordenador_estadual">Coordenador(a) estadual</option>
+                <option value="secretario_municipal">Secretário(a) municipal de educação</option>
+                <option value="secretario_estadual">Secretário(a) estadual de educação</option>
+                <option value="aee">Profissional de AEE</option>
+                <option value="psicologo">Psicólogo(a) escolar</option>
+                <option value="outro">Outro</option>
+              </select>
             </div>
 
             <div>

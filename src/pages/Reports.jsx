@@ -28,6 +28,7 @@ export default function Reports() {
   const navigate = useNavigate();
 
   const [alunos, setAlunos] = useState([]);
+  const [alunosSelecionados, setAlunosSelecionados] = useState([]);
   const [alunoSelecionado, setAlunoSelecionado] = useState(null);
   const [tipoSelecionado, setTipoSelecionado] = useState(null);
   const [periodo, setPeriodo] = useState("1º Semestre 2026");
@@ -72,15 +73,15 @@ export default function Reports() {
   }
 
   async function handleGerar() {
-    if (!alunoSelecionado) { setError("Selecione um aluno."); return; }
+    if (alunosSelecionados.length === 0) { setError("Selecione pelo menos um aluno."); return; }
     if (!tipoSelecionado) { setError("Selecione o tipo de relatório."); return; }
     setError(null);
     setLoading(true);
     try {
-      const res = await generateReport(alunoSelecionado.id, tipoSelecionado, periodo);
-      setRelatorioGerado(res.data);
-      mostrarFeedback("✅ Relatório gerado e salvo com sucesso!");
-      // Recarrega os salvos
+      for (const alunoId of alunosSelecionados) {
+        await generateReport(alunoId, tipoSelecionado, periodo);
+      }
+      mostrarFeedback(`✅ ${alunosSelecionados.length} relatório(s) gerado(s) e salvo(s)!`);
       const { data: profile } = await supabase.from("profiles").select("school_id").eq("id", user.id).single();
       if (profile?.school_id) await carregarRelatorios(profile.school_id);
     } catch (err) {
@@ -193,13 +194,47 @@ export default function Reports() {
 
           {error && <div style={{ background: "#fcebeb", border: "0.5px solid #a32d2d", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#791f1f", marginBottom: 16 }}>{error}</div>}
 
-          {/* Aluno */}
+          {/* Aluno(s) */}
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>Aluno *</label>
-            <select value={alunoSelecionado?.id || ""} onChange={e => { const a = alunos.find(a => a.id === e.target.value); setAlunoSelecionado(a || null); }} style={{ width: "100%", boxSizing: "border-box" }}>
-              <option value="">— Selecione um aluno —</option>
-              {alunos.map(a => <option key={a.id} value={a.id}>{a.full_name}{a.turma ? ` · Turma ${a.turma}` : ""}{a.grade ? ` · ${a.grade}` : ""}{a.disability_type ? ` · ${a.disability_type}` : ""}</option>)}
-            </select>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+              <label style={{ fontSize: 13, color: "#5f5e5a" }}>Aluno(s) * <span style={{ color: "#888", fontWeight: 400 }}>— selecione um ou mais</span></label>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button type="button" onClick={() => setAlunosSelecionados(alunos.map(a => a.id))} style={{ fontSize: 11, padding: "3px 10px", background: "#e8f7fd", color: "#1a6e8a", border: "0.5px solid #2B9EC3", borderRadius: 6, cursor: "pointer" }}>
+                  Todos
+                </button>
+                <button type="button" onClick={() => setAlunosSelecionados([])} style={{ fontSize: 11, padding: "3px 10px", background: "#fff", color: "#5f5e5a", border: "0.5px solid #d3d1c7", borderRadius: 6, cursor: "pointer" }}>
+                  Limpar
+                </button>
+              </div>
+            </div>
+            <div style={{ border: "0.5px solid #d3d1c7", borderRadius: 8, maxHeight: 200, overflowY: "auto", background: "#fff" }}>
+              {alunos.length === 0 ? (
+                <p style={{ fontSize: 13, color: "#5f5e5a", padding: "10px 14px", margin: 0 }}>Nenhum aluno cadastrado.</p>
+              ) : alunos.map(a => (
+                <label key={a.id} style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  padding: "8px 14px", cursor: "pointer",
+                  background: alunosSelecionados.includes(a.id) ? "#e8f7fd" : "transparent",
+                  borderBottom: "0.5px solid #f1efe8"
+                }}>
+                  <input type="checkbox" checked={alunosSelecionados.includes(a.id)}
+                    onChange={e => setAlunosSelecionados(prev =>
+                      e.target.checked ? [...prev, a.id] : prev.filter(id => id !== a.id)
+                    )} />
+                  <span style={{ fontSize: 13 }}>
+                    {a.full_name}
+                    {a.turma ? <span style={{ color: "#5f5e5a" }}> · Turma {a.turma}</span> : ""}
+                    {a.grade ? <span style={{ color: "#5f5e5a" }}> · {a.grade}</span> : ""}
+                    {a.disability_type ? <span style={{ color: "#2B9EC3" }}> · {a.disability_type}</span> : ""}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {alunosSelecionados.length > 0 && (
+              <p style={{ fontSize: 12, color: "#1a6e8a", marginTop: 6 }}>
+                {alunosSelecionados.length} aluno(s) selecionado(s) — será gerado um relatório para cada.
+              </p>
+            )}
           </div>
 
           {/* Tipo */}
@@ -233,7 +268,7 @@ export default function Reports() {
             background: loading ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
             color: "#fff", border: "none", borderRadius: 8, fontSize: 15, fontWeight: 500, cursor: loading ? "not-allowed" : "pointer"
           }}>
-            {loading ? "Nexus7 gerando relatório..." : "📄 Gerar relatório com IA"}
+            {loading ? `Nexus7 gerando ${alunosSelecionados.length > 1 ? alunosSelecionados.length + " relatórios" : "relatório"}...` : `📄 Gerar relatório com IA${alunosSelecionados.length > 1 ? ` (${alunosSelecionados.length} alunos)` : ""}`}
           </button>
         </div>
 

@@ -41,7 +41,7 @@ export default function Assessments() {
 
   const [form, setForm] = useState({
     alunoId: "",
-    lessonId: "",
+    lessonIds: [],
     periodo: "1º Bimestre 2026",
     disciplina: "Matemática",
     quantidade: 5
@@ -86,12 +86,12 @@ export default function Assessments() {
   }, [user]);
 
   async function handleGerar() {
-    if (!form.lessonId) { setError("Selecione uma aula como base para a avaliação."); return; }
+    if (form.lessonIds.length === 0) { setError("Selecione pelo menos uma aula como base para a avaliação."); return; }
     setError(null);
     setLoading(true);
     try {
       const aluno = alunos.find(a => a.id === form.alunoId) || null;
-      const res = await generateExercises(form.lessonId, form.alunoId || null, form.quantidade);
+      const res = await generateExercises(form.lessonIds[0], form.alunoId || null, form.quantidade);
 
       // Atualiza a tabela activities com período e disciplina
       if (res.activityId) {
@@ -268,7 +268,7 @@ export default function Assessments() {
             { id: "gerar", label: "📝 Gerar nova" },
             { id: "salvas", label: `🗂️ Avaliações salvas (${avaliacoesSalvas.length})` }
           ].map(tab => (
-            <button key={tab.id} onClick={() => { setAba(tab.id); if (tab.id === "gerar" && avaliacao) {} }} style={{
+            <button key={tab.id} onClick={() => { setAba(tab.id); if (tab.id === "gerar") { setAvaliacao(null); setEditando(false); setNotas({}); setNotasSalvas({}); } }} style={{
               padding: "8px 16px", fontSize: 13, borderRadius: 8,
               background: aba === tab.id ? "linear-gradient(135deg, #2B9EC3, #4CAF82)" : "#fff",
               color: aba === tab.id ? "#fff" : "#5f5e5a",
@@ -322,30 +322,41 @@ export default function Assessments() {
               {/* Aula base */}
               <div>
                 <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
-                  Aula base *
-                  <span style={{ color: "#888", marginLeft: 6, fontWeight: 400 }}>(a avaliação usa o conteúdo desta aula)</span>
+                  Aula(s) base *
+                  <span style={{ color: "#888", marginLeft: 6, fontWeight: 400 }}>(selecione uma ou mais aulas como base)</span>
                 </label>
                 {aulas.length === 0 ? (
                   <div style={{ background: "#f1efe8", border: "0.5px solid #d3d1c7", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#5f5e5a" }}>
                     Nenhuma aula gerada ainda. Gere uma aula primeiro.
                   </div>
                 ) : (
-                  <select value={form.lessonId} onChange={e => setForm(p => ({ ...p, lessonId: e.target.value }))}
-                    style={{ width: "100%", boxSizing: "border-box" }}>
-                    <option value="">— Selecione uma aula —</option>
-                    {aulas.map(a => <option key={a.id} value={a.id}>{labelAula(a)}</option>)}
-                  </select>
+                  <div style={{ border: "0.5px solid #d3d1c7", borderRadius: 8, maxHeight: 180, overflowY: "auto", background: "#fff" }}>
+                    {aulas.map(a => (
+                      <label key={a.id} style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "8px 14px", cursor: "pointer", fontSize: 13,
+                        background: form.lessonIds.includes(a.id) ? "#e8f7fd" : "transparent",
+                        borderBottom: "0.5px solid #f1efe8"
+                      }}>
+                        <input type="checkbox" checked={form.lessonIds.includes(a.id)}
+                          onChange={e => {
+                            setForm(p => ({
+                              ...p,
+                              lessonIds: e.target.checked
+                                ? [...p.lessonIds, a.id]
+                                : p.lessonIds.filter(id => id !== a.id)
+                            }));
+                          }} />
+                        <span>{labelAula(a)}</span>
+                      </label>
+                    ))}
+                  </div>
                 )}
-                {form.lessonId && (() => {
-                  const aulaSel = aulas.find(a => a.id === form.lessonId);
-                  if (!aulaSel) return null;
-                  return (
-                    <div style={{ marginTop: 8, background: "linear-gradient(135deg, #e8f7fd, #edfff6)", border: "0.5px solid #2B9EC3", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#1a6e8a" }}>
-                      <strong>{aulaSel.result?.titulo || aulaSel.input?.tema}</strong>
-                      {aulaSel.result?.estrategia && <p style={{ margin: "6px 0 0", fontSize: 12, opacity: 0.85 }}>{aulaSel.result.estrategia.slice(0, 120)}...</p>}
-                    </div>
-                  );
-                })()}
+                {form.lessonIds.length > 0 && (
+                  <div style={{ marginTop: 8, background: "linear-gradient(135deg, #e8f7fd, #edfff6)", border: "0.5px solid #2B9EC3", borderRadius: 8, padding: "8px 14px", fontSize: 12, color: "#1a6e8a" }}>
+                    {form.lessonIds.length} aula(s) selecionada(s) — a IA usará todo o conteúdo como base.
+                  </div>
+                )}
               </div>
 
               {/* Aluno */}
@@ -394,11 +405,11 @@ export default function Assessments() {
 
               <button onClick={handleGerar} disabled={loading || !form.lessonId} style={{
                 width: "100%", padding: "12px",
-                background: loading || !form.lessonId ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+                background: loading || form.lessonIds.length === 0 ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
                 color: "#fff", border: "none", borderRadius: 8,
-                fontSize: 15, fontWeight: 500, cursor: loading || !form.lessonId ? "not-allowed" : "pointer"
+                fontSize: 15, fontWeight: 500, cursor: loading || form.lessonIds.length === 0 ? "not-allowed" : "pointer"
               }}>
-                {loading ? "Nexus7 gerando avaliação..." : "📝 Gerar avaliação"}
+                {loading ? "Nexus7 gerando avaliação..." : `📝 Gerar avaliação${form.lessonIds.length > 1 ? ` (${form.lessonIds.length} aulas)` : ""}`}
               </button>
             </div>
           </div>

@@ -11,7 +11,7 @@ const CARDS = [
   { emoji: "📚", label: "Histórico", desc: "Veja suas aulas geradas", rota: "/historico", cor: "#4CAF82" },
   { emoji: "✏️", label: "Avaliações", desc: "Avaliações por bimestre/semestre", rota: "/avaliacoes", cor: "#534AB7" },
   { emoji: "📅", label: "Frequência", desc: "Registre presenças e faltas", rota: "/frequencia", cor: "#2B9EC3" },
-  { emoji: "📄", label: "Relatórios", desc: "Relatórios obrigatórios com IA", rota: "/relatorios", cor: "#BA7517" },
+  { emoji: "📄", label: "Relatórios", desc: "Semestral, família e AEE", rota: "/relatorios", cor: "#BA7517" },
   { emoji: "🏫", label: "Minha escola", desc: "Código de convite e professores", rota: "/escola", cor: "#2B9EC3" },
   { emoji: "🏫", label: "Turmas", desc: "Gerencie turmas e matrículas", rota: "/turmas", cor: "#534AB7" },
   { emoji: "📋", label: "PEI", desc: "Plano Educacional Individualizado", rota: "/pei", cor: "#2B9EC3" },
