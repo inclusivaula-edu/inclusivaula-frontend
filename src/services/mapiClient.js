@@ -158,6 +158,36 @@ export async function getPEIPDFBlob(id) {
   return res.blob();
 }
 
+// ── SESSÕES AEE (Frequência — FUNDEB) ───────────────────────────
+
+export async function listAEESessions(studentId) {
+  const qs = studentId ? `?student_id=${studentId}` : "";
+  return request(`/api/aee-sessions${qs}`);
+}
+
+export async function createAEESession(data) {
+  return request("/api/aee-sessions", { method: "POST", body: JSON.stringify(data) });
+}
+
+export async function updateAEESession(id, data) {
+  return request(`/api/aee-sessions/${id}`, { method: "PUT", body: JSON.stringify(data) });
+}
+
+export async function deleteAEESession(id) {
+  return request(`/api/aee-sessions/${id}`, { method: "DELETE" });
+}
+
+export async function getAEEFrequencyPDF(studentId, periodo) {
+  const { data: { session } } = await (await import("./supabaseClient.js")).supabase.auth.getSession();
+  const token = session?.access_token;
+  const qs = new URLSearchParams({ student_id: studentId, ...(periodo ? { periodo } : {}) }).toString();
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/aee-sessions/frequency-pdf?${qs}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erro ao gerar PDF de frequência");
+  return res.blob();
+}
+
 export async function getAEEPDFBlob(id) {
   const { data: { session } } = await (await import("./supabaseClient.js")).supabase.auth.getSession();
   const token = session?.access_token;

@@ -18,6 +18,7 @@ import Assessments from "./pages/Assessments";
 import Classes from "./pages/Classes";
 import PEI from "./pages/PEI";
 import AEE from "./pages/AEE";
+import AEESessions from "./pages/AEESessions";
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -50,6 +51,7 @@ function AppRoutes() {
       <Route path="/turmas" element={<PrivateRoute><Classes /></PrivateRoute>} />
       <Route path="/pei" element={<PrivateRoute><PEI /></PrivateRoute>} />
       <Route path="/aee" element={<PrivateRoute><AEE /></PrivateRoute>} />
+      <Route path="/aee-sessoes" element={<PrivateRoute><AEESessions /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

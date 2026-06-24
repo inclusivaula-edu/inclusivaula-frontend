@@ -16,6 +16,7 @@ const CARDS = [
   { emoji: "🏫", label: "Turmas", desc: "Gerencie turmas e matrículas", rota: "/turmas", cor: "#534AB7" },
   { emoji: "📋", label: "PEI", desc: "Plano Educacional Individualizado", rota: "/pei", cor: "#2B9EC3" },
   { emoji: "🎓", label: "AEE", desc: "Atendimento Educacional Especializado", rota: "/aee", cor: "#534AB7" },
+  { emoji: "📝", label: "Sessões AEE", desc: "Frequência e evolução — FUNDEB", rota: "/aee-sessoes", cor: "#0F6E56" },
 ];
 
 const PLANO_LABELS = {

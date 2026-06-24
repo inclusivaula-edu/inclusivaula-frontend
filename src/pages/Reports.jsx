@@ -6,11 +6,15 @@ import { generateReport } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
 const TIPOS_RELATORIO = [
-  { id: "semestral", label: "Relatório Semestral", descricao: "Progresso acadêmico e social do período", emoji: "📊", cor: "#2B9EC3" },
-  { id: "familia", label: "Relatório para a Família", descricao: "Linguagem acessível para pais e responsáveis", emoji: "👨‍👩‍👧", cor: "#4CAF82" },
-  { id: "aee", label: "Relatório AEE", descricao: "Técnico especializado para o atendimento educacional", emoji: "🎓", cor: "#534AB7" },
-  { id: "pei", label: "PEI", descricao: "Plano Educacional Individualizado", emoji: "📋", cor: "#BA7517" },
-  { id: "paee", label: "PAEE", descricao: "Plano de Atendimento Educacional Especializado", emoji: "📁", cor: "#0F6E56" }
+  { id: "semestral",            label: "Relatório Semestral",         descricao: "Progresso acadêmico e social do período",                   emoji: "📊", cor: "#2B9EC3" },
+  { id: "familia",              label: "Relatório para a Família",     descricao: "Linguagem acessível para pais e responsáveis",              emoji: "👨‍👩‍👧", cor: "#4CAF82" },
+  { id: "aee",                  label: "Relatório AEE",                descricao: "Técnico especializado para o atendimento educacional",      emoji: "🎓", cor: "#534AB7" },
+  { id: "pei",                  label: "PEI",                          descricao: "Plano Educacional Individualizado",                        emoji: "📋", cor: "#BA7517" },
+  { id: "paee",                 label: "PAEE",                         descricao: "Plano de Atendimento Educacional Especializado",            emoji: "📁", cor: "#0F6E56" },
+  { id: "avaliacao_pedagogica", label: "Avaliação Pedagógica",         descricao: "Elegibilidade ao AEE — Art. 9 Res. CNE/CEB 4/2009",       emoji: "🔍", cor: "#534AB7" },
+  { id: "evolucao",             label: "Relatório de Evolução AEE",    descricao: "Progresso nas sessões de AEE com base nos registros",      emoji: "📈", cor: "#2B9EC3" },
+  { id: "adequacao_curricular", label: "Adequação Curricular",         descricao: "Adaptações por componente curricular — LDB Art. 59",      emoji: "📐", cor: "#BA7517" },
+  { id: "termo_ciencia",        label: "Termo de Ciência dos Pais",    descricao: "Documento legal de ciência e concordância da família",     emoji: "✍️", cor: "#4CAF82" }
 ];
 
 const TIPO_MAP = Object.fromEntries(TIPOS_RELATORIO.map(t => [t.id, t]));
