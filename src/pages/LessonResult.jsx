@@ -24,10 +24,13 @@ export default function LessonResult() {
     intervalRef.current = setInterval(async () => {
       try {
         const res = await getLessonStatus(jobId);
-        if (res.status === "completed" || res.data) {
+        if (res.status === "completed" && res.data && !res.data.error) {
           setLesson(res.data);
           setStatus("done");
           clearInterval(intervalRef.current);
+        } else if (res.status === "error" || (res.data && res.data.error)) {
+          clearInterval(intervalRef.current);
+          setStatus("error");
         }
       } catch {
         clearInterval(intervalRef.current);
@@ -135,6 +138,31 @@ export default function LessonResult() {
   function mostrarFeedback(msg, tipo = "sucesso") {
     setFeedback({ msg, tipo });
     setTimeout(() => setFeedback(null), 3000);
+  }
+
+  if (status === "error") {
+    return (
+      <div style={{
+        minHeight: "100vh", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        background: "#f5f9ff", gap: 16, padding: "2rem"
+      }}>
+        <div style={{ fontSize: 48 }}>⚠️</div>
+        <p style={{ fontSize: 18, fontWeight: 500, color: "#a32d2d" }}>
+          Erro ao gerar a aula
+        </p>
+        <p style={{ fontSize: 13, color: "#5f5e5a", textAlign: "center", maxWidth: 360 }}>
+          O Nexus7 não conseguiu processar sua solicitação. Verifique sua conexão e tente novamente.
+        </p>
+        <button onClick={() => navigate("/gerar")} style={{
+          padding: "10px 28px", fontSize: 14,
+          background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+          color: "#fff", border: "none", borderRadius: 8, cursor: "pointer"
+        }}>
+          ← Tentar novamente
+        </button>
+      </div>
+    );
   }
 
   if (status !== "done") {
