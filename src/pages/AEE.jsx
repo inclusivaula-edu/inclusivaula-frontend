@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { generateAEE, getAEEStatus, listAEEs } from "../services/mapiClient";
+import { generateAEE, getAEEStatus, listAEEs, approveAEE, getAEEPDFBlob } from "../services/mapiClient";
 import { supabase } from "../services/supabaseClient";
 import icone from "../assets/icone.png";
 
@@ -30,6 +30,9 @@ export default function AEE() {
   const [jobId, setJobId] = useState(null);
   const [status, setStatus] = useState(null);
   const [resultado, setResultado] = useState(null);
+  const [aprovado, setAprovado] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+  const [baixandoPDF, setBaixandoPDF] = useState(false);
 
   const CARGOS_ADMIN = ["coordenador_municipal","coordenador_estadual","secretario_municipal","secretario_estadual","diretor","coordenador"];
 
@@ -102,6 +105,38 @@ export default function AEE() {
     if (t === "historico") loadHistorico();
   }
 
+  function mostrarFeedback(msg, tipo = "sucesso") {
+    setFeedback({ msg, tipo });
+    setTimeout(() => setFeedback(null), 3500);
+  }
+
+  async function handleAprovar() {
+    try {
+      await approveAEE(jobId);
+      setAprovado(true);
+      mostrarFeedback("✅ Plano AEE aprovado!");
+    } catch {
+      mostrarFeedback("Erro ao aprovar.", "erro");
+    }
+  }
+
+  async function handleDownloadPDF() {
+    setBaixandoPDF(true);
+    try {
+      const blob = await getAEEPDFBlob(jobId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `plano-aee-${jobId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      mostrarFeedback("Erro ao gerar PDF.", "erro");
+    } finally {
+      setBaixandoPDF(false);
+    }
+  }
+
   async function handleSubmit() {
     if (!alunoId) { setLocalError("Selecione um aluno."); return; }
     if (!escola) { setLocalError("Selecione a escola."); return; }
@@ -109,6 +144,7 @@ export default function AEE() {
     setLoading(true);
     setResultado(null);
     setStatus(null);
+    setAprovado(false);
     try {
       const res = await generateAEE(alunoId, periodo, escola);
       setJobId(res.jobId);
@@ -134,9 +170,18 @@ export default function AEE() {
   const alunoSelecionado = alunos.find(a => a.id === alunoId);
   const labelStyle = { fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 };
   const inputFull = { width: "100%", boxSizing: "border-box" };
+  const btnBase = { padding: "8px 16px", borderRadius: 8, border: "0.5px solid #d3d1c7", fontSize: 13, fontWeight: 500, cursor: "pointer" };
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
+      {feedback && (
+        <div style={{
+          position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)",
+          background: feedback.tipo === "erro" ? "#791f1f" : "#0F6E56",
+          color: "#fff", padding: "10px 24px", borderRadius: 8,
+          fontSize: 14, fontWeight: 500, zIndex: 999
+        }}>{feedback.msg}</div>
+      )}
       <header style={{
         background: "#fff", borderBottom: "0.5px solid #d3d1c7",
         padding: "1rem 2rem", display: "flex", alignItems: "center", gap: 16
@@ -248,12 +293,22 @@ export default function AEE() {
 
         {resultado && status === "completed" && (
           <div style={{ marginTop: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h3 style={{ fontSize: 18, fontWeight: 500, color: "#534AB7" }}>Plano AEE Gerado</h3>
-              <button onClick={() => { setResultado(null); setStatus(null); setJobId(null); }}
-                style={{ fontSize: 13, color: "#534AB7", background: "none", border: "none", cursor: "pointer" }}>
-                ← Gerar outro
-              </button>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16, alignItems: "center", justifyContent: "space-between" }}>
+              <h3 style={{ fontSize: 18, fontWeight: 500, color: "#534AB7", margin: 0 }}>Plano AEE Gerado</h3>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button onClick={() => { setResultado(null); setStatus(null); setJobId(null); setAprovado(false); }}
+                  style={{ ...btnBase, background: "#fff", color: "#5f5e5a" }}>
+                  ← Gerar outro
+                </button>
+                <button onClick={handleDownloadPDF} disabled={baixandoPDF}
+                  style={{ ...btnBase, background: baixandoPDF ? "#ccc" : "#fff", color: "#534AB7", borderColor: "#534AB7" }}>
+                  {baixandoPDF ? "Gerando..." : "📄 PDF"}
+                </button>
+                <button onClick={handleAprovar} disabled={aprovado}
+                  style={{ ...btnBase, background: aprovado ? "#edfff6" : "#fff", color: aprovado ? "#0F6E56" : "#5f5e5a", borderColor: aprovado ? "#4CAF82" : "#d3d1c7" }}>
+                  {aprovado ? "✅ Aprovado" : "👍 Aprovar"}
+                </button>
+              </div>
             </div>
 
             {renderAEE(resultado)}

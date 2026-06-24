@@ -139,3 +139,31 @@ export async function getUsage() {
 export async function indexApprovedLesson(lessonId) {
   return request(`/api/lessons/${lessonId}/index-approved`, { method: "POST" });
 }
+
+export async function approvePEI(id) {
+  return request(`/api/pei/${id}/approve`, { method: "POST" });
+}
+
+export async function approveAEE(id) {
+  return request(`/api/aee/${id}/approve`, { method: "POST" });
+}
+
+export async function getPEIPDFBlob(id) {
+  const { data: { session } } = await (await import("./supabaseClient.js")).supabase.auth.getSession();
+  const token = session?.access_token;
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/pei/${id}/pdf`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erro ao gerar PDF");
+  return res.blob();
+}
+
+export async function getAEEPDFBlob(id) {
+  const { data: { session } } = await (await import("./supabaseClient.js")).supabase.auth.getSession();
+  const token = session?.access_token;
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/aee/${id}/pdf`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erro ao gerar PDF");
+  return res.blob();
+}
