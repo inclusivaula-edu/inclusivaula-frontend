@@ -216,6 +216,14 @@ export default function Register() {
                 Entrar
               </span>
             </p>
+
+            <p style={{ fontSize: 11, textAlign: "center", color: "#9b9a96", lineHeight: 1.6, margin: 0 }}>
+              Ao criar sua conta, você concorda com os{" "}
+              <a href="/termos" style={{ color: "#5f5e5a" }}>Termos de Uso</a>
+              {" "}e com a{" "}
+              <a href="/privacidade" style={{ color: "#5f5e5a" }}>Política de Privacidade</a>{" "}
+              da InclusivAula (LGPD).
+            </p>
           </div>
         )}
 

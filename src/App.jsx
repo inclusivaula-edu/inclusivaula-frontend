@@ -19,6 +19,11 @@ import Classes from "./pages/Classes";
 import PEI from "./pages/PEI";
 import AEE from "./pages/AEE";
 import AEESessions from "./pages/AEESessions";
+import RecoverPassword from "./pages/RecoverPassword";
+import ResetPassword from "./pages/ResetPassword";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfUse from "./pages/TermsOfUse";
+import CookieBanner from "./components/CookieBanner";
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -34,26 +39,39 @@ function PublicRoute({ children }) {
 
 function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
-      <Route path="/cadastro" element={<Register />} />
-      <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-      <Route path="/gerar" element={<PrivateRoute><GenerateLesson /></PrivateRoute>} />
-      <Route path="/resultado" element={<PrivateRoute><LessonResult /></PrivateRoute>} />
-      <Route path="/historico" element={<PrivateRoute><History /></PrivateRoute>} />
-      <Route path="/alunos" element={<PrivateRoute><Students /></PrivateRoute>} />
-      <Route path="/escola" element={<PrivateRoute><SchoolAdmin /></PrivateRoute>} />
-      <Route path="/exercicios" element={<PrivateRoute><Exercises /></PrivateRoute>} />
-      <Route path="/relatorios" element={<PrivateRoute><Reports /></PrivateRoute>} />
-      <Route path="/relatorios/salvos" element={<PrivateRoute><SavedReports /></PrivateRoute>} />
-      <Route path="/frequencia" element={<PrivateRoute><Attendance /></PrivateRoute>} />
-      <Route path="/avaliacoes" element={<PrivateRoute><Assessments /></PrivateRoute>} />
-      <Route path="/turmas" element={<PrivateRoute><Classes /></PrivateRoute>} />
-      <Route path="/pei" element={<PrivateRoute><PEI /></PrivateRoute>} />
-      <Route path="/aee" element={<PrivateRoute><AEE /></PrivateRoute>} />
-      <Route path="/aee-sessoes" element={<PrivateRoute><AEESessions /></PrivateRoute>} />
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
+    <>
+      <Routes>
+        {/* Públicas — autenticação */}
+        <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/cadastro" element={<Register />} />
+        <Route path="/recuperar-senha" element={<RecoverPassword />} />
+        <Route path="/redefinir-senha" element={<ResetPassword />} />
+
+        {/* Públicas — legais (acessíveis sem login) */}
+        <Route path="/privacidade" element={<PrivacyPolicy />} />
+        <Route path="/termos" element={<TermsOfUse />} />
+
+        {/* Privadas */}
+        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/gerar" element={<PrivateRoute><GenerateLesson /></PrivateRoute>} />
+        <Route path="/resultado" element={<PrivateRoute><LessonResult /></PrivateRoute>} />
+        <Route path="/historico" element={<PrivateRoute><History /></PrivateRoute>} />
+        <Route path="/alunos" element={<PrivateRoute><Students /></PrivateRoute>} />
+        <Route path="/escola" element={<PrivateRoute><SchoolAdmin /></PrivateRoute>} />
+        <Route path="/exercicios" element={<PrivateRoute><Exercises /></PrivateRoute>} />
+        <Route path="/relatorios" element={<PrivateRoute><Reports /></PrivateRoute>} />
+        <Route path="/relatorios/salvos" element={<PrivateRoute><SavedReports /></PrivateRoute>} />
+        <Route path="/frequencia" element={<PrivateRoute><Attendance /></PrivateRoute>} />
+        <Route path="/avaliacoes" element={<PrivateRoute><Assessments /></PrivateRoute>} />
+        <Route path="/turmas" element={<PrivateRoute><Classes /></PrivateRoute>} />
+        <Route path="/pei" element={<PrivateRoute><PEI /></PrivateRoute>} />
+        <Route path="/aee" element={<PrivateRoute><AEE /></PrivateRoute>} />
+        <Route path="/aee-sessoes" element={<PrivateRoute><AEESessions /></PrivateRoute>} />
+
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+      <CookieBanner />
+    </>
   );
 }
 

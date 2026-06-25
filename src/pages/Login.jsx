@@ -108,11 +108,27 @@ export default function Login() {
           {loading ? "Entrando..." : "Entrar"}
         </button>
 
-        <p style={{ fontSize: 13, textAlign: "center", color: "#5f5e5a", marginTop: 16 }}>
+        <p style={{ fontSize: 13, textAlign: "center", color: "#5f5e5a", marginTop: 12 }}>
+          <span
+            style={{ color: "#2B9EC3", cursor: "pointer" }}
+            onClick={() => navigate("/recuperar-senha")}
+          >
+            Esqueci minha senha
+          </span>
+        </p>
+
+        <p style={{ fontSize: 13, textAlign: "center", color: "#5f5e5a", marginTop: 8 }}>
           Primeira vez aqui?{" "}
           <span style={{ color: "#2B9EC3", cursor: "pointer" }} onClick={() => navigate("/cadastro")}>
             Criar conta
           </span>
+        </p>
+
+        <p style={{ fontSize: 11, textAlign: "center", color: "#9b9a96", marginTop: 20, lineHeight: 1.6 }}>
+          Ao entrar, você concorda com nossos{" "}
+          <a href="/termos" style={{ color: "#5f5e5a" }}>Termos de Uso</a>
+          {" "}e{" "}
+          <a href="/privacidade" style={{ color: "#5f5e5a" }}>Política de Privacidade</a>.
         </p>
 
       </div>
