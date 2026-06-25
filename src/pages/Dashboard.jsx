@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useLesson } from "../contexts/LessonContext";
-import { getUsage } from "../services/mapiClient";
+import { getUsage, subscribePlan } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
 const CARDS = [
@@ -31,10 +31,30 @@ export default function Dashboard() {
   const { reset } = useLesson();
   const navigate = useNavigate();
   const [uso, setUso] = useState(null);
+  const [upgradeModal, setUpgradeModal] = useState(false);
+  const [upgradeLoading, setUpgradeLoading] = useState(null);
+  const [upgradeError, setUpgradeError] = useState(null);
 
   useEffect(() => {
     getUsage().then(res => setUso(res.data)).catch(() => { });
   }, []);
+
+  async function handleUpgrade(plan) {
+    setUpgradeLoading(plan);
+    setUpgradeError(null);
+    try {
+      const res = await subscribePlan(plan);
+      if (res?.data?.checkoutUrl) {
+        window.location.href = res.data.checkoutUrl;
+      } else {
+        setUpgradeError("Não foi possível gerar o link de pagamento. Tente novamente.");
+      }
+    } catch (e) {
+      setUpgradeError(e?.message || "Erro ao processar pagamento. Tente novamente.");
+    } finally {
+      setUpgradeLoading(null);
+    }
+  }
 
   function handleCard(rota) {
     if (rota === "/gerar") reset();
@@ -130,10 +150,7 @@ export default function Dashboard() {
             {/* Botão upgrade — só aparece no plano free */}
             {uso.plano === "free" && (
               <button
-                onClick={() => window.open(
-                  "https://wa.me/5596999113575?text=Olá! Quero fazer upgrade do meu plano na InclusivAula.",
-                  "_blank"
-                )}
+                onClick={() => { setUpgradeModal(true); setUpgradeError(null); }}
                 style={{
                   fontSize: 12, padding: "6px 16px",
                   background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
@@ -170,6 +187,96 @@ export default function Dashboard() {
           ))}
         </div>
       </main>
+
+      {/* Modal de upgrade */}
+      {upgradeModal && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16
+        }} onClick={() => setUpgradeModal(false)}>
+          <div style={{
+            background: "#fff", borderRadius: 16, padding: "2rem",
+            maxWidth: 480, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
+          }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ margin: "0 0 8px", color: "#1a1a2e", fontSize: 22 }}>Escolha seu plano</h2>
+            <p style={{ color: "#5f5e5a", margin: "0 0 24px", fontSize: 14 }}>
+              Pagamento seguro via Mercado Pago. Cancele quando quiser.
+            </p>
+
+            {upgradeError && (
+              <div style={{
+                background: "#fff0f0", border: "1px solid #fca5a5", borderRadius: 8,
+                padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#dc2626"
+              }}>
+                {upgradeError}
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {/* Pro */}
+              <div style={{
+                border: "2px solid #2B9EC3", borderRadius: 12, padding: "1rem 1.25rem",
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12
+              }}>
+                <div>
+                  <div style={{ fontWeight: 600, color: "#2B9EC3", marginBottom: 2 }}>Pro</div>
+                  <div style={{ fontSize: 13, color: "#5f5e5a" }}>100 aulas · 10 relatórios · 10 professores</div>
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 18, color: "#1a1a2e" }}>R$ 49/mês</div>
+                  <button
+                    onClick={() => handleUpgrade("pro")}
+                    disabled={upgradeLoading !== null}
+                    style={{
+                      marginTop: 6, padding: "6px 18px", fontSize: 13, fontWeight: 600,
+                      background: upgradeLoading === "pro" ? "#9ca3af" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+                      color: "#fff", border: "none", borderRadius: 6, cursor: upgradeLoading ? "not-allowed" : "pointer"
+                    }}
+                  >
+                    {upgradeLoading === "pro" ? "Aguarde..." : "Assinar"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Enterprise */}
+              <div style={{
+                border: "2px solid #534AB7", borderRadius: 12, padding: "1rem 1.25rem",
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12
+              }}>
+                <div>
+                  <div style={{ fontWeight: 600, color: "#534AB7", marginBottom: 2 }}>Enterprise</div>
+                  <div style={{ fontSize: 13, color: "#5f5e5a" }}>Ilimitado · Para redes escolares</div>
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 18, color: "#1a1a2e" }}>R$ 199/mês</div>
+                  <button
+                    onClick={() => handleUpgrade("enterprise")}
+                    disabled={upgradeLoading !== null}
+                    style={{
+                      marginTop: 6, padding: "6px 18px", fontSize: 13, fontWeight: 600,
+                      background: upgradeLoading === "enterprise" ? "#9ca3af" : "linear-gradient(135deg, #534AB7, #2B9EC3)",
+                      color: "#fff", border: "none", borderRadius: 6, cursor: upgradeLoading ? "not-allowed" : "pointer"
+                    }}
+                  >
+                    {upgradeLoading === "enterprise" ? "Aguarde..." : "Assinar"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setUpgradeModal(false)}
+              style={{
+                marginTop: 20, width: "100%", padding: "10px", fontSize: 14,
+                background: "none", border: "1px solid #d3d1c7", borderRadius: 8,
+                cursor: "pointer", color: "#5f5e5a"
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -188,6 +188,23 @@ export async function getAEEFrequencyPDF(studentId, periodo) {
   return res.blob();
 }
 
+// ── BILLING ──────────────────────────────────────────────────────
+
+export async function getBillingPlan() {
+  return request("/api/billing/plan");
+}
+
+export async function subscribePlan(plan) {
+  return request("/api/billing/subscribe", {
+    method: "POST",
+    body: JSON.stringify({ plan })
+  });
+}
+
+export async function cancelBillingPlan() {
+  return request("/api/billing/cancel", { method: "DELETE" });
+}
+
 export async function getAEEPDFBlob(id) {
   const { data: { session } } = await (await import("./supabaseClient.js")).supabase.auth.getSession();
   const token = session?.access_token;
