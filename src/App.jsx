@@ -23,6 +23,8 @@ import RecoverPassword from "./pages/RecoverPassword";
 import ResetPassword from "./pages/ResetPassword";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
+import SecurityMFA from "./pages/SecurityMFA";
+import AuditLogs from "./pages/AuditLogs";
 import CookieBanner from "./components/CookieBanner";
 
 function PrivateRoute({ children }) {
@@ -67,6 +69,8 @@ function AppRoutes() {
         <Route path="/pei" element={<PrivateRoute><PEI /></PrivateRoute>} />
         <Route path="/aee" element={<PrivateRoute><AEE /></PrivateRoute>} />
         <Route path="/aee-sessoes" element={<PrivateRoute><AEESessions /></PrivateRoute>} />
+        <Route path="/seguranca" element={<PrivateRoute><SecurityMFA /></PrivateRoute>} />
+        <Route path="/auditoria" element={<PrivateRoute><AuditLogs /></PrivateRoute>} />
 
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
