@@ -160,6 +160,13 @@ export default function Dashboard() {
             🔐 Segurança
           </button>
           <button
+            onClick={() => navigate("/seguranca/alertas")}
+            title="Central de Segurança"
+            style={{ fontSize: 13, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#5f5e5a" }}
+          >
+            🛡️ Alertas
+          </button>
+          <button
             onClick={() => navigate("/auditoria")}
             title="Ver logs de auditoria"
             style={{ fontSize: 13, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#5f5e5a" }}
