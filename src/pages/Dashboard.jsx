@@ -142,39 +142,36 @@ export default function Dashboard() {
     <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
       <header style={{
         background: "#fff", borderBottom: "0.5px solid #d3d1c7",
-        padding: "1rem 2rem", display: "flex",
-        justifyContent: "space-between", alignItems: "center"
+        padding: "12px 16px"
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src={icone} alt="InclusivAula" style={{ height: 36 }} />
-          <span style={{ fontSize: 18, fontWeight: 600, color: "#2B9EC3" }}>
-            Inclusiv<span style={{ color: "#4CAF82" }}>Aula</span>
-          </span>
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          marginBottom: 8
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <img src={icone} alt="InclusivAula" style={{ height: 32 }} />
+            <span style={{ fontSize: 16, fontWeight: 600, color: "#2B9EC3" }}>
+              Inclusiv<span style={{ color: "#4CAF82" }}>Aula</span>
+            </span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 11, color: "#5f5e5a", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</span>
+            <button onClick={signOut} style={{ fontSize: 12, padding: "4px 10px", background: "none", border: "1px solid #d3d1c7", borderRadius: 6, cursor: "pointer", color: "#5f5e5a" }}>Sair</button>
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button
-            onClick={() => navigate("/seguranca")}
-            title="Configurar 2FA"
-            style={{ fontSize: 13, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#5f5e5a" }}
-          >
-            🔐 Segurança
-          </button>
-          <button
-            onClick={() => navigate("/seguranca/alertas")}
-            title="Central de Segurança"
-            style={{ fontSize: 13, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#5f5e5a" }}
-          >
+        <div style={{
+          display: "flex", gap: 6, overflowX: "auto",
+          WebkitOverflowScrolling: "touch", scrollbarWidth: "none"
+        }}>
+          <button onClick={() => navigate("/seguranca/alertas")} style={{ fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#5f5e5a", whiteSpace: "nowrap", flexShrink: 0 }}>
             🛡️ Alertas
           </button>
-          <button
-            onClick={() => navigate("/auditoria")}
-            title="Ver logs de auditoria"
-            style={{ fontSize: 13, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#5f5e5a" }}
-          >
+          <button onClick={() => navigate("/seguranca")} style={{ fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#5f5e5a", whiteSpace: "nowrap", flexShrink: 0 }}>
+            🔐 Segurança
+          </button>
+          <button onClick={() => navigate("/auditoria")} style={{ fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#5f5e5a", whiteSpace: "nowrap", flexShrink: 0 }}>
             📋 Auditoria
           </button>
-          <span style={{ fontSize: 13, color: "#5f5e5a" }}>{user?.email}</span>
-          <button onClick={signOut} style={{ fontSize: 13 }}>Sair</button>
         </div>
       </header>
 
