@@ -76,7 +76,21 @@ export default function Dashboard() {
             Inclusiv<span style={{ color: "#4CAF82" }}>Aula</span>
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button
+            onClick={() => navigate("/seguranca")}
+            title="Configurar 2FA"
+            style={{ fontSize: 13, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#5f5e5a" }}
+          >
+            🔐 Segurança
+          </button>
+          <button
+            onClick={() => navigate("/auditoria")}
+            title="Ver logs de auditoria"
+            style={{ fontSize: 13, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#5f5e5a" }}
+          >
+            📋 Auditoria
+          </button>
           <span style={{ fontSize: 13, color: "#5f5e5a" }}>{user?.email}</span>
           <button onClick={signOut} style={{ fontSize: 13 }}>Sair</button>
         </div>
