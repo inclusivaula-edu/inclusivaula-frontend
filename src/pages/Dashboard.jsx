@@ -21,9 +21,73 @@ const CARDS = [
 
 const PLANO_LABELS = {
   free: { label: "Gratuito", cor: "#ad3e3e", bg: "#f1efe8" },
+  pro: { label: "Pro", cor: "#2B9EC3", bg: "#e8f7fd" },
+  escola_mini: { label: "Escola Mini", cor: "#4CAF82", bg: "#edfff6" },
+  escola_standard: { label: "Escola Standard", cor: "#4CAF82", bg: "#edfff6" },
+  premium: { label: "Premium", cor: "#534AB7", bg: "#EEEDFE" },
+  // legados
   professor: { label: "Professor", cor: "#2B9EC3", bg: "#e8f7fd" },
   escola: { label: "Escola", cor: "#4CAF82", bg: "#edfff6" },
-  rede: { label: "Rede", cor: "#534AB7", bg: "#EEEDFE" }
+  rede: { label: "Rede", cor: "#534AB7", bg: "#EEEDFE" },
+  enterprise: { label: "Enterprise", cor: "#534AB7", bg: "#EEEDFE" }
+};
+
+const PLANS_CONFIG = [
+  {
+    key: "pro",
+    label: "Pro Individual",
+    emoji: "⭐",
+    desc: "1 professor · 100 aulas/mês · 10 relatórios",
+    color: "#2B9EC3",
+    cycles: {
+      mensal:    { price: 49.90,   label: "R$ 49,90/mês" },
+      semestral: { price: 44.90,   label: "R$ 44,90/mês", badge: "10% off" },
+      anual:     { price: 39.90,   label: "R$ 39,90/mês", badge: "20% off" }
+    }
+  },
+  {
+    key: "escola_mini",
+    label: "Escola Mini",
+    emoji: "🏫",
+    desc: "Até 10 professores · Aulas ilimitadas · Painel coordenação",
+    color: "#4CAF82",
+    cycles: {
+      mensal:    { price: 299.00,  label: "R$ 299/mês" },
+      semestral: { price: 269.00,  label: "R$ 269/mês", badge: "10% off" },
+      anual:     { price: 239.00,  label: "R$ 239/mês", badge: "20% off" }
+    }
+  },
+  {
+    key: "escola_standard",
+    label: "Escola Standard",
+    emoji: "🎯",
+    desc: "Até 25 professores · Ilimitado · Auditoria + suporte prioritário",
+    color: "#4CAF82",
+    highlight: true,
+    cycles: {
+      mensal:    { price: 798.00,  label: "R$ 798/mês" },
+      semestral: { price: 718.00,  label: "R$ 718/mês", badge: "10% off" },
+      anual:     { price: 638.00,  label: "R$ 638/mês", badge: "20% off" }
+    }
+  },
+  {
+    key: "premium",
+    label: "Premium",
+    emoji: "💎",
+    desc: "Até 50 professores · White-label PDFs · API + onboarding",
+    color: "#534AB7",
+    cycles: {
+      mensal:    { price: 2499.00, label: "R$ 2.499/mês" },
+      semestral: { price: 2249.00, label: "R$ 2.249/mês", badge: "10% off" },
+      anual:     { price: 1999.00, label: "R$ 1.999/mês", badge: "20% off" }
+    }
+  }
+];
+
+const CYCLE_LABELS = {
+  mensal:    { label: "Mensal",    sub: "Cancele quando quiser" },
+  semestral: { label: "Semestral", sub: "Fidelidade 6 meses · 10% off" },
+  anual:     { label: "Anual",     sub: "Fidelidade 12 meses · 20% off" }
 };
 
 export default function Dashboard() {
@@ -32,18 +96,20 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [uso, setUso] = useState(null);
   const [upgradeModal, setUpgradeModal] = useState(false);
-  const [upgradeLoading, setUpgradeLoading] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState("escola_standard");
+  const [selectedCycle, setSelectedCycle] = useState("mensal");
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
   const [upgradeError, setUpgradeError] = useState(null);
 
   useEffect(() => {
     getUsage().then(res => setUso(res.data)).catch(() => { });
   }, []);
 
-  async function handleUpgrade(plan) {
-    setUpgradeLoading(plan);
+  async function handleUpgrade() {
+    setUpgradeLoading(true);
     setUpgradeError(null);
     try {
-      const res = await subscribePlan(plan);
+      const res = await subscribePlan(selectedPlan, selectedCycle);
       if (res?.data?.checkoutUrl) {
         window.location.href = res.data.checkoutUrl;
       } else {
@@ -52,8 +118,15 @@ export default function Dashboard() {
     } catch (e) {
       setUpgradeError(e?.message || "Erro ao processar pagamento. Tente novamente.");
     } finally {
-      setUpgradeLoading(null);
+      setUpgradeLoading(false);
     }
+  }
+
+  function openModal() {
+    setUpgradeError(null);
+    setSelectedPlan("escola_standard");
+    setSelectedCycle("mensal");
+    setUpgradeModal(true);
   }
 
   function handleCard(rota) {
@@ -62,6 +135,8 @@ export default function Dashboard() {
   }
 
   const planoInfo = PLANO_LABELS[uso?.plano] || PLANO_LABELS.free;
+  const activePlanConfig = PLANS_CONFIG.find(p => p.key === selectedPlan);
+  const activeCycleConfig = activePlanConfig?.cycles[selectedCycle];
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
@@ -164,7 +239,7 @@ export default function Dashboard() {
             {/* Botão upgrade — só aparece no plano free */}
             {uso.plano === "free" && (
               <button
-                onClick={() => { setUpgradeModal(true); setUpgradeError(null); }}
+                onClick={openModal}
                 style={{
                   fontSize: 12, padding: "6px 16px",
                   background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
@@ -205,89 +280,164 @@ export default function Dashboard() {
       {/* Modal de upgrade */}
       {upgradeModal && (
         <div style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)",
           display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16
         }} onClick={() => setUpgradeModal(false)}>
           <div style={{
             background: "#fff", borderRadius: 16, padding: "2rem",
-            maxWidth: 480, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.2)"
+            maxWidth: 560, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+            maxHeight: "90vh", overflowY: "auto"
           }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ margin: "0 0 8px", color: "#1a1a2e", fontSize: 22 }}>Escolha seu plano</h2>
-            <p style={{ color: "#5f5e5a", margin: "0 0 24px", fontSize: 14 }}>
-              Pagamento seguro via Mercado Pago. Cancele quando quiser.
+
+            <h2 style={{ margin: "0 0 4px", color: "#1a1a2e", fontSize: 22 }}>Escolha seu plano</h2>
+            <p style={{ color: "#5f5e5a", margin: "0 0 20px", fontSize: 13 }}>
+              Pagamento mensal via Mercado Pago. Planos com fidelidade têm desconto garantido.
             </p>
+
+            {/* Seletor de ciclo */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 20, background: "#f5f9ff", borderRadius: 10, padding: 4 }}>
+              {Object.entries(CYCLE_LABELS).map(([key, val]) => (
+                <button
+                  key={key}
+                  onClick={() => setSelectedCycle(key)}
+                  style={{
+                    flex: 1, padding: "8px 4px", border: "none", borderRadius: 7, cursor: "pointer",
+                    fontSize: 12, fontWeight: 600, transition: "all 0.15s",
+                    background: selectedCycle === key ? "#fff" : "transparent",
+                    color: selectedCycle === key ? "#2B9EC3" : "#5f5e5a",
+                    boxShadow: selectedCycle === key ? "0 1px 4px rgba(0,0,0,0.12)" : "none"
+                  }}
+                >
+                  {val.label}
+                  {key !== "mensal" && (
+                    <span style={{
+                      display: "block", fontSize: 10, fontWeight: 400,
+                      color: selectedCycle === key ? "#4CAF82" : "#9ca3af"
+                    }}>
+                      {key === "semestral" ? "10% off" : "20% off"}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <p style={{ fontSize: 11, color: "#9ca3af", marginBottom: 16, marginTop: -12 }}>
+              {CYCLE_LABELS[selectedCycle].sub}
+            </p>
+
+            {/* Cards de planos */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {PLANS_CONFIG.map(plan => {
+                const cycleData = plan.cycles[selectedCycle];
+                const isSelected = selectedPlan === plan.key;
+                return (
+                  <div
+                    key={plan.key}
+                    onClick={() => setSelectedPlan(plan.key)}
+                    style={{
+                      border: isSelected ? `2px solid ${plan.color}` : "2px solid #e5e7eb",
+                      borderRadius: 12, padding: "14px 16px", cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+                      background: isSelected ? `${plan.color}08` : "#fff",
+                      transition: "all 0.15s",
+                      position: "relative"
+                    }}
+                  >
+                    {plan.highlight && (
+                      <span style={{
+                        position: "absolute", top: -10, left: 16,
+                        background: "linear-gradient(135deg, #4CAF82, #2B9EC3)",
+                        color: "#fff", fontSize: 10, fontWeight: 700,
+                        padding: "2px 10px", borderRadius: 10
+                      }}>
+                        MAIS POPULAR
+                      </span>
+                    )}
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{
+                        width: 20, height: 20, borderRadius: "50%",
+                        border: `2px solid ${isSelected ? plan.color : "#d1d5db"}`,
+                        background: isSelected ? plan.color : "transparent",
+                        flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center"
+                      }}>
+                        {isSelected && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#fff" }} />}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, color: plan.color, fontSize: 14 }}>
+                          {plan.emoji} {plan.label}
+                        </div>
+                        <div style={{ fontSize: 12, color: "#5f5e5a", marginTop: 2 }}>{plan.desc}</div>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 16, color: "#1a1a2e" }}>
+                        {cycleData.label}
+                      </div>
+                      {cycleData.badge && (
+                        <span style={{ fontSize: 10, color: "#4CAF82", fontWeight: 600 }}>
+                          {cycleData.badge}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Resumo do selecionado */}
+            {activePlanConfig && activeCycleConfig && (
+              <div style={{
+                marginTop: 16, padding: "12px 16px",
+                background: "#f5f9ff", borderRadius: 10, fontSize: 13
+              }}>
+                <strong>{activePlanConfig.emoji} {activePlanConfig.label} — {CYCLE_LABELS[selectedCycle].label}</strong>
+                <br />
+                <span style={{ color: "#5f5e5a" }}>
+                  {activeCycleConfig.label} cobrado mensalmente
+                  {selectedCycle !== "mensal" && ` · contrato de ${selectedCycle === "semestral" ? "6" : "12"} meses`}
+                </span>
+              </div>
+            )}
 
             {upgradeError && (
               <div style={{
                 background: "#fff0f0", border: "1px solid #fca5a5", borderRadius: 8,
-                padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#dc2626"
+                padding: "10px 14px", marginTop: 12, fontSize: 13, color: "#dc2626"
               }}>
                 {upgradeError}
               </div>
             )}
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {/* Pro */}
-              <div style={{
-                border: "2px solid #2B9EC3", borderRadius: 12, padding: "1rem 1.25rem",
-                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12
-              }}>
-                <div>
-                  <div style={{ fontWeight: 600, color: "#2B9EC3", marginBottom: 2 }}>Pro</div>
-                  <div style={{ fontSize: 13, color: "#5f5e5a" }}>100 aulas · 10 relatórios · 10 professores</div>
-                </div>
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 18, color: "#1a1a2e" }}>R$ 49/mês</div>
-                  <button
-                    onClick={() => handleUpgrade("pro")}
-                    disabled={upgradeLoading !== null}
-                    style={{
-                      marginTop: 6, padding: "6px 18px", fontSize: 13, fontWeight: 600,
-                      background: upgradeLoading === "pro" ? "#9ca3af" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
-                      color: "#fff", border: "none", borderRadius: 6, cursor: upgradeLoading ? "not-allowed" : "pointer"
-                    }}
-                  >
-                    {upgradeLoading === "pro" ? "Aguarde..." : "Assinar"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Enterprise */}
-              <div style={{
-                border: "2px solid #534AB7", borderRadius: 12, padding: "1rem 1.25rem",
-                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12
-              }}>
-                <div>
-                  <div style={{ fontWeight: 600, color: "#534AB7", marginBottom: 2 }}>Enterprise</div>
-                  <div style={{ fontSize: 13, color: "#5f5e5a" }}>Ilimitado · Para redes escolares</div>
-                </div>
-                <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ fontWeight: 700, fontSize: 18, color: "#1a1a2e" }}>R$ 199/mês</div>
-                  <button
-                    onClick={() => handleUpgrade("enterprise")}
-                    disabled={upgradeLoading !== null}
-                    style={{
-                      marginTop: 6, padding: "6px 18px", fontSize: 13, fontWeight: 600,
-                      background: upgradeLoading === "enterprise" ? "#9ca3af" : "linear-gradient(135deg, #534AB7, #2B9EC3)",
-                      color: "#fff", border: "none", borderRadius: 6, cursor: upgradeLoading ? "not-allowed" : "pointer"
-                    }}
-                  >
-                    {upgradeLoading === "enterprise" ? "Aguarde..." : "Assinar"}
-                  </button>
-                </div>
-              </div>
-            </div>
+            <button
+              onClick={handleUpgrade}
+              disabled={upgradeLoading}
+              style={{
+                marginTop: 16, width: "100%", padding: "13px", fontSize: 15, fontWeight: 700,
+                background: upgradeLoading
+                  ? "#9ca3af"
+                  : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+                color: "#fff", border: "none", borderRadius: 10,
+                cursor: upgradeLoading ? "not-allowed" : "pointer",
+                transition: "opacity 0.15s"
+              }}
+            >
+              {upgradeLoading ? "Aguarde..." : `Assinar ${activePlanConfig?.label || ""} →`}
+            </button>
 
             <button
               onClick={() => setUpgradeModal(false)}
               style={{
-                marginTop: 20, width: "100%", padding: "10px", fontSize: 14,
+                marginTop: 10, width: "100%", padding: "10px", fontSize: 13,
                 background: "none", border: "1px solid #d3d1c7", borderRadius: 8,
                 cursor: "pointer", color: "#5f5e5a"
               }}
             >
               Cancelar
             </button>
+
+            <p style={{ textAlign: "center", fontSize: 11, color: "#9ca3af", marginTop: 12, marginBottom: 0 }}>
+              🔒 Pagamento seguro via Mercado Pago · Cancele pelo suporte
+            </p>
           </div>
         </div>
       )}

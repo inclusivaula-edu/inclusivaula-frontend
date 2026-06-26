@@ -194,10 +194,10 @@ export async function getBillingPlan() {
   return request("/api/billing/plan");
 }
 
-export async function subscribePlan(plan) {
+export async function subscribePlan(plan, cycle = "mensal") {
   return request("/api/billing/subscribe", {
     method: "POST",
-    body: JSON.stringify({ plan })
+    body: JSON.stringify({ plan, cycle })
   });
 }
 
