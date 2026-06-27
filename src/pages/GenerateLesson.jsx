@@ -61,7 +61,7 @@ export default function GenerateLesson() {
       if (profile?.school_id) {
         const { data } = await supabase
           .from("students")
-          .select("id, full_name, grade, disability_type, notes, turma")
+          .select("id, full_name, grade, disability_type, notes, turma, observable_behavior, what_helps")
           .eq("school_id", profile.school_id)
           .order("full_name");
         setAlunos(data || []);
@@ -177,7 +177,17 @@ export default function GenerateLesson() {
                 {alunoSelecionado.turma && ` · Turma: ${alunoSelecionado.turma}`}
                 {alunoSelecionado.grade && ` · ${alunoSelecionado.grade}`}
                 {alunoSelecionado.disability_type && ` · ${alunoSelecionado.disability_type}`}
-                {alunoSelecionado.notes && <p style={{ margin: "6px 0 0", fontSize: 12, opacity: 0.85 }}>📝 {alunoSelecionado.notes}</p>}
+                {alunoSelecionado.observable_behavior && (
+                  <p style={{ margin: "6px 0 0", fontSize: 12, opacity: 0.9 }}>
+                    👁 <strong>Comportamento observado:</strong> {alunoSelecionado.observable_behavior}
+                  </p>
+                )}
+                {alunoSelecionado.what_helps && (
+                  <p style={{ margin: "4px 0 0", fontSize: 12, opacity: 0.9 }}>
+                    ✅ <strong>O que funciona:</strong> {alunoSelecionado.what_helps}
+                  </p>
+                )}
+                {alunoSelecionado.notes && <p style={{ margin: "4px 0 0", fontSize: 12, opacity: 0.75 }}>📝 {alunoSelecionado.notes}</p>}
               </div>
             )}
           </div>

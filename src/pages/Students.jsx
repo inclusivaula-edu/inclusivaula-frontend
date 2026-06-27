@@ -18,6 +18,7 @@ const DISABILITIES = [
 
 const formVazio = {
   full_name: "", birth_date: "", grade: "1º ano", turma: "",
+  observable_behavior: "", what_helps: "",
   disability_type: "Nenhuma", guardian_name: "", guardian_phone: "", notes: ""
 };
 
@@ -74,6 +75,8 @@ export default function Students() {
       birth_date: aluno.birth_date || "",
       grade: aluno.grade || "1º ano",
       turma: aluno.turma || "",
+      observable_behavior: aluno.observable_behavior || "",
+      what_helps: aluno.what_helps || "",
       disability_type: aluno.disability_type || "Nenhuma",
       guardian_name: aluno.guardian_name || "",
       guardian_phone: aluno.guardian_phone || "",
@@ -94,6 +97,8 @@ export default function Students() {
         birth_date: form.birth_date || null,
         grade: form.grade,
         turma: form.turma || null,
+        observable_behavior: form.observable_behavior?.trim() || null,
+        what_helps: form.what_helps?.trim() || null,
         disability_type: form.disability_type === "Nenhuma" ? null : form.disability_type,
         guardian_name: form.guardian_name,
         guardian_phone: form.guardian_phone,
@@ -243,7 +248,28 @@ export default function Students() {
               </div>
 
               <div>
-                <label style={labelStyle}>Perfil / Necessidade especial</label>
+                <label style={labelStyle}>
+                  O que esse aluno faz diferente da turma?{" "}
+                  <span style={{ color: "#2B9EC3", fontWeight: 600 }}>★ Campo mais importante</span>
+                </label>
+                <textarea name="observable_behavior" value={form.observable_behavior}
+                  onChange={handleChange} rows={3} maxLength={500}
+                  placeholder="Ex: Em atividade em grupo, ele se isola e cobre os ouvidos quando tem barulho. Não consegue manter foco por mais de 5 minutos em tarefa escrita."
+                  style={{ ...inputStyle, resize: "vertical", fontSize: 13 }} />
+                <span style={{ fontSize: 11, color: "#999" }}>{form.observable_behavior.length}/500</span>
+              </div>
+
+              <div>
+                <label style={labelStyle}>O que já funciona com esse aluno?</label>
+                <textarea name="what_helps" value={form.what_helps}
+                  onChange={handleChange} rows={2} maxLength={500}
+                  placeholder="Ex: Responde melhor quando recebe instrução individual antes da atividade coletiva. Gosta de desenhar para registrar o que aprendeu."
+                  style={{ ...inputStyle, resize: "vertical", fontSize: 13 }} />
+                <span style={{ fontSize: 11, color: "#999" }}>{form.what_helps.length}/500</span>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Perfil / Necessidade especial <span style={{ color: "#999", fontWeight: 400 }}>(opcional)</span></label>
                 <select name="disability_type" value={form.disability_type}
                   onChange={handleChange} style={inputStyle}>
                   {DISABILITIES.map(d => <option key={d} value={d}>{d}</option>)}
@@ -326,7 +352,10 @@ export default function Students() {
                     {s.disability_type ? ` · ${s.disability_type}` : ""}
                     {s.guardian_name ? ` · Resp: ${s.guardian_name}` : ""}
                   </p>
-                  {s.notes && (
+                  {s.observable_behavior && (
+                    <p style={{ fontSize: 12, color: "#1a6e8a", margin: "4px 0 0" }}>👁 {s.observable_behavior.length > 80 ? s.observable_behavior.slice(0, 80) + "…" : s.observable_behavior}</p>
+                  )}
+                  {s.notes && !s.observable_behavior && (
                     <p style={{ fontSize: 12, color: "#888", margin: "4px 0 0" }}>📝 {s.notes}</p>
                   )}
                 </div>
