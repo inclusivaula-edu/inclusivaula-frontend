@@ -475,6 +475,106 @@ export default function LessonResult() {
           </Section>
         )}
 
+        {/* ── MATERIAL DE AULA ───────────────────────────────────── */}
+        {(dados?.roteiro_professor?.length > 0 || dados?.ficha_atividade) && (
+          <div style={{ marginTop: 32, borderTop: "2px solid #4CAF82", paddingTop: 24 }}>
+            <div style={{ background: "#FFF8E1", border: "0.5px solid #BA7517", borderRadius: 8, padding: "10px 16px", fontSize: 13, color: "#854F0B", marginBottom: 20 }}>
+              ✏️ <strong>Rascunho pedagógico</strong> — edite antes de usar com o aluno
+            </div>
+
+            {dados?.roteiro_professor?.length > 0 && (
+              <Section title="Roteiro do Professor" emoji="🗒️" color="#4CAF82">
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {dados.roteiro_professor.map((etapa, i) => (
+                    <div key={i} style={{
+                      background: "#fff", border: "0.5px solid #d3d1c7",
+                      borderLeft: "3px solid #4CAF82", borderRadius: 8, padding: "14px 16px"
+                    }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: "#4CAF82" }}>{etapa.etapa}</span>
+                        {etapa.tempo && (
+                          <span style={{ fontSize: 11, background: "#edfff6", color: "#2a7a55", padding: "2px 10px", borderRadius: 20 }}>
+                            ⏱ {etapa.tempo}
+                          </span>
+                        )}
+                      </div>
+                      {etapa.acao && (
+                        <p style={{ fontSize: 14, color: "#2c2c2a", margin: "0 0 8px", lineHeight: 1.6 }}>{etapa.acao}</p>
+                      )}
+                      {etapa.fala_sugerida && (
+                        <div style={{ background: "#f5f9ff", borderRadius: 6, padding: "8px 12px", fontSize: 13, color: "#1a6e8a", fontStyle: "italic", marginBottom: 8 }}>
+                          💬 "{etapa.fala_sugerida}"
+                        </div>
+                      )}
+                      {etapa.dica_nee && (
+                        <div style={{ fontSize: 12, color: "#854F0B", background: "#FFF8E1", borderRadius: 6, padding: "6px 10px" }}>
+                          ★ NEE: {etapa.dica_nee}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            )}
+
+            {dados?.ficha_atividade && (
+              <Section title="Ficha de Atividade" emoji="📄" color="#534AB7">
+                {dados.ficha_atividade.titulo && (
+                  <p style={{ fontSize: 15, fontWeight: 600, color: "#534AB7", marginBottom: 4 }}>
+                    {dados.ficha_atividade.titulo}
+                  </p>
+                )}
+                {dados.ficha_atividade.instrucao_geral && (
+                  <p style={{ fontSize: 13, color: "#5f5e5a", fontStyle: "italic", marginBottom: 16 }}>
+                    {dados.ficha_atividade.instrucao_geral}
+                  </p>
+                )}
+                <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {(dados.ficha_atividade.atividades || []).map((ativ, i) => (
+                    <div key={i} style={{
+                      background: "#fff", border: "0.5px solid #d3d1c7",
+                      borderRadius: 8, padding: "14px 16px",
+                      display: "flex", gap: 14
+                    }}>
+                      <div style={{
+                        minWidth: 28, height: 28, background: "#534AB7", borderRadius: "50%",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 13, fontWeight: 700, color: "#fff", flexShrink: 0
+                      }}>
+                        {ativ.numero}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 14, color: "#2c2c2a", margin: "0 0 8px", lineHeight: 1.6 }}>
+                          {ativ.enunciado}
+                        </p>
+                        {ativ.opcoes?.length > 0 && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
+                            {ativ.opcoes.map((op, j) => (
+                              <label key={j} style={{ fontSize: 13, color: "#5f5e5a", display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                                <input type="radio" name={`ativ-${i}`} style={{ accentColor: "#534AB7" }} />
+                                {op}
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                        {ativ.espaco_resposta && ativ.espaco_resposta !== "nenhum" && (
+                          <div style={{
+                            borderBottom: ativ.espaco_resposta === "linha" ? "1px solid #d3d1c7" : "none",
+                            border: ativ.espaco_resposta === "caixa" || ativ.espaco_resposta === "paragrafo" ? "0.5px solid #d3d1c7" : "none",
+                            borderRadius: ativ.espaco_resposta !== "linha" ? 6 : 0,
+                            minHeight: ativ.espaco_resposta === "linha" ? 8 : ativ.espaco_resposta === "paragrafo" ? 60 : 48,
+                            marginTop: 8
+                          }} />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            )}
+          </div>
+        )}
+
       </main>
     </div>
   );
