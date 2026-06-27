@@ -65,7 +65,7 @@ export default function History() {
     <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
       <header style={{
         background: "#fff", borderBottom: "0.5px solid #d3d1c7",
-        padding: "1rem 2rem", display: "flex",
+        padding: "10px 16px", display: "flex",
         justifyContent: "space-between", alignItems: "center"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>

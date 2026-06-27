@@ -15,7 +15,13 @@ async function request(endpoint, options = {}) {
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "Erro na requisição");
+  if (!res.ok) {
+    const msg = data.error || "Erro na requisição";
+    if (res.status === 403 && msg.toLowerCase().includes("limite")) {
+      window.dispatchEvent(new CustomEvent("inclusivaula:toast", { detail: { message: msg, type: "warning" } }));
+    }
+    throw new Error(msg);
+  }
   return data;
 }
 

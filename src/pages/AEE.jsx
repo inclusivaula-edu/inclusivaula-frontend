@@ -220,7 +220,7 @@ export default function AEE() {
       )}
       <header style={{
         background: "#fff", borderBottom: "0.5px solid #d3d1c7",
-        padding: "1rem 2rem", display: "flex", alignItems: "center", gap: 16
+        padding: "10px 16px", display: "flex", alignItems: "center", gap: 16
       }}>
         <button onClick={() => navigate("/dashboard")} style={{ fontSize: 13 }}>← Voltar</button>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

@@ -5,18 +5,19 @@ import { useLesson } from "../contexts/LessonContext";
 import { getUsage, subscribePlan } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
+// Ordem mobile: Gerar aula (full), Alunos|Turmas, Historico|Avaliações, Frequencia|Sessões AEE, Minha escola|Relatórios, PEI|AEE
 const CARDS = [
-  { emoji: "🧠", label: "Gerar Plano de aula", desc: "Crie uma aula adaptada com IA", rota: "/gerar", cor: "#2B9EC3" },
+  { emoji: "🧠", label: "Gerar Plano de aula", desc: "Crie uma aula adaptada com IA", rota: "/gerar", cor: "#2B9EC3", span: 2 },
   { emoji: "👨‍🎓", label: "Alunos", desc: "Gerencie seus alunos", rota: "/alunos", cor: "#4CAF82" },
+  { emoji: "🏫", label: "Turmas", desc: "Gerencie turmas e matrículas", rota: "/turmas", cor: "#534AB7" },
   { emoji: "📚", label: "Histórico", desc: "Veja suas aulas geradas", rota: "/historico", cor: "#4CAF82" },
   { emoji: "✏️", label: "Avaliações", desc: "Avaliações por bimestre/semestre", rota: "/avaliacoes", cor: "#534AB7" },
   { emoji: "📅", label: "Frequência", desc: "Registre presenças e faltas", rota: "/frequencia", cor: "#2B9EC3" },
-  { emoji: "📄", label: "Relatórios", desc: "Semestral, família e AEE", rota: "/relatorios", cor: "#BA7517" },
+  { emoji: "📝", label: "Sessões AEE", desc: "Frequência e evolução — FUNDEB", rota: "/aee-sessoes", cor: "#0F6E56" },
   { emoji: "🏫", label: "Minha escola", desc: "Código de convite e professores", rota: "/escola", cor: "#2B9EC3" },
-  { emoji: "🏫", label: "Turmas", desc: "Gerencie turmas e matrículas", rota: "/turmas", cor: "#534AB7" },
+  { emoji: "📄", label: "Relatórios", desc: "Semestral, família e AEE", rota: "/relatorios", cor: "#BA7517" },
   { emoji: "📋", label: "PEI", desc: "Plano Educacional Individualizado", rota: "/pei", cor: "#2B9EC3" },
   { emoji: "🎓", label: "AEE", desc: "Atendimento Educacional Especializado", rota: "/aee", cor: "#534AB7" },
-  { emoji: "📝", label: "Sessões AEE", desc: "Frequência e evolução — FUNDEB", rota: "/aee-sessoes", cor: "#0F6E56" },
 ];
 
 const PLANO_LABELS = {
@@ -159,17 +160,14 @@ export default function Dashboard() {
             <button onClick={signOut} style={{ fontSize: 12, padding: "4px 10px", background: "none", border: "1px solid #d3d1c7", borderRadius: 6, cursor: "pointer", color: "#5f5e5a" }}>Sair</button>
           </div>
         </div>
-        <div style={{
-          display: "flex", gap: 6, overflowX: "auto",
-          WebkitOverflowScrolling: "touch", scrollbarWidth: "none"
-        }}>
-          <button onClick={() => navigate("/seguranca/alertas")} style={{ fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#5f5e5a", whiteSpace: "nowrap", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={() => navigate("/seguranca/alertas")} style={{ flex: 1, fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "6px 4px", cursor: "pointer", color: "#5f5e5a", textAlign: "center" }}>
             🛡️ Alertas
           </button>
-          <button onClick={() => navigate("/seguranca")} style={{ fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#5f5e5a", whiteSpace: "nowrap", flexShrink: 0 }}>
+          <button onClick={() => navigate("/seguranca")} style={{ flex: 1, fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "6px 4px", cursor: "pointer", color: "#5f5e5a", textAlign: "center" }}>
             🔐 Segurança
           </button>
-          <button onClick={() => navigate("/auditoria")} style={{ fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "4px 10px", cursor: "pointer", color: "#5f5e5a", whiteSpace: "nowrap", flexShrink: 0 }}>
+          <button onClick={() => navigate("/auditoria")} style={{ flex: 1, fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "6px 4px", cursor: "pointer", color: "#5f5e5a", textAlign: "center" }}>
             📋 Auditoria
           </button>
         </div>
@@ -260,22 +258,23 @@ export default function Dashboard() {
         {/* Cards de navegação */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: 16
+          gridTemplateColumns: "repeat(2, 1fr)",
+          gap: 12
         }}>
           {CARDS.map(card => (
             <div key={card.rota} onClick={() => handleCard(card.rota)} style={{
               background: "#fff", border: "0.5px solid #d3d1c7",
-              borderRadius: 12, padding: "1.5rem", cursor: "pointer",
+              borderRadius: 12, padding: "1.2rem", cursor: "pointer",
               boxShadow: "0 2px 8px rgba(43,158,195,0.06)",
-              transition: "box-shadow 0.2s, transform 0.15s"
+              transition: "box-shadow 0.2s, transform 0.15s",
+              ...(card.span ? { gridColumn: `span ${card.span}` } : {})
             }}
               onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 6px 20px rgba(43,158,195,0.14)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
               onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(43,158,195,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
             >
-              <div style={{ fontSize: 32, marginBottom: 12 }}>{card.emoji}</div>
-              <p style={{ fontWeight: 500, marginBottom: 4, color: card.cor }}>{card.label}</p>
-              <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>{card.desc}</p>
+              <div style={{ fontSize: 28, marginBottom: 10 }}>{card.emoji}</div>
+              <p style={{ fontWeight: 500, marginBottom: 4, color: card.cor, fontSize: 14 }}>{card.label}</p>
+              <p style={{ fontSize: 12, color: "#5f5e5a", margin: 0 }}>{card.desc}</p>
             </div>
           ))}
         </div>

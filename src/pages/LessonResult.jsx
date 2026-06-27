@@ -232,7 +232,7 @@ export default function LessonResult() {
 
       <header style={{
         background: "#fff", borderBottom: "0.5px solid #d3d1c7",
-        padding: "1rem 2rem", display: "flex",
+        padding: "10px 16px", display: "flex",
         justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>

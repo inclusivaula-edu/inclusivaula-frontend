@@ -27,6 +27,7 @@ import SecurityMFA from "./pages/SecurityMFA";
 import AuditLogs from "./pages/AuditLogs";
 import SecurityAlerts from "./pages/SecurityAlerts";
 import CookieBanner from "./components/CookieBanner";
+import Toast from "./components/Toast";
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -77,6 +78,7 @@ function AppRoutes() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       <CookieBanner />
+      <Toast />
     </>
   );
 }

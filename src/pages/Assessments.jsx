@@ -211,7 +211,7 @@ export default function Assessments() {
 
       <header style={{
         background: "#fff", borderBottom: "0.5px solid #d3d1c7",
-        padding: "1rem 2rem", display: "flex",
+        padding: "10px 16px", display: "flex",
         justifyContent: "space-between", alignItems: "center"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -414,7 +414,7 @@ export default function Assessments() {
                   style={{ width: "100%", accentColor: "#2B9EC3" }} />
               </div>
 
-              <button onClick={handleGerar} disabled={loading || !form.lessonId} style={{
+              <button onClick={handleGerar} disabled={loading || form.lessonIds.length === 0} style={{
                 width: "100%", padding: "12px",
                 background: loading || form.lessonIds.length === 0 ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
                 color: "#fff", border: "none", borderRadius: 8,
