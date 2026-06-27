@@ -101,9 +101,13 @@ export default function Dashboard() {
   const [selectedCycle, setSelectedCycle] = useState("mensal");
   const [upgradeLoading, setUpgradeLoading] = useState(false);
   const [upgradeError, setUpgradeError] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
   useEffect(() => {
     getUsage().then(res => setUso(res.data)).catch(() => { });
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   async function handleUpgrade() {
@@ -258,23 +262,23 @@ export default function Dashboard() {
         {/* Cards de navegação */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
-          gap: 12
+          gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(auto-fit, minmax(200px, 1fr))",
+          gap: isMobile ? 10 : 16
         }}>
           {CARDS.map(card => (
             <div key={card.rota} onClick={() => handleCard(card.rota)} style={{
               background: "#fff", border: "0.5px solid #d3d1c7",
-              borderRadius: 12, padding: "1.2rem", cursor: "pointer",
+              borderRadius: 12, padding: isMobile ? "1rem" : "1.5rem", cursor: "pointer",
               boxShadow: "0 2px 8px rgba(43,158,195,0.06)",
               transition: "box-shadow 0.2s, transform 0.15s",
-              ...(card.span ? { gridColumn: `span ${card.span}` } : {})
+              ...(isMobile && card.span ? { gridColumn: `span ${card.span}` } : {})
             }}
               onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 6px 20px rgba(43,158,195,0.14)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
               onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 2px 8px rgba(43,158,195,0.06)"; e.currentTarget.style.transform = "translateY(0)"; }}
             >
-              <div style={{ fontSize: 28, marginBottom: 10 }}>{card.emoji}</div>
-              <p style={{ fontWeight: 500, marginBottom: 4, color: card.cor, fontSize: 14 }}>{card.label}</p>
-              <p style={{ fontSize: 12, color: "#5f5e5a", margin: 0 }}>{card.desc}</p>
+              <div style={{ fontSize: isMobile ? 26 : 32, marginBottom: isMobile ? 8 : 12 }}>{card.emoji}</div>
+              <p style={{ fontWeight: 500, marginBottom: 4, color: card.cor, fontSize: isMobile ? 13 : 15 }}>{card.label}</p>
+              <p style={{ fontSize: isMobile ? 11 : 13, color: "#5f5e5a", margin: 0 }}>{card.desc}</p>
             </div>
           ))}
         </div>
