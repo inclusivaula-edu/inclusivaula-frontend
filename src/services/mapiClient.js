@@ -220,3 +220,34 @@ export async function getAEEPDFBlob(id) {
   if (!res.ok) throw new Error("Erro ao gerar PDF");
   return res.blob();
 }
+
+// ── SIMULADOS ───────────────────────────────────────────────────
+
+export async function generateSimulado(payload) {
+  return request("/api/simulado/generate", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export async function getSimuladoStatus(id) {
+  return request(`/api/simulado/${id}/status`);
+}
+
+export async function listSimulados() {
+  return request("/api/simulados");
+}
+
+export async function deleteSimulado(id) {
+  return request(`/api/simulado/${id}`, { method: "DELETE" });
+}
+
+export async function getSimuladoPDFBlob(id, tipo = "aluno") {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  const res = await fetch(`${BASE_URL}/api/simulado/${id}/pdf?tipo=${tipo}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erro ao gerar PDF do simulado");
+  return res.blob();
+}

@@ -25,6 +25,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import SecurityMFA from "./pages/SecurityMFA";
 import AuditLogs from "./pages/AuditLogs";
+import Simulado from "./pages/Simulado";
 import SecurityAlerts from "./pages/SecurityAlerts";
 import CookieBanner from "./components/CookieBanner";
 import Toast from "./components/Toast";
@@ -71,6 +72,7 @@ function AppRoutes() {
         <Route path="/pei" element={<PrivateRoute><PEI /></PrivateRoute>} />
         <Route path="/aee" element={<PrivateRoute><AEE /></PrivateRoute>} />
         <Route path="/aee-sessoes" element={<PrivateRoute><AEESessions /></PrivateRoute>} />
+        <Route path="/simulado" element={<PrivateRoute><Simulado /></PrivateRoute>} />
         <Route path="/seguranca" element={<PrivateRoute><SecurityMFA /></PrivateRoute>} />
         <Route path="/auditoria" element={<PrivateRoute><AuditLogs /></PrivateRoute>} />
         <Route path="/seguranca/alertas" element={<PrivateRoute><SecurityAlerts /></PrivateRoute>} />
