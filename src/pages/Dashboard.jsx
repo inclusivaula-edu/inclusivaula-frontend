@@ -7,18 +7,20 @@ import icone from "../assets/icone.png";
 
 // Ordem mobile: Gerar aula (full), Alunos|Turmas, Historico|Avaliações, Frequencia|Sessões AEE, Minha escola|Relatórios, PEI|AEE
 const CARDS = [
+  // --- Professor ---
   { emoji: "🧠", label: "Gerar Plano de aula", desc: "Crie uma aula adaptada com IA", rota: "/gerar", cor: "#2B9EC3", span: 2 },
   { emoji: "👨‍🎓", label: "Alunos", desc: "Gerencie seus alunos", rota: "/alunos", cor: "#4CAF82" },
-  { emoji: "🏫", label: "Turmas", desc: "Gerencie turmas e matrículas", rota: "/turmas", cor: "#534AB7" },
   { emoji: "📚", label: "Histórico", desc: "Veja suas aulas geradas", rota: "/historico", cor: "#4CAF82" },
-  { emoji: "✏️", label: "Avaliações", desc: "Avaliações por bimestre/semestre", rota: "/avaliacoes", cor: "#534AB7" },
   { emoji: "📅", label: "Frequência", desc: "Registre presenças e faltas", rota: "/frequencia", cor: "#2B9EC3" },
-  { emoji: "📝", label: "Sessões AEE", desc: "Frequência e evolução — FUNDEB", rota: "/aee-sessoes", cor: "#0F6E56" },
-  { emoji: "🏫", label: "Minha escola", desc: "Código de convite e professores", rota: "/escola", cor: "#2B9EC3", minRole: "coordenador" },
-  { emoji: "📄", label: "Relatórios", desc: "Semestral, família e AEE", rota: "/relatorios", cor: "#BA7517" },
+  { emoji: "✏️", label: "Avaliações", desc: "Avaliações por bimestre/semestre", rota: "/avaliacoes", cor: "#534AB7" },
   { emoji: "📋", label: "PEI", desc: "Plano Educacional Individualizado", rota: "/pei", cor: "#2B9EC3" },
   { emoji: "🎓", label: "PAEE", desc: "Plano de Atendimento Educacional Especializado", rota: "/aee", cor: "#534AB7" },
+  { emoji: "📝", label: "Sessões AEE", desc: "Frequência e evolução — FUNDEB", rota: "/aee-sessoes", cor: "#0F6E56" },
   { emoji: "📝", label: "Simulado", desc: "Simulados baseados nas aulas geradas", rota: "/simulado", cor: "#534AB7" },
+  // --- Coordenador+ ---
+  { emoji: "🏫", label: "Turmas", desc: "Gerencie turmas e matrículas", rota: "/turmas", cor: "#534AB7", minRole: "coordenador" },
+  { emoji: "🏫", label: "Minha escola", desc: "Código de convite e professores", rota: "/escola", cor: "#2B9EC3", minRole: "coordenador" },
+  { emoji: "📄", label: "Relatórios", desc: "Relatórios consolidados da escola", rota: "/relatorios", cor: "#BA7517", minRole: "coordenador" },
 ];
 
 const PLANO_LABELS = {
@@ -165,22 +167,26 @@ export default function Dashboard() {
             <button onClick={signOut} style={{ fontSize: 12, padding: "4px 10px", background: "none", border: "1px solid #d3d1c7", borderRadius: 6, cursor: "pointer", color: "#5f5e5a" }}>Sair</button>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
-          <button onClick={() => navigate("/seguranca/alertas")} style={{ flex: 1, fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "6px 4px", cursor: "pointer", color: "#5f5e5a", textAlign: "center" }}>
-            🛡️ Alertas
-          </button>
-          <button onClick={() => navigate("/seguranca")} style={{ flex: 1, fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "6px 4px", cursor: "pointer", color: "#5f5e5a", textAlign: "center" }}>
-            🔐 Segurança
-          </button>
-          <button onClick={() => navigate("/auditoria")} style={{ flex: 1, fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "6px 4px", cursor: "pointer", color: "#5f5e5a", textAlign: "center" }}>
-            📋 Auditoria
-          </button>
-        </div>
+        {hasRole("diretor") && (
+          <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={() => navigate("/seguranca/alertas")} style={{ flex: 1, fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "6px 4px", cursor: "pointer", color: "#5f5e5a", textAlign: "center" }}>
+              🛡️ Alertas
+            </button>
+            <button onClick={() => navigate("/seguranca")} style={{ flex: 1, fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "6px 4px", cursor: "pointer", color: "#5f5e5a", textAlign: "center" }}>
+              🔐 Segurança
+            </button>
+            <button onClick={() => navigate("/auditoria")} style={{ flex: 1, fontSize: 12, background: "none", border: "1px solid #d3d1c7", borderRadius: 6, padding: "6px 4px", cursor: "pointer", color: "#5f5e5a", textAlign: "center" }}>
+              📋 Auditoria
+            </button>
+          </div>
+        )}
       </header>
 
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "2rem 1rem" }}>
         <h2 style={{ fontSize: 22, fontWeight: 500, marginBottom: 8 }}>Olá, {profile?.full_name?.split(" ")[0] || "professor"} 👋</h2>
-        <p style={{ color: "#5f5e5a", marginBottom: 24 }}>O que vamos fazer hoje?</p>
+        <p style={{ color: "#5f5e5a", marginBottom: 24 }}>
+          {profile?.cargo && profile.cargo !== "professor" ? `${profile.cargo.replace(/_/g, " ")} · ` : ""}O que vamos fazer hoje?
+        </p>
 
         {/* Banner de uso do plano */}
         {uso && (
