@@ -240,18 +240,30 @@ export default function Register() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8 }}>
-              <div onClick={() => { setSchoolMode("criar"); setError(null); }} style={{
-                border: "0.5px solid #d3d1c7", borderRadius: 12,
-                padding: "1.2rem", cursor: "pointer"
-              }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = "#2B9EC3"}
-                onMouseLeave={e => e.currentTarget.style.borderColor = "#d3d1c7"}
-              >
-                <p style={{ fontWeight: 600, marginBottom: 4, color: "#2B9EC3" }}>🏫 Cadastrar escola nova</p>
-                <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
-                  Sou o primeiro professor ou diretor a cadastrar minha escola.
-                </p>
-              </div>
+              {["coordenador", "coordenador_municipal", "coordenador_estadual", "diretor", "secretario_municipal", "secretario_estadual"].includes(auth.cargo) ? (
+                <div onClick={() => { setSchoolMode("criar"); setError(null); }} style={{
+                  border: "0.5px solid #d3d1c7", borderRadius: 12,
+                  padding: "1.2rem", cursor: "pointer"
+                }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = "#2B9EC3"}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = "#d3d1c7"}
+                >
+                  <p style={{ fontWeight: 600, marginBottom: 4, color: "#2B9EC3" }}>🏫 Cadastrar escola nova</p>
+                  <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
+                    Sou coordenador(a) ou diretor(a) e vou cadastrar minha escola.
+                  </p>
+                </div>
+              ) : (
+                <div style={{
+                  border: "0.5px solid #d3d1c7", borderRadius: 12,
+                  padding: "1.2rem", opacity: 0.5
+                }}>
+                  <p style={{ fontWeight: 600, marginBottom: 4, color: "#888" }}>🏫 Cadastrar escola nova</p>
+                  <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
+                    Disponível apenas para coordenadores, diretores ou autoridades. Solicite o código de convite.
+                  </p>
+                </div>
+              )}
 
               <div onClick={() => { setSchoolMode("entrar"); setError(null); }} style={{
                 border: "0.5px solid #d3d1c7", borderRadius: 12,

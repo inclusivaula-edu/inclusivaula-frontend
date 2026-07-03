@@ -14,7 +14,7 @@ const CARDS = [
   { emoji: "✏️", label: "Avaliações", desc: "Avaliações por bimestre/semestre", rota: "/avaliacoes", cor: "#534AB7" },
   { emoji: "📅", label: "Frequência", desc: "Registre presenças e faltas", rota: "/frequencia", cor: "#2B9EC3" },
   { emoji: "📝", label: "Sessões AEE", desc: "Frequência e evolução — FUNDEB", rota: "/aee-sessoes", cor: "#0F6E56" },
-  { emoji: "🏫", label: "Minha escola", desc: "Código de convite e professores", rota: "/escola", cor: "#2B9EC3" },
+  { emoji: "🏫", label: "Minha escola", desc: "Código de convite e professores", rota: "/escola", cor: "#2B9EC3", minRole: "coordenador" },
   { emoji: "📄", label: "Relatórios", desc: "Semestral, família e AEE", rota: "/relatorios", cor: "#BA7517" },
   { emoji: "📋", label: "PEI", desc: "Plano Educacional Individualizado", rota: "/pei", cor: "#2B9EC3" },
   { emoji: "🎓", label: "PAEE", desc: "Plano de Atendimento Educacional Especializado", rota: "/aee", cor: "#534AB7" },
@@ -93,7 +93,7 @@ const CYCLE_LABELS = {
 };
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut, hasRole } = useAuth();
   const { reset } = useLesson();
   const navigate = useNavigate();
   const [uso, setUso] = useState(null);
@@ -179,7 +179,7 @@ export default function Dashboard() {
       </header>
 
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "2rem 1rem" }}>
-        <h2 style={{ fontSize: 22, fontWeight: 500, marginBottom: 8 }}>Olá, professor 👋</h2>
+        <h2 style={{ fontSize: 22, fontWeight: 500, marginBottom: 8 }}>Olá, {profile?.full_name?.split(" ")[0] || "professor"} 👋</h2>
         <p style={{ color: "#5f5e5a", marginBottom: 24 }}>O que vamos fazer hoje?</p>
 
         {/* Banner de uso do plano */}
@@ -266,7 +266,7 @@ export default function Dashboard() {
           gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(auto-fit, minmax(200px, 1fr))",
           gap: isMobile ? 10 : 16
         }}>
-          {CARDS.map(card => (
+          {CARDS.filter(card => !card.minRole || hasRole(card.minRole)).map(card => (
             <div key={card.rota} onClick={() => handleCard(card.rota)} style={{
               background: "#fff", border: "0.5px solid #d3d1c7",
               borderRadius: 12, padding: isMobile ? "1rem" : "1.5rem", cursor: "pointer",
