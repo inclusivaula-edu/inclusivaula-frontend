@@ -16,7 +16,10 @@ const PERIODOS = [
 
 const DISCIPLINAS = [
   "Matemática", "Língua Portuguesa", "Ciências", "História",
-  "Geografia", "Artes", "Educação Física", "Inglês", "Outra"
+  "Geografia", "Artes", "Educação Física", "Inglês",
+  "Ensino Religioso", "Redação", "Filosofia", "Sociologia",
+  "Física", "Química", "Biologia", "Literatura", "Espanhol",
+  "Educação Financeira", "Projeto de Vida", "Outra"
 ];
 
 export default function Assessments() {
@@ -44,7 +47,8 @@ export default function Assessments() {
     lessonIds: [],
     periodo: "1º Bimestre 2026",
     disciplina: "Matemática",
-    quantidade: 5
+    quantidade: 5,
+    pontuacao: 10
   });
 
   useEffect(() => {
@@ -91,7 +95,7 @@ export default function Assessments() {
     setLoading(true);
     try {
       const aluno = alunos.find(a => a.id === form.alunoId) || null;
-      const res = await generateExercises(form.lessonIds[0], form.alunoId || null, form.quantidade);
+      const res = await generateExercises(form.lessonIds[0], form.alunoId || null, form.quantidade, form.pontuacao);
 
       // Atualiza a tabela activities com período e disciplina
       if (res.activityId) {
@@ -139,14 +143,15 @@ export default function Assessments() {
 
   async function handleSalvarNota(alunoId) {
     const nota = notas[alunoId];
-    if (nota === undefined || nota === "") { mostrarFeedback("Digite uma nota entre 0 e 10.", "erro"); return; }
+    const maxPts = dadosAvaliacao?.pontuacao_maxima || form.pontuacao || 10;
+    if (nota === undefined || nota === "") { mostrarFeedback(`Digite uma nota entre 0 e ${maxPts}.`, "erro"); return; }
     try {
       await supabase.from("evaluations").insert([{
         student_id: alunoId,
         school_id: schoolId,
         title: `${form.disciplina} — ${form.periodo}`,
         score: Number(nota),
-        max_score: 10,
+        max_score: maxPts,
         periodo: form.periodo,
         evaluation_date: new Date().toISOString().split("T")[0]
       }]);
@@ -441,14 +446,30 @@ export default function Assessments() {
                 )}
               </div>
 
-              {/* Quantidade */}
-              <div>
-                <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
-                  Quantidade de questões: {form.quantidade}
-                </label>
-                <input type="range" min="3" max="10" step="1" value={form.quantidade}
-                  onChange={e => setForm(p => ({ ...p, quantidade: Number(e.target.value) }))}
-                  style={{ width: "100%", accentColor: "#2B9EC3" }} />
+              {/* Quantidade e pontuação */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                <div>
+                  <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
+                    Questões: {form.quantidade}
+                  </label>
+                  <input type="range" min="3" max="20" step="1" value={form.quantidade}
+                    onChange={e => setForm(p => ({ ...p, quantidade: Number(e.target.value) }))}
+                    style={{ width: "100%", accentColor: "#2B9EC3" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
+                    Valor total (pontos)
+                  </label>
+                  <select value={form.pontuacao} onChange={e => setForm(p => ({ ...p, pontuacao: Number(e.target.value) }))}
+                    style={{ width: "100%", boxSizing: "border-box" }}>
+                    {[5, 10, 15, 20, 25, 30, 40, 50, 100].map(v => (
+                      <option key={v} value={v}>{v} pontos</option>
+                    ))}
+                  </select>
+                  <p style={{ fontSize: 11, color: "#888", margin: "4px 0 0" }}>
+                    {(form.pontuacao / form.quantidade).toFixed(2)} pts/questão
+                  </p>
+                </div>
               </div>
 
               <button onClick={handleGerar} disabled={loading || form.lessonIds.length === 0} style={{
@@ -553,9 +574,12 @@ export default function Assessments() {
             {/* Registro de notas */}
             {!editando && (
               <div style={{ background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 12, padding: "1.5rem", marginTop: 8 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 500, color: "#2B9EC3", marginBottom: 16 }}>
-                  📝 Registrar notas — {dadosAvaliacao.disciplina} · {dadosAvaliacao.periodo}
+                <h3 style={{ fontSize: 15, fontWeight: 500, color: "#2B9EC3", marginBottom: 4 }}>
+                  📝 Correção e notas — {dadosAvaliacao.disciplina} · {dadosAvaliacao.periodo}
                 </h3>
+                <p style={{ fontSize: 12, color: "#5f5e5a", margin: "0 0 16px" }}>
+                  Avaliação de {dadosAvaliacao.pontuacao_maxima || form.pontuacao || 10} pontos · {(dadosAvaliacao.exercicios || []).length} questões · {((dadosAvaliacao.pontuacao_maxima || form.pontuacao || 10) / Math.max((dadosAvaliacao.exercicios || []).length, 1)).toFixed(2)} pts/questão
+                </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {alunos.map(a => (
                     <div key={a.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "10px 14px", background: "#f5f9ff", border: "0.5px solid #d3d1c7", borderRadius: 8 }}>
@@ -566,14 +590,15 @@ export default function Assessments() {
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         {notasSalvas[a.id] !== undefined ? (
                           <span style={{ fontSize: 13, padding: "4px 12px", background: "#edfff6", color: "#0F6E56", borderRadius: 20, fontWeight: 500 }}>
-                            ✅ {notasSalvas[a.id]}/10
+                            ✅ {notasSalvas[a.id]}/{dadosAvaliacao.pontuacao_maxima || form.pontuacao || 10}
                           </span>
                         ) : (
                           <>
-                            <input type="number" min="0" max="10" step="0.5" placeholder="nota"
+                            <input type="number" min="0" max={dadosAvaliacao.pontuacao_maxima || form.pontuacao || 10} step="0.5" placeholder="nota"
                               value={notas[a.id] || ""}
                               onChange={e => setNotas(prev => ({ ...prev, [a.id]: e.target.value }))}
                               style={{ width: 70, textAlign: "center", fontSize: 14, padding: "6px 8px" }} />
+                            <span style={{ fontSize: 11, color: "#888" }}>/{dadosAvaliacao.pontuacao_maxima || form.pontuacao || 10}</span>
                             <button onClick={() => handleSalvarNota(a.id)} style={{
                               fontSize: 12, padding: "6px 14px",
                               background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",

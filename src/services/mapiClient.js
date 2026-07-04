@@ -50,10 +50,10 @@ export async function getLessonPDF(jobId) {
 
 // ── EXERCÍCIOS ───────────────────────────────────────────────────
 
-export async function generateExercises(lessonId, studentId = null, quantidade = 5) {
+export async function generateExercises(lessonId, studentId = null, quantidade = 5, pontuacao = 10) {
   return request("/api/exercises/generate", {
     method: "POST",
-    body: JSON.stringify({ lessonId, studentId, quantidade })
+    body: JSON.stringify({ lessonId, studentId, quantidade, pontuacao })
   });
 }
 

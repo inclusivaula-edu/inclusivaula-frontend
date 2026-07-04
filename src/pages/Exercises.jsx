@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../services/supabaseClient";
-import { generateExercises, registerGrade } from "../services/mapiClient";
+import { generateExercises, registerGrade, deleteAvaliacao, getAvaliacaoPDFBlob } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
 export default function Exercises() {
@@ -24,6 +24,8 @@ export default function Exercises() {
   const [notas, setNotas] = useState({});
   const [salvandoNota, setSalvandoNota] = useState(false);
   const [notasSalvas, setNotasSalvas] = useState({});
+  const [pontuacao, setPontuacao] = useState(10);
+  const [quantidade, setQuantidade] = useState(5);
 
   // Carrega alunos da escola para registro de notas
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function Exercises() {
     setError(null);
     setLoading(true);
     try {
-      const res = await generateExercises(lessonId, studentId || null, 5);
+      const res = await generateExercises(lessonId, studentId || null, quantidade, pontuacao);
       setExercicios(res.data);
       setActivityId(res.activityId);
       mostrarFeedback("✅ Exercícios gerados com sucesso!");
@@ -92,6 +94,37 @@ export default function Exercises() {
     setFeedback({ msg, tipo });
     setTimeout(() => setFeedback(null), 3000);
   }
+
+  async function handleDownloadPDF(tipo) {
+    if (!activityId) return;
+    try {
+      mostrarFeedback(`Gerando PDF ${tipo}...`);
+      const blob = await getAvaliacaoPDFBlob(activityId, tipo);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `exercicios-${tipo}-${activityId.slice(0, 8)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      mostrarFeedback(`✅ PDF ${tipo} baixado!`);
+    } catch {
+      mostrarFeedback("Erro ao gerar PDF.", "erro");
+    }
+  }
+
+  async function handleExcluir() {
+    if (!activityId || !window.confirm("Excluir estes exercícios?")) return;
+    try {
+      await deleteAvaliacao(activityId);
+      setExercicios(null);
+      setActivityId(null);
+      mostrarFeedback("✅ Exercícios excluídos.");
+    } catch {
+      mostrarFeedback("Erro ao excluir.", "erro");
+    }
+  }
+
+  const btnSmall = { fontSize: 12, padding: "6px 14px", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 500 };
 
   const tipoLabel = { multipla_escolha: "Múltipla escolha", verdadeiro_falso: "V ou F", dissertativo: "Dissertativo" };
   const nivelColor = { basico: "#4CAF82", intermediario: "#BA7517", avancado: "#a32d2d" };
@@ -155,8 +188,35 @@ export default function Exercises() {
           </div>
         )}
 
-        {/* Botão de geração */}
+        {/* Configuração e botão de geração */}
         {!exercicios && (
+          <>
+          <div style={{ background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 12, padding: "1.2rem", marginBottom: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
+                  Questões: {quantidade}
+                </label>
+                <input type="range" min="3" max="20" step="1" value={quantidade}
+                  onChange={e => setQuantidade(Number(e.target.value))}
+                  style={{ width: "100%", accentColor: "#2B9EC3" }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
+                  Valor total (pontos)
+                </label>
+                <select value={pontuacao} onChange={e => setPontuacao(Number(e.target.value))}
+                  style={{ width: "100%", boxSizing: "border-box" }}>
+                  {[5, 10, 15, 20, 25, 30, 40, 50, 100].map(v => (
+                    <option key={v} value={v}>{v} pontos</option>
+                  ))}
+                </select>
+                <p style={{ fontSize: 11, color: "#888", margin: "4px 0 0" }}>
+                  {(pontuacao / quantidade).toFixed(2)} pts/questão
+                </p>
+              </div>
+            </div>
+          </div>
           <button
             onClick={handleGerar}
             disabled={loading || !lessonId}
@@ -171,6 +231,7 @@ export default function Exercises() {
           >
             {loading ? "Nexus7 gerando exercícios..." : "✏️ Gerar exercícios adaptados"}
           </button>
+          </>
         )}
 
         {/* Lista de exercícios */}
@@ -184,9 +245,14 @@ export default function Exercises() {
               <h3 style={{ fontSize: 16, fontWeight: 500, color: "#2B9EC3", marginBottom: 8 }}>
                 {exercicios.titulo}
               </h3>
-              <p style={{ fontSize: 13, color: "#5f5e5a", marginBottom: 0 }}>
+              <p style={{ fontSize: 13, color: "#5f5e5a", marginBottom: 12 }}>
                 📋 {exercicios.instrucoes}
               </p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <button onClick={() => handleDownloadPDF("aluno")} style={{ ...btnSmall, background: "#2B9EC3", color: "#fff" }}>📄 PDF aluno</button>
+                <button onClick={() => handleDownloadPDF("gabarito")} style={{ ...btnSmall, background: "#534AB7", color: "#fff" }}>📄 PDF gabarito</button>
+                <button onClick={handleExcluir} style={{ ...btnSmall, background: "#a32d2d", color: "#fff" }}>🗑 Excluir</button>
+              </div>
             </div>
 
             {exercicios.exercicios?.map((ex, i) => (
@@ -308,13 +374,13 @@ export default function Exercises() {
                             background: "#edfff6", color: "#0F6E56",
                             borderRadius: 20, fontWeight: 500
                           }}>
-                            ✅ {notasSalvas[a.id]}/10
+                            ✅ {notasSalvas[a.id]}/{exercicios?.pontuacao_maxima || pontuacao}
                           </span>
                         ) : (
                           <>
                             <input
                               type="number"
-                              min="0" max="10" step="0.5"
+                              min="0" max={exercicios?.pontuacao_maxima || pontuacao} step="0.5"
                               placeholder="nota"
                               value={notas[a.id] || ""}
                               onChange={e => setNotas(prev => ({ ...prev, [a.id]: e.target.value }))}
