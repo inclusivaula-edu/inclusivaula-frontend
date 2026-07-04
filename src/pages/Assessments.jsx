@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../services/supabaseClient";
-import { generateExercises } from "../services/mapiClient";
+import { generateExercises, deleteAvaliacao, getAvaliacaoPDFBlob } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
 const PERIODOS = [
@@ -185,6 +185,35 @@ export default function Assessments() {
     setTimeout(() => setFeedback(null), 3000);
   }
 
+  async function handleDownloadPDF(activityId, tipo) {
+    try {
+      const blob = await getAvaliacaoPDFBlob(activityId, tipo);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `avaliacao-${tipo}-${activityId.slice(0, 8)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      mostrarFeedback("Erro ao baixar PDF.", "erro");
+    }
+  }
+
+  async function handleExcluir(activityId) {
+    if (!window.confirm("Excluir esta avaliação?")) return;
+    try {
+      await deleteAvaliacao(activityId);
+      setAvaliacoesSalvas(prev => prev.filter(a => a.id !== activityId));
+      if (avaliacao?.activityId === activityId) {
+        setAvaliacao(null);
+        setEditando(false);
+      }
+      mostrarFeedback("Avaliação excluída.");
+    } catch {
+      mostrarFeedback("Erro ao excluir.", "erro");
+    }
+  }
+
   const nivelColor = { basico: "#4CAF82", intermediario: "#BA7517", avancado: "#a32d2d" };
   const tipoLabel = { multipla_escolha: "Múltipla escolha", verdadeiro_falso: "V ou F", dissertativo: "Dissertativo" };
 
@@ -294,15 +323,23 @@ export default function Assessments() {
                 <div key={at.id} style={{
                   background: "#fff", border: "0.5px solid #d3d1c7",
                   borderLeft: "3px solid #534AB7", borderRadius: 10,
-                  padding: "14px 20px", cursor: "pointer"
-                }} onClick={() => abrirAvaliacaoSalva(at)}>
-                  <p style={{ fontWeight: 500, fontSize: 14, marginBottom: 4, color: "#534AB7" }}>
-                    📝 {at.title}
-                  </p>
-                  <p style={{ fontSize: 12, color: "#5f5e5a", margin: 0 }}>
-                    {disciplina} · {periodo} · {(at.questions || []).length} questões ·{" "}
-                    {new Date(at.created_at).toLocaleDateString("pt-BR")}
-                  </p>
+                  padding: "14px 20px"
+                }}>
+                  <div style={{ cursor: "pointer" }} onClick={() => abrirAvaliacaoSalva(at)}>
+                    <p style={{ fontWeight: 500, fontSize: 14, marginBottom: 4, color: "#534AB7" }}>
+                      📝 {at.title}
+                    </p>
+                    <p style={{ fontSize: 12, color: "#5f5e5a", margin: 0 }}>
+                      {disciplina} · {periodo} · {(at.questions || []).length} questões ·{" "}
+                      {new Date(at.created_at).toLocaleDateString("pt-BR")}
+                    </p>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+                    <button onClick={() => abrirAvaliacaoSalva(at)} style={btnSmallAv}>📋 Correção</button>
+                    <button onClick={() => handleDownloadPDF(at.id, "aluno")} style={btnSmallAv}>📄 PDF aluno</button>
+                    <button onClick={() => handleDownloadPDF(at.id, "gabarito")} style={{ ...btnSmallAv, color: "#534AB7", borderColor: "#534AB7" }}>📄 PDF gabarito</button>
+                    <button onClick={() => handleExcluir(at.id)} style={{ ...btnSmallAv, color: "#a32d2d", borderColor: "#f7c1c1" }}>🗑️ Excluir</button>
+                  </div>
                 </div>
               );
             })}
@@ -435,13 +472,22 @@ export default function Assessments() {
             </button>
 
             {/* Cabeçalho */}
-            <div style={{ background: "linear-gradient(135deg, #2B9EC3, #4CAF82)", borderRadius: 12, padding: "1.2rem 1.5rem", marginBottom: 20, color: "#fff" }}>
+            <div style={{ background: "linear-gradient(135deg, #2B9EC3, #4CAF82)", borderRadius: 12, padding: "1.2rem 1.5rem", marginBottom: 12, color: "#fff" }}>
               <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>{dadosAvaliacao.titulo}</h3>
               <p style={{ fontSize: 13, opacity: 0.9, margin: 0 }}>
                 {dadosAvaliacao.disciplina} · {dadosAvaliacao.periodo}
                 {dadosAvaliacao.aluno ? ` · ${dadosAvaliacao.aluno.full_name}` : " · Turma geral"}
               </p>
             </div>
+
+            {/* Ações */}
+            {avaliacao.activityId && (
+              <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+                <button onClick={() => handleDownloadPDF(avaliacao.activityId, "aluno")} style={btnSmallAv}>📄 PDF aluno</button>
+                <button onClick={() => handleDownloadPDF(avaliacao.activityId, "gabarito")} style={{ ...btnSmallAv, color: "#534AB7", borderColor: "#534AB7" }}>📄 PDF gabarito</button>
+                <button onClick={() => handleExcluir(avaliacao.activityId)} style={{ ...btnSmallAv, color: "#a32d2d", borderColor: "#f7c1c1" }}>🗑️ Excluir</button>
+              </div>
+            )}
 
             {dadosAvaliacao.instrucoes && (
               <div style={{ background: "#f1efe8", border: "0.5px solid #d3d1c7", borderRadius: 8, padding: "12px 16px", marginBottom: 20, fontSize: 13, color: "#5f5e5a" }}>
@@ -547,3 +593,8 @@ export default function Assessments() {
     </div>
   );
 }
+
+const btnSmallAv = {
+  padding: "5px 12px", fontSize: 12, background: "#fff",
+  color: "#5f5e5a", border: "0.5px solid #d3d1c7", borderRadius: 6, cursor: "pointer"
+};

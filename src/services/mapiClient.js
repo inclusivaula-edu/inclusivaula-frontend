@@ -68,6 +68,20 @@ export async function registerGrade(activityId, studentId, score, feedback = "")
   });
 }
 
+export async function deleteAvaliacao(id) {
+  return request(`/api/exercises/${id}`, { method: "DELETE" });
+}
+
+export async function getAvaliacaoPDFBlob(id, tipo = "aluno") {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  const res = await fetch(`${BASE_URL}/api/exercises/${id}/pdf?tipo=${tipo}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erro ao gerar PDF da avaliação");
+  return res.blob();
+}
+
 // ── RELATÓRIOS ───────────────────────────────────────────────────
 
 export async function generateReport(studentId, tipo = "semestral", periodo = null) {
