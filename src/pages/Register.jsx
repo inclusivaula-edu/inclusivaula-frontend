@@ -15,6 +15,7 @@ export default function Register() {
   const [error, setError] = useState(null);
 
   const [auth, setAuth] = useState({ email: "", password: "", confirmPassword: "", full_name: "", phone: "", cargo: "professor" });
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [school, setSchool] = useState({ name: "", city: "", state: "AP", cnpj: "", phone: "", address: "" });
   const [inviteCode, setInviteCode] = useState("");
 
@@ -43,6 +44,7 @@ export default function Register() {
     if (!auth.password) return "Informe uma senha.";
     if (auth.password.length < 8) return "A senha deve ter pelo menos 8 caracteres.";
     if (auth.password !== auth.confirmPassword) return "As senhas não coincidem.";
+    if (!acceptedTerms) return "Você precisa aceitar os Termos de Uso e a Política de Privacidade.";
     return null;
   }
 
@@ -84,7 +86,8 @@ export default function Register() {
           cargo: auth.cargo,
           schoolMode,
           school: schoolMode === "criar" ? school : null,
-          inviteCode: schoolMode === "entrar" ? inviteCode : null
+          inviteCode: schoolMode === "entrar" ? inviteCode : null,
+          acceptedTerms
         })
       });
 
@@ -217,13 +220,18 @@ export default function Register() {
               </span>
             </p>
 
-            <p style={{ fontSize: 11, textAlign: "center", color: "#9b9a96", lineHeight: 1.6, margin: 0 }}>
-              Ao criar sua conta, você concorda com os{" "}
-              <a href="/termos" style={{ color: "#5f5e5a" }}>Termos de Uso</a>
-              {" "}e com a{" "}
-              <a href="/privacidade" style={{ color: "#5f5e5a" }}>Política de Privacidade</a>{" "}
-              da InclusivAula (LGPD).
-            </p>
+            <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#5f5e5a", lineHeight: 1.5, cursor: "pointer" }}>
+              <input type="checkbox" checked={acceptedTerms}
+                onChange={e => setAcceptedTerms(e.target.checked)}
+                style={{ marginTop: 2, accentColor: "#2B9EC3" }} />
+              <span>
+                Li e concordo com os{" "}
+                <a href="/termos" target="_blank" style={{ color: "#2B9EC3" }}>Termos de Uso</a>
+                {" "}e com a{" "}
+                <a href="/privacidade" target="_blank" style={{ color: "#2B9EC3" }}>Política de Privacidade</a>,
+                incluindo o tratamento de dados educacionais e de saúde de alunos conforme a LGPD.
+              </span>
+            </label>
           </div>
         )}
 

@@ -28,11 +28,39 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { email, password, full_name, phone, schoolMode, school, inviteCode } = await req.json();
+    const { email, password, full_name, phone, cargo, schoolMode, school, inviteCode, acceptedTerms } = await req.json();
 
     if (!email || !password || !full_name) {
       return new Response(JSON.stringify({ error: "Dados obrigatórios faltando." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // LGPD: consentimento explícito obrigatório
+    if (acceptedTerms !== true) {
+      return new Response(JSON.stringify({ error: "É necessário aceitar os Termos de Uso e a Política de Privacidade." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    const CARGO_TO_ROLE: Record<string, string> = {
+      professor: "professor",
+      aee: "professor",
+      psicologo: "professor",
+      outro: "professor",
+      coordenador: "coordenador",
+      coordenador_municipal: "coordenador",
+      coordenador_estadual: "coordenador",
+      diretor: "diretor",
+      secretario_municipal: "secretaria",
+      secretario_estadual: "secretaria",
+    };
+    const role = CARGO_TO_ROLE[cargo || "professor"] || "professor";
+
+    const ROLES_CAN_CREATE_SCHOOL = ["coordenador", "diretor", "secretaria", "mec"];
+    if (schoolMode === "criar" && !ROLES_CAN_CREATE_SCHOOL.includes(role)) {
+      return new Response(JSON.stringify({ error: "Apenas coordenadores, diretores ou autoridades podem cadastrar uma escola. Solicite o código de convite ao responsável da sua escola." }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
@@ -85,10 +113,11 @@ Deno.serve(async (req) => {
 
     // 3. Insere dados relacionais
     await supabaseAdmin.from("profiles").upsert([{
-      id: userId, email, full_name, role: "teacher", school_id: schoolId
+      id: userId, email, full_name, role, cargo: cargo || "professor", school_id: schoolId,
+      accepted_terms_at: new Date().toISOString()
     }]);
     await supabaseAdmin.from("users").upsert([{
-      id: userId, email, full_name, role: "teacher", school_id: schoolId
+      id: userId, email, full_name, role, cargo: cargo || "professor", school_id: schoolId
     }]);
     await supabaseAdmin.from("teachers").insert([{
       user_id: userId, school_id: schoolId,
