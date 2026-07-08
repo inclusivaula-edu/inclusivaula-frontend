@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { generatePEI, getPEIStatus, listPEIs, approvePEI, getPEIPDFBlob } from "../services/mapiClient";
+import { generatePEI, generatePDI, getPEIStatus, listPEIs, approvePEI, getPEIPDFBlob } from "../services/mapiClient";
 import { supabase } from "../services/supabaseClient";
 import icone from "../assets/icone.png";
 
@@ -21,6 +21,7 @@ export default function PEI() {
   const [loadingAlunos, setLoadingAlunos] = useState(false);
   const [alunoId, setAlunoId] = useState("");
   const [periodo, setPeriodo] = useState("1º Semestre");
+  const [tipoDoc, setTipoDoc] = useState("pei"); // "pei" | "pdi"
   const [escola, setEscola] = useState("");
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState(null);
@@ -111,7 +112,9 @@ export default function PEI() {
     setStatus(null);
     setAprovado(false);
     try {
-      const res = await generatePEI(alunoId, periodo, escola);
+      const res = tipoDoc === "pdi"
+        ? await generatePDI(alunoId, periodo, escola)
+        : await generatePEI(alunoId, periodo, escola);
       setJobId(res.jobId);
       setStatus("processing");
     } catch (err) {
@@ -275,6 +278,14 @@ export default function PEI() {
                   {alunoSelecionado.notes && <p style={{ margin: "6px 0 0", fontSize: 12, opacity: 0.85 }}>📝 {alunoSelecionado.notes}</p>}
                 </div>
               )}
+            </div>
+
+            <div>
+              <label htmlFor="pei-tipo" style={labelStyle}>Tipo de documento *</label>
+              <select id="pei-tipo" value={tipoDoc} onChange={e => setTipoDoc(e.target.value)} style={inputFull}>
+                <option value="pei">PEI — Plano Educacional Individualizado</option>
+                <option value="pdi">PDI — Plano de Desenvolvimento Individual</option>
+              </select>
             </div>
 
             <div>

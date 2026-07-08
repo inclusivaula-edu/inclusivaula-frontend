@@ -137,6 +137,43 @@ export async function listPEIs(student_id = null) {
   return request(`/api/pei${qs}`);
 }
 
+// ── PDI (Plano de Desenvolvimento Individual) ───────────────────
+
+export async function generatePDI(student_id, periodo, escola = "") {
+  return request("/api/pdi/generate", {
+    method: "POST",
+    body: JSON.stringify({ student_id, periodo, escola })
+  });
+}
+
+// ── ESTUDO DE CASO (Portaria MEC 421/2026) ──────────────────────
+
+export async function generateCaseStudy(student_id, periodo = "", escola = "") {
+  return request("/api/estudo-caso/generate", {
+    method: "POST",
+    body: JSON.stringify({ student_id, periodo, escola })
+  });
+}
+
+export async function getCaseStudyStatus(jobId) {
+  return request(`/api/estudo-caso/${jobId}/status`);
+}
+
+export async function listCaseStudies(student_id = null) {
+  const qs = student_id ? `?student_id=${student_id}` : "";
+  return request(`/api/estudo-caso${qs}`);
+}
+
+export async function getCaseStudyPDFBlob(id) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  const res = await fetch(`${BASE_URL}/api/estudo-caso/${id}/pdf`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erro ao gerar PDF do estudo de caso");
+  return res.blob();
+}
+
 // ── AEE (Atendimento Educacional Especializado) ─────────────────
 
 export async function generateAEE(student_id, periodo, escola = "") {
