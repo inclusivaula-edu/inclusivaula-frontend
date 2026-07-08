@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../services/supabaseClient";
 import {
   listAEESessions, createAEESession, updateAEESession, deleteAEESession,
-  getAEEFrequencyPDF
+  getAEEFrequencyPDF, generateAEEEvolutionReport
 } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
@@ -42,6 +42,8 @@ export default function AEESessions() {
   const [expandido, setExpandido] = useState(null);
   const [editandoId, setEditandoId] = useState(null);
   const [gerandoPDF, setGerandoPDF] = useState(false);
+  const [gerandoEvolucao, setGerandoEvolucao] = useState(false);
+  const [evolucao, setEvolucao] = useState(null);
 
   // Formulário de registro
   const [form, setForm] = useState({
@@ -147,6 +149,20 @@ export default function AEESessions() {
       mostrarFeedback("Erro ao gerar PDF de frequência.", "erro");
     } finally {
       setGerandoPDF(false);
+    }
+  }
+
+  async function handleRelatorioEvolucao() {
+    if (!alunoSelecionado) { mostrarFeedback("Selecione um aluno.", "erro"); return; }
+    setGerandoEvolucao(true); setEvolucao(null);
+    try {
+      const res = await generateAEEEvolutionReport(alunoSelecionado, form.periodo);
+      setEvolucao(res.data);
+      mostrarFeedback("✅ Relatório de evolução gerado e salvo em Relatórios!");
+    } catch (err) {
+      mostrarFeedback(err.message, "erro");
+    } finally {
+      setGerandoEvolucao(false);
     }
   }
 
@@ -340,6 +356,57 @@ export default function AEESessions() {
                     }}>
                       {gerandoPDF ? "Gerando..." : "📄 PDF de Frequência"}
                     </button>
+                    <button onClick={handleRelatorioEvolucao} disabled={gerandoEvolucao} style={{
+                      padding: "8px 16px", fontSize: 13, cursor: "pointer", borderRadius: 8, marginLeft: 8,
+                      background: gerandoEvolucao ? "#ccc" : "#534AB7", color: "#fff", border: "none", fontWeight: 500
+                    }}>
+                      {gerandoEvolucao ? "🧠 Analisando sessões..." : "📈 Relatório de Evolução (IA)"}
+                    </button>
+                  </div>
+                )}
+
+                {evolucao && (
+                  <div style={{ background: "#fff", border: "0.5px solid #d3d1c7", borderLeft: "3px solid #534AB7", borderRadius: 12, padding: "1.5rem", marginBottom: 16 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                      <h3 style={{ fontSize: 15, fontWeight: 600, color: "#534AB7", margin: 0 }}>📈 Evolução — {evolucao.periodo || form.periodo}</h3>
+                      <button onClick={() => setEvolucao(null)} style={{ fontSize: 12 }}>Fechar</button>
+                    </div>
+                    <p style={{ fontSize: 13, lineHeight: 1.7, marginBottom: 12 }}>{evolucao.sintese}</p>
+                    <p style={{ fontSize: 12, color: "#5f5e5a", marginBottom: 12 }}>
+                      Frequência: {evolucao.frequencia?.presencas}/{evolucao.frequencia?.total_sessoes} sessões ({evolucao.frequencia?.taxa_presenca}) — {evolucao.frequencia?.analise}
+                    </p>
+                    {(evolucao.avancos || []).length > 0 && (
+                      <div style={{ marginBottom: 10 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "#0F6E56", margin: "0 0 4px" }}>✅ Avanços</p>
+                        <ul style={{ margin: 0, paddingLeft: 18 }}>
+                          {evolucao.avancos.map((a, i) => <li key={i} style={{ fontSize: 13 }}><strong>{a.area}:</strong> {a.descricao}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    {(evolucao.pontos_de_atencao || []).length > 0 && (
+                      <div style={{ marginBottom: 10 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "#854F0B", margin: "0 0 4px" }}>⚠️ Pontos de atenção</p>
+                        <ul style={{ margin: 0, paddingLeft: 18 }}>
+                          {evolucao.pontos_de_atencao.map((a, i) => <li key={i} style={{ fontSize: 13 }}><strong>{a.area}:</strong> {a.descricao}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    {(evolucao.recomendacoes_pei || []).length > 0 && (
+                      <div style={{ marginBottom: 10 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "#534AB7", margin: "0 0 4px" }}>📋 Recomendações para o PEI/PAEE</p>
+                        <ul style={{ margin: 0, paddingLeft: 18 }}>
+                          {evolucao.recomendacoes_pei.map((r, i) => <li key={i} style={{ fontSize: 13 }}>{r}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    {(evolucao.orientacoes_familia || []).length > 0 && (
+                      <div>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "#2B9EC3", margin: "0 0 4px" }}>👨‍👩‍👧 Orientações à família</p>
+                        <ul style={{ margin: 0, paddingLeft: 18 }}>
+                          {evolucao.orientacoes_familia.map((o, i) => <li key={i} style={{ fontSize: 13 }}>{o}</li>)}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 )}
 

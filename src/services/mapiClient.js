@@ -239,6 +239,13 @@ export async function deleteAEESession(id) {
   return request(`/api/aee-sessions/${id}`, { method: "DELETE" });
 }
 
+export async function generateAEEEvolutionReport(studentId, periodo) {
+  return request("/api/aee-sessions/evolution-report", {
+    method: "POST",
+    body: JSON.stringify({ student_id: studentId, periodo })
+  });
+}
+
 export async function getAEEFrequencyPDF(studentId, periodo) {
   const { data: { session } } = await (await import("./supabaseClient.js")).supabase.auth.getSession();
   const token = session?.access_token;
