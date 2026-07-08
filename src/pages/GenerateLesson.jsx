@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useLesson } from "../contexts/LessonContext";
 import { generateLesson } from "../services/mapiClient";
@@ -32,18 +32,29 @@ const DISCIPLINAS = [
   "Física", "Química", "Biologia", "Outra"
 ];
 
+// Monta o texto do objetivo a partir das intervenções escolhidas no Banco de Intervenções
+function textoIntervencoes(lista) {
+  if (!lista?.length) return "";
+  const itens = lista.map(i => `- ${i.titulo}: ${i.como}`).join("\n");
+  return `Aplicar nesta aula as seguintes estratégias do Banco de Intervenções:\n${itens}`;
+}
+
 export default function GenerateLesson() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { setJobId, setStatus, setError } = useLesson();
+
+  const intervencoesVindas = location.state?.intervencoesSelecionadas || null;
+  const deficienciaVinda = location.state?.deficienciaSugerida || null;
 
   const [form, setForm] = useState({
     tema: "",
     disciplina: "Ciências",
-    deficiencia: "Geral",
+    deficiencia: deficienciaVinda || "Geral",
     serie: "1º ano",
     duracao: 50,
-    objetivo: "",
+    objetivo: textoIntervencoes(intervencoesVindas),
     periodo: "1º Bimestre"
   });
 
@@ -248,9 +259,14 @@ export default function GenerateLesson() {
           {/* Objetivo */}
           <div>
             <label htmlFor="gl-objetivo" style={labelStyle}>Objetivo da aula (opcional)</label>
+            {intervencoesVindas?.length > 0 && (
+              <div style={{ marginBottom: 8, background: "linear-gradient(135deg, #e8f7fd, #edfff6)", border: "0.5px solid #2B9EC3", borderRadius: 8, padding: "8px 12px", fontSize: 12, color: "#1a6e8a" }}>
+                💡 {intervencoesVindas.length} intervenção(ões) do Banco de Intervenções pré-preenchidas abaixo — edite à vontade.
+              </div>
+            )}
             <textarea id="gl-objetivo" name="objetivo" value={form.objetivo} onChange={handleChange}
               placeholder="Ex: que o aluno compreenda o conceito de fração própria..."
-              rows={3} style={{ ...inputFull, resize: "vertical" }} />
+              rows={intervencoesVindas?.length > 0 ? 6 : 3} style={{ ...inputFull, resize: "vertical" }} />
           </div>
 
           <button onClick={handleSubmit} disabled={loading} style={{
