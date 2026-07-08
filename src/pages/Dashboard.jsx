@@ -17,6 +17,7 @@ const CARDS = [
   { emoji: "🎓", label: "PAEE", desc: "Plano de Atendimento Educacional Especializado", rota: "/aee", cor: "#534AB7" },
   { emoji: "📝", label: "Sessões AEE", desc: "Frequência e evolução — FUNDEB", rota: "/aee-sessoes", cor: "#0F6E56" },
   { emoji: "📅", label: "Agenda", desc: "Atendimentos com lembrete por e-mail", rota: "/agenda", cor: "#2B9EC3" },
+  { emoji: "💡", label: "Intervenções", desc: "Estratégias prontas por perfil de NEE", rota: "/intervencoes", cor: "#4CAF82" },
   // --- Coordenador+ ---
   { emoji: "📝", label: "Simulado", desc: "Simulados baseados nas aulas geradas", rota: "/simulado", cor: "#534AB7", minRole: "coordenador" },
   { emoji: "🏫", label: "Turmas", desc: "Gerencie turmas e matrículas", rota: "/turmas", cor: "#534AB7", minRole: "coordenador" },
