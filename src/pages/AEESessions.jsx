@@ -44,6 +44,10 @@ export default function AEESessions() {
   const [gerandoPDF, setGerandoPDF] = useState(false);
   const [gerandoEvolucao, setGerandoEvolucao] = useState(false);
   const [evolucao, setEvolucao] = useState(null);
+  const [evidencias, setEvidencias] = useState([]);
+  const [descEvidencia, setDescEvidencia] = useState("");
+  const [enviandoEvidencia, setEnviandoEvidencia] = useState(false);
+  const [mostrarEvidencias, setMostrarEvidencias] = useState(false);
 
   // Formulário de registro
   const [form, setForm] = useState({
@@ -149,6 +153,54 @@ export default function AEESessions() {
       mostrarFeedback("Erro ao gerar PDF de frequência.", "erro");
     } finally {
       setGerandoPDF(false);
+    }
+  }
+
+  async function carregarEvidencias(alunoId) {
+    const { data } = await supabase.from("learning_evidences")
+      .select("*").eq("student_id", alunoId)
+      .order("created_at", { ascending: false }).limit(30);
+    const comUrls = await Promise.all((data || []).map(async ev => {
+      const { data: signed } = await supabase.storage.from("evidencias").createSignedUrl(ev.path, 3600);
+      return { ...ev, url: signed?.signedUrl };
+    }));
+    setEvidencias(comUrls);
+  }
+
+  async function handleUploadEvidencia(file) {
+    if (!file || !alunoSelecionado) return;
+    if (file.size > 5 * 1024 * 1024) { mostrarFeedback("Arquivo acima de 5MB.", "erro"); return; }
+    setEnviandoEvidencia(true);
+    try {
+      const { data: profile } = await supabase
+        .from("profiles").select("school_id").eq("id", user.id).single();
+      const nomeSeguro = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+      const path = `${profile.school_id}/${alunoSelecionado}/${Date.now()}-${nomeSeguro}`;
+      const { error: upErr } = await supabase.storage.from("evidencias").upload(path, file);
+      if (upErr) throw upErr;
+      const { error: insErr } = await supabase.from("learning_evidences").insert({
+        student_id: alunoSelecionado, school_id: profile.school_id, user_id: user.id,
+        descricao: descEvidencia || null, path, mime_type: file.type
+      });
+      if (insErr) throw insErr;
+      setDescEvidencia("");
+      mostrarFeedback("✅ Evidência anexada ao aluno!");
+      carregarEvidencias(alunoSelecionado);
+    } catch {
+      mostrarFeedback("Erro ao enviar evidência.", "erro");
+    } finally {
+      setEnviandoEvidencia(false);
+    }
+  }
+
+  async function excluirEvidencia(ev) {
+    if (!window.confirm("Excluir esta evidência?")) return;
+    try {
+      await supabase.storage.from("evidencias").remove([ev.path]);
+      await supabase.from("learning_evidences").delete().eq("id", ev.id);
+      setEvidencias(prev => prev.filter(e => e.id !== ev.id));
+    } catch {
+      mostrarFeedback("Erro ao excluir.", "erro");
     }
   }
 
@@ -409,6 +461,60 @@ export default function AEESessions() {
                     )}
                   </div>
                 )}
+
+                <div style={{ background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 12, padding: "1rem 1.5rem", marginBottom: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>📸 Evidências de aprendizagem ({evidencias.length})</p>
+                    <button onClick={() => { const abrir = !mostrarEvidencias; setMostrarEvidencias(abrir); if (abrir) carregarEvidencias(alunoSelecionado); }} style={{ fontSize: 12 }}>
+                      {mostrarEvidencias ? "Recolher" : "Abrir"}
+                    </button>
+                  </div>
+                  {mostrarEvidencias && (
+                    <div style={{ marginTop: 14 }}>
+                      <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+                        <input value={descEvidencia} onChange={e => setDescEvidencia(e.target.value)}
+                          placeholder="Descrição (ex: primeira escrita do nome)"
+                          style={{ flex: 1, minWidth: 200 }} aria-label="Descrição da evidência" />
+                        <label style={{
+                          padding: "8px 16px", fontSize: 13, borderRadius: 8, cursor: enviandoEvidencia ? "wait" : "pointer",
+                          background: enviandoEvidencia ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)", color: "#fff", fontWeight: 500
+                        }}>
+                          {enviandoEvidencia ? "Enviando..." : "📎 Anexar foto/PDF"}
+                          <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf"
+                            disabled={enviandoEvidencia}
+                            onChange={e => { handleUploadEvidencia(e.target.files?.[0]); e.target.value = ""; }}
+                            style={{ display: "none" }} />
+                        </label>
+                      </div>
+                      {evidencias.length === 0 ? (
+                        <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>Nenhuma evidência anexada ainda. Fotografe trabalhos, atividades e conquistas do aluno.</p>
+                      ) : (
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10 }}>
+                          {evidencias.map(ev => (
+                            <div key={ev.id} style={{ border: "0.5px solid #d3d1c7", borderRadius: 8, overflow: "hidden", background: "#f5f9ff" }}>
+                              {ev.mime_type?.startsWith("image/") ? (
+                                <a href={ev.url} target="_blank" rel="noreferrer">
+                                  <img src={ev.url} alt={ev.descricao || "Evidência de aprendizagem"} style={{ width: "100%", height: 100, objectFit: "cover", display: "block" }} />
+                                </a>
+                              ) : (
+                                <a href={ev.url} target="_blank" rel="noreferrer" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 100, fontSize: 32, textDecoration: "none" }}>📄</a>
+                              )}
+                              <div style={{ padding: "6px 8px" }}>
+                                <p style={{ fontSize: 11, margin: 0, color: "#2c2c2a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={ev.descricao || ""}>
+                                  {ev.descricao || "Sem descrição"}
+                                </p>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 2 }}>
+                                  <span style={{ fontSize: 10, color: "#888" }}>{new Date(ev.created_at).toLocaleDateString("pt-BR")}</span>
+                                  <button onClick={() => excluirEvidencia(ev)} aria-label="Excluir evidência" style={{ fontSize: 10, padding: "2px 6px", color: "#a32d2d", borderColor: "#f7c1c1" }}>🗑️</button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {sessoes.length === 0 ? (
                   <div style={{ background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 12, padding: "2rem", textAlign: "center" }}>
