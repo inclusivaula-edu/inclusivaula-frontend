@@ -1,0 +1,48 @@
+# InclusivAula — www.inclusivaula.com.br
+# Conteúdo público em /recursos é aberto a todos os crawlers,
+# incluindo crawlers de IA (treinamento e busca).
+
+User-agent: *
+Allow: /
+
+# Crawlers de IA — permitidos explicitamente
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+Sitemap: https://www.inclusivaula.com.br/sitemap.xml

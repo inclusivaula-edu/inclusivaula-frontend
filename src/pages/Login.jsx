@@ -136,6 +136,12 @@ export default function Login() {
           </button>
         </p>
 
+        <p style={{ fontSize: 13, textAlign: "center", marginTop: 16 }}>
+          <a href="/recursos/" style={{ color: "#2B9EC3" }}>
+            📚 Guias gratuitos: PEI, PAEE, Estudo de Caso e aulas adaptadas
+          </a>
+        </p>
+
         <p style={{ fontSize: 11, textAlign: "center", color: "#9b9a96", marginTop: 20, lineHeight: 1.6 }}>
           Ao entrar, você concorda com nossos{" "}
           <a href="/termos" style={{ color: "#5f5e5a" }}>Termos de Uso</a>

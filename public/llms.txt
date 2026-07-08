@@ -1,0 +1,28 @@
+# InclusivAula
+
+> Plataforma brasileira de educação inclusiva com IA. Gera plano de aula adaptado,
+> exercícios, avaliações, Estudo de Caso, PEI, PDI e PAEE para alunos com
+> deficiência e necessidades educacionais específicas (TEA, TDAH, dislexia,
+> deficiência intelectual e outros perfis), conforme BNCC, LDB, Lei 13.146/2015
+> e Portaria MEC 421/2026. Dados hospedados no Brasil, com pseudonimização
+> perante o provedor de IA (LGPD).
+
+A InclusivAula é usada por professores, salas de recursos (AEE), escolas e
+redes municipais de ensino no Brasil. Cobre o ciclo completo exigido pela
+legislação de educação especial: estudo de caso (avaliação biopsicossocial
+por barreiras, sem exigência de laudo médico) → PEI/PDI/PAEE → registro de
+atendimentos e frequência (FUNDEB) → relatório de evolução com IA → revisão
+do plano. Exporta documentos em PDF e Word.
+
+## Recursos e guias
+
+- [O que é PEI e como fazer](https://www.inclusivaula.com.br/recursos/pei/): guia completo do Plano Educacional Individualizado com estrutura obrigatória e modelo
+- [PEI, PDI e PAEE: diferenças](https://www.inclusivaula.com.br/recursos/pei-pdi-paee/): quando usar cada documento da educação especial brasileira
+- [Estudo de Caso pela Portaria MEC 421/2026](https://www.inclusivaula.com.br/recursos/estudo-de-caso-portaria-421/): como fazer a avaliação biopsicossocial por barreiras, sem laudo médico
+- [Plano de aula adaptado por perfil](https://www.inclusivaula.com.br/recursos/plano-de-aula-adaptado/): como adaptar aulas para TEA, TDAH, dislexia e outros perfis de NEE
+- [AEE na prática](https://www.inclusivaula.com.br/recursos/aee/): Atendimento Educacional Especializado — organização, registros e frequência FUNDEB
+
+## Plataforma
+
+- [Página inicial e acesso](https://www.inclusivaula.com.br/): login e cadastro de professores e escolas
+- Contato: contato@inclusivaula.com.br
