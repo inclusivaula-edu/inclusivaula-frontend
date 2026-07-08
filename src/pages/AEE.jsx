@@ -123,14 +123,14 @@ export default function AEE() {
     }
   }
 
-  async function handleDownloadPDF() {
+  async function handleDownloadPDF(formato = "pdf") {
     setBaixandoPDF(true);
     try {
-      const blob = await getAEEPDFBlob(jobId);
+      const blob = await getAEEPDFBlob(jobId, formato);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `plano-aee-${jobId}.pdf`;
+      a.download = `plano-aee-${jobId}.${formato === "docx" ? "docx" : "pdf"}`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
@@ -354,9 +354,13 @@ export default function AEE() {
                     </button>
                   </>
                 )}
-                <button onClick={handleDownloadPDF} disabled={baixandoPDF}
+                <button onClick={() => handleDownloadPDF("pdf")} disabled={baixandoPDF}
                   style={{ ...btnBase, background: baixandoPDF ? "#ccc" : "#fff", color: "#534AB7", borderColor: "#534AB7" }}>
                   {baixandoPDF ? "Gerando..." : "📄 PDF"}
+                </button>
+                <button onClick={() => handleDownloadPDF("docx")} disabled={baixandoPDF}
+                  style={{ ...btnBase, background: baixandoPDF ? "#ccc" : "#fff", color: "#185ABD", borderColor: "#185ABD" }}>
+                  📝 Word
                 </button>
                 <button onClick={handleAprovar} disabled={aprovado}
                   style={{ ...btnBase, background: aprovado ? "#edfff6" : "#fff", color: aprovado ? "#0F6E56" : "#5f5e5a", borderColor: aprovado ? "#4CAF82" : "#d3d1c7" }}>

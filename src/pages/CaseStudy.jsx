@@ -110,14 +110,14 @@ export default function CaseStudy() {
     } catch { /* silencioso */ }
   }
 
-  async function baixarPDF() {
+  async function baixarPDF(formato = "pdf") {
     setBaixando(true);
     try {
-      const blob = await getCaseStudyPDFBlob(jobId);
+      const blob = await getCaseStudyPDFBlob(jobId, formato);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `estudo-de-caso-${jobId.slice(0, 8)}.pdf`;
+      a.download = `estudo-de-caso-${jobId.slice(0, 8)}.${formato === "docx" ? "docx" : "pdf"}`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
@@ -239,8 +239,11 @@ export default function CaseStudy() {
           <>
             <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
               <button onClick={() => { setResultado(null); setStatus(null); setJobId(null); }} style={{ fontSize: 13 }}>← Gerar outro</button>
-              <button onClick={baixarPDF} disabled={baixando} style={{ fontSize: 13, background: "#534AB7", color: "#fff", border: "none" }}>
+              <button onClick={() => baixarPDF("pdf")} disabled={baixando} style={{ fontSize: 13, background: "#534AB7", color: "#fff", border: "none" }}>
                 {baixando ? "Gerando..." : "📄 Baixar PDF"}
+              </button>
+              <button onClick={() => baixarPDF("docx")} disabled={baixando} style={{ fontSize: 13, background: "#185ABD", color: "#fff", border: "none" }}>
+                📝 Baixar Word
               </button>
             </div>
 

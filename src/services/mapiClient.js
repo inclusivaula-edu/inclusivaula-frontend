@@ -164,10 +164,10 @@ export async function listCaseStudies(student_id = null) {
   return request(`/api/estudo-caso${qs}`);
 }
 
-export async function getCaseStudyPDFBlob(id) {
+export async function getCaseStudyPDFBlob(id, formato = "pdf") {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
-  const res = await fetch(`${BASE_URL}/api/estudo-caso/${id}/pdf`, {
+  const res = await fetch(`${BASE_URL}/api/estudo-caso/${id}/pdf?formato=${formato}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF do estudo de caso");
@@ -210,10 +210,10 @@ export async function approveAEE(id) {
   return request(`/api/aee/${id}/approve`, { method: "POST" });
 }
 
-export async function getPEIPDFBlob(id) {
+export async function getPEIPDFBlob(id, formato = "pdf") {
   const { data: { session } } = await (await import("./supabaseClient.js")).supabase.auth.getSession();
   const token = session?.access_token;
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/pei/${id}/pdf`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/pei/${id}/pdf?formato=${formato}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF");
@@ -297,10 +297,10 @@ export async function cancelBillingPlan() {
   return request("/api/billing/cancel", { method: "DELETE" });
 }
 
-export async function getAEEPDFBlob(id) {
+export async function getAEEPDFBlob(id, formato = "pdf") {
   const { data: { session } } = await (await import("./supabaseClient.js")).supabase.auth.getSession();
   const token = session?.access_token;
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/aee/${id}/pdf`, {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/aee/${id}/pdf?formato=${formato}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF");
