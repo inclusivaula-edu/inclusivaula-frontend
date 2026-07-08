@@ -220,6 +220,24 @@ export async function getPEIPDFBlob(id, formato = "pdf") {
   return res.blob();
 }
 
+// ── AGENDA DE ATENDIMENTOS ──────────────────────────────────────
+
+export async function listAgenda(todos = false) {
+  return request(`/api/agenda${todos ? "?todos=true" : ""}`);
+}
+
+export async function createAgendamento(data) {
+  return request("/api/agenda", { method: "POST", body: JSON.stringify(data) });
+}
+
+export async function updateAgendamento(id, data) {
+  return request(`/api/agenda/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+}
+
+export async function deleteAgendamento(id) {
+  return request(`/api/agenda/${id}`, { method: "DELETE" });
+}
+
 // ── SESSÕES AEE (Frequência — FUNDEB) ───────────────────────────
 
 export async function listAEESessions(studentId) {

@@ -28,6 +28,7 @@ import AuditLogs from "./pages/AuditLogs";
 import Simulado from "./pages/Simulado";
 import SchoolPanel from "./pages/SchoolPanel";
 import CaseStudy from "./pages/CaseStudy";
+import Agenda from "./pages/Agenda";
 import NetworkPanel from "./pages/NetworkPanel";
 import SecurityAlerts from "./pages/SecurityAlerts";
 import CookieBanner from "./components/CookieBanner";
@@ -76,6 +77,7 @@ function AppRoutes() {
         <Route path="/aee" element={<PrivateRoute><AEE /></PrivateRoute>} />
         <Route path="/aee-sessoes" element={<PrivateRoute><AEESessions /></PrivateRoute>} />
         <Route path="/simulado" element={<PrivateRoute><Simulado /></PrivateRoute>} />
+        <Route path="/agenda" element={<PrivateRoute><Agenda /></PrivateRoute>} />
         <Route path="/estudo-caso" element={<PrivateRoute><CaseStudy /></PrivateRoute>} />
         <Route path="/painel-escola" element={<PrivateRoute><SchoolPanel /></PrivateRoute>} />
         <Route path="/painel-rede" element={<PrivateRoute><NetworkPanel /></PrivateRoute>} />
