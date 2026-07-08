@@ -21,7 +21,7 @@ export default function Toast() {
   if (toasts.length === 0) return null;
 
   return (
-    <div style={{
+    <div aria-live="polite" role="status" style={{
       position: "fixed", top: 16, right: 16, zIndex: 9999,
       display: "flex", flexDirection: "column", gap: 8,
       maxWidth: "calc(100vw - 32px)"

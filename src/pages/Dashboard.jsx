@@ -274,7 +274,10 @@ export default function Dashboard() {
           gap: isMobile ? 10 : 16
         }}>
           {CARDS.filter(card => !card.minRole || hasRole(card.minRole)).map(card => (
-            <div key={card.rota} onClick={() => handleCard(card.rota)} style={{
+            <div key={card.rota} onClick={() => handleCard(card.rota)}
+              role="button" tabIndex={0} aria-label={`${card.label} — ${card.desc}`}
+              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleCard(card.rota); } }}
+              style={{
               background: "#fff", border: "0.5px solid #d3d1c7",
               borderRadius: 12, padding: isMobile ? "1rem" : "1.5rem", cursor: "pointer",
               boxShadow: "0 2px 8px rgba(43,158,195,0.06)",

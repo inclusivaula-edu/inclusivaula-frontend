@@ -44,13 +44,16 @@ export default function Login() {
       }}>
         <div style={{ textAlign: "center", marginBottom: 32 }}>
           <img src={logo} alt="InclusivAula" style={{ height: 60, marginBottom: 8 }} />
+          <h1 style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap" }}>
+            Entrar na InclusivAula
+          </h1>
           <p style={{ fontSize: 13, color: "#5f5e5a" }}>
             Educação adaptada. Inclusão de verdade.
           </p>
         </div>
 
         {error && (
-          <div style={{
+          <div role="alert" style={{
             background: "#fcebeb",
             border: "0.5px solid #a32d2d",
             borderRadius: 8,
@@ -63,12 +66,16 @@ export default function Login() {
           </div>
         )}
 
+        <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: 16 }}>
-          <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
+          <label htmlFor="login-email" style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
             E-mail
           </label>
           <input
+            id="login-email"
             type="email"
+            autoComplete="email"
+            required
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="professor@escola.com"
@@ -77,11 +84,14 @@ export default function Login() {
         </div>
 
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
+          <label htmlFor="login-password" style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
             Senha
           </label>
           <input
+            id="login-password"
             type="password"
+            autoComplete="current-password"
+            required
             value={password}
             onChange={e => setPassword(e.target.value)}
             placeholder="••••••••"
@@ -90,8 +100,9 @@ export default function Login() {
         </div>
 
         <button
-          onClick={handleSubmit}
+          type="submit"
           disabled={loading}
+          aria-busy={loading}
           style={{
             width: "100%",
             padding: "12px",
@@ -107,21 +118,22 @@ export default function Login() {
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>
+        </form>
 
         <p style={{ fontSize: 13, textAlign: "center", color: "#5f5e5a", marginTop: 12 }}>
-          <span
-            style={{ color: "#2B9EC3", cursor: "pointer" }}
+          <button type="button"
+            style={{ color: "#2B9EC3", cursor: "pointer", background: "none", border: "none", fontSize: 13, padding: 0 }}
             onClick={() => navigate("/recuperar-senha")}
           >
             Esqueci minha senha
-          </span>
+          </button>
         </p>
 
         <p style={{ fontSize: 13, textAlign: "center", color: "#5f5e5a", marginTop: 8 }}>
           Primeira vez aqui?{" "}
-          <span style={{ color: "#2B9EC3", cursor: "pointer" }} onClick={() => navigate("/cadastro")}>
+          <button type="button" style={{ color: "#2B9EC3", cursor: "pointer", background: "none", border: "none", fontSize: 13, padding: 0 }} onClick={() => navigate("/cadastro")}>
             Criar conta
-          </span>
+          </button>
         </p>
 
         <p style={{ fontSize: 11, textAlign: "center", color: "#9b9a96", marginTop: 20, lineHeight: 1.6 }}>
