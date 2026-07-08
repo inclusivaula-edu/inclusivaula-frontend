@@ -133,7 +133,7 @@ export default function Exercises() {
     <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
 
       {feedback && (
-        <div style={{
+        <div role="status" aria-live="polite" style={{
           position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)",
           background: feedback.tipo === "erro" ? "#791f1f" : "#0F6E56",
           color: "#fff", padding: "10px 24px", borderRadius: 8,
@@ -179,7 +179,7 @@ export default function Exercises() {
         </div>
 
         {error && (
-          <div style={{
+          <div role="alert" style={{
             background: "#fcebeb", border: "0.5px solid #a32d2d",
             borderRadius: 8, padding: "10px 14px",
             fontSize: 13, color: "#791f1f", marginBottom: 20

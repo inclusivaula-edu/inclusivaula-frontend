@@ -73,9 +73,9 @@ export default function ResetPassword() {
             <p style={{ fontSize: 13, color: "#5f5e5a", lineHeight: 1.6 }}>
               Se você chegou aqui por um link de e-mail, aguarde um instante.
               Se o link expirou, solicite um novo em{" "}
-              <span onClick={() => navigate("/recuperar-senha")} style={{ color: "#2B9EC3", cursor: "pointer" }}>
+              <button type="button" onClick={() => navigate("/recuperar-senha")} style={{ color: "#2B9EC3", cursor: "pointer", background: "none", border: "none", fontSize: "inherit", padding: 0 }}>
                 recuperar senha
-              </span>.
+              </button>.
             </p>
           </div>
         ) : (
@@ -88,7 +88,7 @@ export default function ResetPassword() {
             </p>
 
             {error && (
-              <div style={{
+              <div role="alert" style={{
                 background: "#fcebeb", border: "0.5px solid #a32d2d", borderRadius: 8,
                 padding: "10px 14px", fontSize: 13, color: "#791f1f", marginBottom: 20
               }}>

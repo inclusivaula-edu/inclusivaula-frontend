@@ -158,11 +158,11 @@ export default function GenerateLesson() {
 
           {/* Aluno específico */}
           <div>
-            <label style={labelStyle}>
+            <label htmlFor="gl-aluno" style={labelStyle}>
               Aluno específico
               <span style={{ color: "#888", marginLeft: 6, fontWeight: 400 }}>(opcional)</span>
             </label>
-            <select onChange={handleSelecionarAluno} value={alunoSelecionado?.id || ""}
+            <select id="gl-aluno" onChange={handleSelecionarAluno} value={alunoSelecionado?.id || ""}
               disabled={loadingAlunos} style={inputFull}>
               <option value="">{loadingAlunos ? "Carregando alunos..." : "— Gerar para perfil geral —"}</option>
               {alunos.map(a => (
@@ -194,23 +194,23 @@ export default function GenerateLesson() {
 
           {/* Tema */}
           <div>
-            <label style={labelStyle}>Tema da aula *</label>
-            <input name="tema" value={form.tema} onChange={handleChange}
+            <label htmlFor="gl-tema" style={labelStyle}>Tema da aula *</label>
+            <input id="gl-tema" name="tema" required value={form.tema} onChange={handleChange}
               placeholder="Ex: frações, fotossíntese, Segunda Guerra..." style={inputFull} />
           </div>
 
           {/* Disciplina — campo novo */}
           <div>
-            <label style={labelStyle}>Disciplina</label>
-            <select name="disciplina" value={form.disciplina} onChange={handleChange} style={inputFull}>
+            <label htmlFor="gl-disciplina" style={labelStyle}>Disciplina</label>
+            <select id="gl-disciplina" name="disciplina" value={form.disciplina} onChange={handleChange} style={inputFull}>
               {DISCIPLINAS.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
 
           {/* Período */}
           <div>
-            <label style={labelStyle}>Período letivo</label>
-            <select name="periodo" value={form.periodo} onChange={handleChange} style={inputFull}>
+            <label htmlFor="gl-periodo" style={labelStyle}>Período letivo</label>
+            <select id="gl-periodo" name="periodo" value={form.periodo} onChange={handleChange} style={inputFull}>
               {PERIODOS.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
@@ -218,20 +218,20 @@ export default function GenerateLesson() {
           {/* Perfil e série */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div>
-              <label style={labelStyle}>
+              <label htmlFor="gl-perfil" style={labelStyle}>
                 Perfil do aluno
                 {alunoSelecionado && <span style={{ color: "#4CAF82", marginLeft: 6, fontSize: 11 }}>✓ do cadastro</span>}
               </label>
-              <select name="deficiencia" value={form.deficiencia} onChange={handleChange} style={inputFull}>
+              <select id="gl-perfil" name="deficiencia" value={form.deficiencia} onChange={handleChange} style={inputFull}>
                 {DEFICIENCIAS.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
             <div>
-              <label style={labelStyle}>
+              <label htmlFor="gl-serie" style={labelStyle}>
                 Série
                 {alunoSelecionado && <span style={{ color: "#4CAF82", marginLeft: 6, fontSize: 11 }}>✓ do cadastro</span>}
               </label>
-              <select name="serie" value={form.serie} onChange={handleChange} style={inputFull}>
+              <select id="gl-serie" name="serie" value={form.serie} onChange={handleChange} style={inputFull}>
                 {SERIES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
@@ -239,16 +239,16 @@ export default function GenerateLesson() {
 
           {/* Duração */}
           <div>
-            <label style={labelStyle}>Duração: {form.duracao} minutos</label>
-            <input type="range" name="duracao" min="30" max="120" step="10"
+            <label htmlFor="gl-duracao" style={labelStyle}>Duração: {form.duracao} minutos</label>
+            <input id="gl-duracao" type="range" name="duracao" min="30" max="120" step="10"
               value={form.duracao} onChange={handleChange}
               style={{ width: "100%", accentColor: "#2B9EC3" }} />
           </div>
 
           {/* Objetivo */}
           <div>
-            <label style={labelStyle}>Objetivo da aula (opcional)</label>
-            <textarea name="objetivo" value={form.objetivo} onChange={handleChange}
+            <label htmlFor="gl-objetivo" style={labelStyle}>Objetivo da aula (opcional)</label>
+            <textarea id="gl-objetivo" name="objetivo" value={form.objetivo} onChange={handleChange}
               placeholder="Ex: que o aluno compreenda o conceito de fração própria..."
               rows={3} style={{ ...inputFull, resize: "vertical" }} />
           </div>

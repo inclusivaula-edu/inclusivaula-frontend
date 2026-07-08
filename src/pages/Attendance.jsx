@@ -115,7 +115,7 @@ export default function Attendance() {
   return (
     <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
       {feedback && (
-        <div style={{
+        <div role="status" aria-live="polite" style={{
           position: "fixed", top: 20, left: "50%", transform: "translateX(-50%)",
           background: feedback.tipo === "erro" ? "#791f1f" : "#0F6E56",
           color: "#fff", padding: "10px 24px", borderRadius: 8,

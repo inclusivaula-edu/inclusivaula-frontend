@@ -137,7 +137,7 @@ export default function Register() {
 
         {/* Erro */}
         {error && (
-          <div style={{
+          <div role="alert" style={{
             background: "#fcebeb", border: "0.5px solid #a32d2d", borderRadius: 8,
             padding: "10px 14px", fontSize: 13, color: "#791f1f", marginBottom: 20
           }}>

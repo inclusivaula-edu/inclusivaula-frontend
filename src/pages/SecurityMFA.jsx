@@ -97,7 +97,7 @@ export default function SecurityMFA() {
         </p>
 
         {error && (
-          <div style={{ background: "#fff0f0", border: "1px solid #fca5a5", color: "#dc2626", padding: 12, borderRadius: 8, fontSize: 13, marginBottom: 16 }}>
+          <div role="alert" style={{ background: "#fff0f0", border: "1px solid #fca5a5", color: "#dc2626", padding: 12, borderRadius: 8, fontSize: 13, marginBottom: 16 }}>
             {error}
           </div>
         )}
