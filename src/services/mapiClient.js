@@ -17,7 +17,12 @@ async function request(endpoint, options = {}) {
   const data = await res.json();
   if (!res.ok) {
     const msg = data.error || "Erro na requisição";
-    if (res.status === 403 && msg.toLowerCase().includes("limite")) {
+    if (res.status === 403 && data.code === "MFA_REQUIRED") {
+      window.dispatchEvent(new CustomEvent("inclusivaula:toast", {
+        detail: { message: "Esta ação exige autenticação de 2 fatores. Redirecionando para configuração...", type: "warning" }
+      }));
+      setTimeout(() => { window.location.href = "/seguranca"; }, 2500);
+    } else if (res.status === 403 && msg.toLowerCase().includes("limite")) {
       window.dispatchEvent(new CustomEvent("inclusivaula:toast", { detail: { message: msg, type: "warning" } }));
     }
     throw new Error(msg);
@@ -206,6 +211,22 @@ export async function getAEEFrequencyPDF(studentId, periodo) {
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF de frequência");
   return res.blob();
+}
+
+// ── LGPD (direitos do titular) ──────────────────────────────────
+
+export async function exportMyData() {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  const res = await fetch(`${BASE_URL}/api/lgpd/export`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erro ao exportar dados");
+  return res.blob();
+}
+
+export async function deleteMyAccount() {
+  return request("/api/lgpd/account", { method: "DELETE" });
 }
 
 // ── BILLING ──────────────────────────────────────────────────────

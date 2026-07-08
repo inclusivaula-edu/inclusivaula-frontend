@@ -164,6 +164,7 @@ export default function Dashboard() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 11, color: "#5f5e5a", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email}</span>
+            <button onClick={() => navigate("/seguranca")} title="Segurança e privacidade" style={{ fontSize: 12, padding: "4px 10px", background: "none", border: "1px solid #d3d1c7", borderRadius: 6, cursor: "pointer", color: "#5f5e5a" }}>🔐</button>
             <button onClick={signOut} style={{ fontSize: 12, padding: "4px 10px", background: "none", border: "1px solid #d3d1c7", borderRadius: 6, cursor: "pointer", color: "#5f5e5a" }}>Sair</button>
           </div>
         </div>

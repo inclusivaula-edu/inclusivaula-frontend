@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../services/supabaseClient.js";
+import { exportMyData, deleteMyAccount } from "../services/mapiClient.js";
 
 export default function SecurityMFA() {
   const navigate = useNavigate();
@@ -12,6 +13,40 @@ export default function SecurityMFA() {
   const [code, setCode] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [lgpdMsg, setLgpdMsg] = useState(null);
+  const [lgpdBusy, setLgpdBusy] = useState(false);
+
+  async function handleExportData() {
+    setLgpdBusy(true); setLgpdMsg(null);
+    try {
+      const blob = await exportMyData();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "inclusivaula-meus-dados.json";
+      a.click();
+      URL.revokeObjectURL(url);
+      setLgpdMsg({ tipo: "ok", texto: "✅ Exportação concluída. Verifique seus downloads." });
+    } catch {
+      setLgpdMsg({ tipo: "erro", texto: "Erro ao exportar dados. Tente novamente." });
+    } finally {
+      setLgpdBusy(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    const confirma = prompt('Esta ação é IRREVERSÍVEL. Seus dados pessoais serão excluídos. Digite "EXCLUIR" para confirmar:');
+    if (confirma !== "EXCLUIR") return;
+    setLgpdBusy(true); setLgpdMsg(null);
+    try {
+      await deleteMyAccount();
+      await supabase.auth.signOut();
+      window.location.href = "/";
+    } catch (err) {
+      setLgpdMsg({ tipo: "erro", texto: err.message });
+      setLgpdBusy(false);
+    }
+  }
 
   useEffect(() => { loadFactors(); }, []);
 
@@ -136,6 +171,46 @@ export default function SecurityMFA() {
             <p style={{ color: "#5f5e5a", fontSize: 14 }}>Da próxima vez que entrar, vamos pedir o código do seu app.</p>
           </div>
         )}
+      </div>
+
+      {/* Privacidade e dados — LGPD Art. 18 */}
+      <div style={{ maxWidth: 600, margin: "16px auto 0", background: "#fff", borderRadius: 16, padding: "2rem", boxShadow: "0 4px 20px rgba(43,158,195,0.08)" }}>
+        <h2 style={{ color: "#1a1a2e", marginTop: 0, fontSize: 18 }}>🛡️ Privacidade e dados (LGPD)</h2>
+        <p style={{ color: "#5f5e5a", fontSize: 13, marginBottom: 20 }}>
+          Conforme a Lei Geral de Proteção de Dados, você pode exportar uma cópia dos seus dados pessoais
+          ou solicitar a exclusão da sua conta.
+        </p>
+
+        {lgpdMsg && (
+          <div style={{
+            background: lgpdMsg.tipo === "ok" ? "#ecfdf5" : "#fff0f0",
+            border: `1px solid ${lgpdMsg.tipo === "ok" ? "#6ee7b7" : "#fca5a5"}`,
+            color: lgpdMsg.tipo === "ok" ? "#065f46" : "#dc2626",
+            padding: 12, borderRadius: 8, fontSize: 13, marginBottom: 16
+          }}>{lgpdMsg.texto}</div>
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", border: "1px solid #d3d1c7", borderRadius: 8 }}>
+            <div>
+              <div style={{ fontWeight: 500, fontSize: 14 }}>Exportar meus dados</div>
+              <div style={{ fontSize: 12, color: "#5f5e5a" }}>Baixa um arquivo JSON com seu perfil e conteúdos gerados (portabilidade)</div>
+            </div>
+            <button onClick={handleExportData} disabled={lgpdBusy} style={{ background: "none", border: "1px solid #2B9EC3", color: "#2B9EC3", padding: "8px 16px", borderRadius: 6, cursor: "pointer", fontSize: 13, whiteSpace: "nowrap" }}>
+              {lgpdBusy ? "Aguarde..." : "📦 Exportar"}
+            </button>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", border: "1px solid #fca5a5", borderRadius: 8, background: "#fffafa" }}>
+            <div>
+              <div style={{ fontWeight: 500, fontSize: 14, color: "#dc2626" }}>Excluir minha conta</div>
+              <div style={{ fontSize: 12, color: "#5f5e5a" }}>Remove seus dados pessoais permanentemente. Conteúdo pedagógico da escola é preservado.</div>
+            </div>
+            <button onClick={handleDeleteAccount} disabled={lgpdBusy} style={{ background: "none", border: "1px solid #fca5a5", color: "#dc2626", padding: "8px 16px", borderRadius: 6, cursor: "pointer", fontSize: 13, whiteSpace: "nowrap" }}>
+              🗑️ Excluir
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
