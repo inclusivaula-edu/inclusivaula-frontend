@@ -20,7 +20,9 @@ const CARDS = [
   { emoji: "📝", label: "Simulado", desc: "Simulados baseados nas aulas geradas", rota: "/simulado", cor: "#534AB7", minRole: "coordenador" },
   { emoji: "🏫", label: "Turmas", desc: "Gerencie turmas e matrículas", rota: "/turmas", cor: "#534AB7", minRole: "coordenador" },
   { emoji: "🏫", label: "Minha escola", desc: "Código de convite e professores", rota: "/escola", cor: "#2B9EC3", minRole: "coordenador" },
-  { emoji: "📄", label: "Relatórios", desc: "Relatórios consolidados da escola", rota: "/relatorios", cor: "#BA7517", minRole: "coordenador" },
+  { emoji: "📄", label: "Relatórios", desc: "Relatórios pedagógicos por aluno", rota: "/relatorios", cor: "#BA7517", minRole: "coordenador" },
+  { emoji: "📊", label: "Painel da escola", desc: "Indicadores, alertas e tendências", rota: "/painel-escola", cor: "#0F6E56", minRole: "coordenador" },
+  { emoji: "🏛️", label: "Painel da rede", desc: "Visão de todas as escolas da rede", rota: "/painel-rede", cor: "#534AB7", minRole: "secretaria" },
 ];
 
 const PLANO_LABELS = {

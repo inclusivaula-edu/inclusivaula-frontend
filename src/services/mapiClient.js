@@ -213,6 +213,20 @@ export async function getAEEFrequencyPDF(studentId, periodo) {
   return res.blob();
 }
 
+// ── GESTÃO (painéis por nível hierárquico) ──────────────────────
+
+export async function getSchoolPanel() {
+  return request("/api/management/school");
+}
+
+export async function getNetworkPanel() {
+  return request("/api/management/network");
+}
+
+export async function getGlobalPanel() {
+  return request("/api/management/global");
+}
+
 // ── LGPD (direitos do titular) ──────────────────────────────────
 
 export async function exportMyData() {
