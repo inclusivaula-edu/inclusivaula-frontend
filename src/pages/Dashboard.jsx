@@ -49,9 +49,9 @@ const PLANS_CONFIG = [
     desc: "1 professor · 100 aulas/mês · 10 relatórios",
     color: "#2B9EC3",
     cycles: {
-      mensal:    { price: 49.90,   label: "R$ 49,90/mês" },
-      semestral: { price: 44.90,   label: "R$ 44,90/mês", badge: "10% off" },
-      anual:     { price: 39.90,   label: "R$ 39,90/mês", badge: "20% off" }
+      mensal:    { price: 79.90,   label: "R$ 79,90/mês" },
+      semestral: { price: 67.90,   label: "R$ 67,90/mês", badge: "15% off" },
+      anual:     { price: 55.90,   label: "R$ 55,90/mês", badge: "30% off" }
     }
   },
   {
@@ -95,8 +95,8 @@ const PLANS_CONFIG = [
 
 const CYCLE_LABELS = {
   mensal:    { label: "Mensal",    sub: "Cancele quando quiser" },
-  semestral: { label: "Semestral", sub: "Fidelidade 6 meses · 10% off" },
-  anual:     { label: "Anual",     sub: "Fidelidade 12 meses · 20% off" }
+  semestral: { label: "Semestral", sub: "Fidelidade 6 meses · até 15% off" },
+  anual:     { label: "Anual",     sub: "Fidelidade 12 meses · até 30% off" }
 };
 
 export default function Dashboard() {
