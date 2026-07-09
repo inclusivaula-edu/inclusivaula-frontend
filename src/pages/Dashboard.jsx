@@ -8,7 +8,7 @@ import icone from "../assets/icone.png";
 // Ordem mobile: Gerar aula (full), Alunos|Turmas, Historico|Avaliações, Frequencia|Sessões AEE, Minha escola|Relatórios, PEI|AEE
 const CARDS = [
   // --- Professor ---
-  { emoji: "🧠", label: "Gerar Plano de aula", desc: "Crie uma aula adaptada com IA", rota: "/gerar", cor: "#2B9EC3", span: 2 },
+  { emoji: "🧠", label: "Gerar Plano de aula", desc: "Crie uma aula adaptada com IA", rota: "/gerar", cor: "#2B9EC3" },
   { emoji: "👨‍🎓", label: "Alunos", desc: "Gerencie seus alunos", rota: "/alunos", cor: "#4CAF82" },
   { emoji: "📚", label: "Histórico", desc: "Veja suas aulas geradas", rota: "/historico", cor: "#4CAF82" },
   { emoji: "📅", label: "Frequência", desc: "Registre presenças e faltas", rota: "/frequencia", cor: "#2B9EC3" },
@@ -199,25 +199,39 @@ export default function Dashboard() {
           <div style={{
             background: "#fff", border: "0.5px solid #d3d1c7",
             borderRadius: 12, padding: "14px 20px", marginBottom: 24,
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            flexWrap: "wrap", gap: 12,
+            display: "flex", flexDirection: "column", gap: 12,
             boxShadow: "0 2px 8px rgba(43,158,195,0.06)"
           }}>
+            {/* Linha 1: plano · mês · upgrade */}
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{
                 fontSize: 12, padding: "3px 12px", borderRadius: 20, fontWeight: 600,
-                background: planoInfo.bg, color: planoInfo.cor
+                background: planoInfo.bg, color: planoInfo.cor, whiteSpace: "nowrap"
               }}>
                 Plano {planoInfo.label}
               </span>
               <span style={{ fontSize: 13, color: "#5f5e5a" }}>
                 {uso.mes?.replace("-", "/")}
               </span>
+              {uso.plano === "free" && (
+                <button
+                  onClick={openModal}
+                  style={{
+                    fontSize: 12, padding: "6px 16px", marginLeft: "auto",
+                    background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
+                    color: "#fff", border: "none", borderRadius: 6, cursor: "pointer",
+                    fontWeight: 500, whiteSpace: "nowrap"
+                  }}
+                >
+                  ⚡ Fazer upgrade
+                </button>
+              )}
             </div>
 
-            <div style={{ display: "flex", gap: 20 }}>
+            {/* Linha 2: barras de uso lado a lado */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: isMobile ? 12 : 20, maxWidth: isMobile ? "100%" : 400 }}>
               {/* Barra de aulas */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 140 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#5f5e5a" }}>
                   <span>🧠 Aulas</span>
                   <span style={{ fontWeight: 600, color: uso.aulas.limite === -1 ? "#4CAF82" : uso.aulas.usadas >= uso.aulas.limite ? "#a32d2d" : "#2B9EC3" }}>
@@ -236,7 +250,7 @@ export default function Dashboard() {
               </div>
 
               {/* Barra de relatórios */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 140 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#5f5e5a" }}>
                   <span>📄 Relatórios</span>
                   <span style={{ fontWeight: 600, color: uso.relatorios.limite === -1 ? "#4CAF82" : uso.relatorios.usados >= uso.relatorios.limite ? "#a32d2d" : "#BA7517" }}>
@@ -254,21 +268,6 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
-
-            {/* Botão upgrade — só aparece no plano free */}
-            {uso.plano === "free" && (
-              <button
-                onClick={openModal}
-                style={{
-                  fontSize: 12, padding: "6px 16px",
-                  background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
-                  color: "#fff", border: "none", borderRadius: 6, cursor: "pointer",
-                  fontWeight: 500
-                }}
-              >
-                ⚡ Fazer upgrade
-              </button>
-            )}
           </div>
         )}
 
