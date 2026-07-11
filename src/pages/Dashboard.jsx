@@ -50,8 +50,8 @@ const PLANS_CONFIG = [
     color: "#2B9EC3",
     cycles: {
       mensal:    { price: 79.90,   label: "R$ 79,90/mês" },
-      semestral: { price: 67.90,   label: "R$ 67,90/mês", badge: "15% off" },
-      anual:     { price: 55.90,   label: "R$ 55,90/mês", badge: "30% off" }
+      semestral: { price: 74.90,   label: "R$ 74,90/mês", badge: "7% off" },
+      anual:     { price: 67.90,   label: "R$ 67,90/mês", badge: "15% off" }
     }
   },
   {
@@ -61,9 +61,9 @@ const PLANS_CONFIG = [
     desc: "Até 10 professores · Aulas ilimitadas · Painel coordenação",
     color: "#4CAF82",
     cycles: {
-      mensal:    { price: 299.00,  label: "R$ 299/mês" },
-      semestral: { price: 269.00,  label: "R$ 269/mês", badge: "10% off" },
-      anual:     { price: 239.00,  label: "R$ 239/mês", badge: "20% off" }
+      mensal:    { price: 659.00,  label: "R$ 659/mês" },
+      semestral: { price: 613.00,  label: "R$ 613/mês", badge: "7% off" },
+      anual:     { price: 559.00,  label: "R$ 559/mês", badge: "15% off" }
     }
   },
   {
@@ -74,9 +74,9 @@ const PLANS_CONFIG = [
     color: "#4CAF82",
     highlight: true,
     cycles: {
-      mensal:    { price: 798.00,  label: "R$ 798/mês" },
-      semestral: { price: 718.00,  label: "R$ 718/mês", badge: "10% off" },
-      anual:     { price: 638.00,  label: "R$ 638/mês", badge: "20% off" }
+      mensal:    { price: 1649.00, label: "R$ 1.649/mês" },
+      semestral: { price: 1529.00, label: "R$ 1.529/mês", badge: "7% off" },
+      anual:     { price: 1399.00, label: "R$ 1.399/mês", badge: "15% off" }
     }
   },
   {
@@ -86,17 +86,17 @@ const PLANS_CONFIG = [
     desc: "Até 50 professores · White-label PDFs · API + onboarding",
     color: "#534AB7",
     cycles: {
-      mensal:    { price: 2499.00, label: "R$ 2.499/mês" },
-      semestral: { price: 2249.00, label: "R$ 2.249/mês", badge: "10% off" },
-      anual:     { price: 1999.00, label: "R$ 1.999/mês", badge: "20% off" }
+      mensal:    { price: 3299.00, label: "R$ 3.299/mês" },
+      semestral: { price: 3069.00, label: "R$ 3.069/mês", badge: "7% off" },
+      anual:     { price: 2799.00, label: "R$ 2.799/mês", badge: "15% off" }
     }
   }
 ];
 
 const CYCLE_LABELS = {
   mensal:    { label: "Mensal",    sub: "Cancele quando quiser" },
-  semestral: { label: "Semestral", sub: "Fidelidade 6 meses · até 15% off" },
-  anual:     { label: "Anual",     sub: "Fidelidade 12 meses · até 30% off" }
+  semestral: { label: "Semestral", sub: "Fidelidade 6 meses · até 7% off" },
+  anual:     { label: "Anual",     sub: "Fidelidade 12 meses · até 15% off" }
 };
 
 export default function Dashboard() {
@@ -336,7 +336,7 @@ export default function Dashboard() {
                       display: "block", fontSize: 10, fontWeight: 400,
                       color: selectedCycle === key ? "#4CAF82" : "#9ca3af"
                     }}>
-                      {key === "semestral" ? "10% off" : "20% off"}
+                      {key === "semestral" ? "7% off" : "15% off"}
                     </span>
                   )}
                 </button>
