@@ -68,8 +68,8 @@ export default function Exercises() {
   }
 
   async function handleSalvarNota(alunoId) {
-    const nota = notas[alunoId];
-    if (nota === undefined || nota === "") {
+    const nota = notas[alunoId] ?? "0.00";
+    if (nota === "") {
       mostrarFeedback("Digite uma nota entre 0 e 10.", "erro");
       return;
     }
@@ -381,8 +381,8 @@ export default function Exercises() {
                             <input
                               type="number"
                               min="0" max={exercicios?.pontuacao_maxima || pontuacao} step="0.5"
-                              placeholder="nota"
-                              value={notas[a.id] || ""}
+                              placeholder="0,00"
+                              value={notas[a.id] ?? "0.00"}
                               onChange={e => setNotas(prev => ({ ...prev, [a.id]: e.target.value }))}
                               style={{
                                 width: 70, textAlign: "center",

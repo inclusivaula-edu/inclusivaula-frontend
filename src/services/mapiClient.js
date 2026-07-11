@@ -56,9 +56,13 @@ export async function getLessonPDF(jobId) {
 // ── EXERCÍCIOS ───────────────────────────────────────────────────
 
 export async function generateExercises(lessonId, studentId = null, quantidade = 5, pontuacao = 10) {
+  // lessonId pode ser um id único ou um array de ids (avaliação sobre várias aulas)
+  const body = Array.isArray(lessonId)
+    ? { lessonIds: lessonId, studentId, quantidade, pontuacao }
+    : { lessonId, studentId, quantidade, pontuacao };
   return request("/api/exercises/generate", {
     method: "POST",
-    body: JSON.stringify({ lessonId, studentId, quantidade, pontuacao })
+    body: JSON.stringify(body)
   });
 }
 

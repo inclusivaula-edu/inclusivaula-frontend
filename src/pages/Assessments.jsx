@@ -95,7 +95,7 @@ export default function Assessments() {
     setLoading(true);
     try {
       const aluno = alunos.find(a => a.id === form.alunoId) || null;
-      const res = await generateExercises(form.lessonIds[0], form.alunoId || null, form.quantidade, form.pontuacao);
+      const res = await generateExercises(form.lessonIds, form.alunoId || null, form.quantidade, form.pontuacao);
 
       // Atualiza a tabela activities com período e disciplina
       if (res.activityId) {
@@ -142,9 +142,9 @@ export default function Assessments() {
   }
 
   async function handleSalvarNota(alunoId) {
-    const nota = notas[alunoId];
+    const nota = notas[alunoId] ?? "0.00";
     const maxPts = dadosAvaliacao?.pontuacao_maxima || form.pontuacao || 10;
-    if (nota === undefined || nota === "") { mostrarFeedback(`Digite uma nota entre 0 e ${maxPts}.`, "erro"); return; }
+    if (nota === "") { mostrarFeedback(`Digite uma nota entre 0 e ${maxPts}.`, "erro"); return; }
     try {
       await supabase.from("evaluations").insert([{
         student_id: alunoId,
@@ -594,8 +594,8 @@ export default function Assessments() {
                           </span>
                         ) : (
                           <>
-                            <input type="number" min="0" max={dadosAvaliacao.pontuacao_maxima || form.pontuacao || 10} step="0.5" placeholder="nota"
-                              value={notas[a.id] || ""}
+                            <input type="number" min="0" max={dadosAvaliacao.pontuacao_maxima || form.pontuacao || 10} step="0.5" placeholder="0,00"
+                              value={notas[a.id] ?? "0.00"}
                               onChange={e => setNotas(prev => ({ ...prev, [a.id]: e.target.value }))}
                               style={{ width: 70, textAlign: "center", fontSize: 14, padding: "6px 8px" }} />
                             <span style={{ fontSize: 11, color: "#888" }}>/{dadosAvaliacao.pontuacao_maxima || form.pontuacao || 10}</span>
