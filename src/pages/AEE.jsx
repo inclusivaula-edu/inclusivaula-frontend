@@ -522,6 +522,20 @@ function renderAEE(aee) {
         </div>
       )}
 
+      {aee.necessidades_educacionais_especiais && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>Necessidades Educacionais Especiais do(a) Estudante</h4>
+          <ul style={listStyle}>
+            {aee.necessidades_educacionais_especiais.deficiencia_hipotese && <li><strong>4.1 Deficiência/hipótese específica:</strong> {aee.necessidades_educacionais_especiais.deficiencia_hipotese}</li>}
+            {aee.necessidades_educacionais_especiais.sistema_linguistico && <li><strong>4.2 Sistema linguístico:</strong> {aee.necessidades_educacionais_especiais.sistema_linguistico}</li>}
+            {aee.necessidades_educacionais_especiais.recursos_acessibilidade_utilizados && <li><strong>4.3 Recursos já utilizados:</strong> {aee.necessidades_educacionais_especiais.recursos_acessibilidade_utilizados}</li>}
+            {aee.necessidades_educacionais_especiais.atividades_adaptacoes_pretendidas && <li><strong>4.4 Atividades/adaptações pretendidas:</strong> {aee.necessidades_educacionais_especiais.atividades_adaptacoes_pretendidas}</li>}
+            {aee.necessidades_educacionais_especiais.implicacoes_acessibilidade_curricular && <li><strong>4.5 Implicações para o currículo:</strong> {aee.necessidades_educacionais_especiais.implicacoes_acessibilidade_curricular}</li>}
+            {aee.necessidades_educacionais_especiais.outras_informacoes_relevantes && <li><strong>4.6 Outras informações relevantes:</strong> {aee.necessidades_educacionais_especiais.outras_informacoes_relevantes}</li>}
+          </ul>
+        </div>
+      )}
+
       {aee.desenvolvimento_do_estudante && (
         <div style={sectionStyle}>
           <h4 style={titleStyle}>Desenvolvimento do(a) Estudante (dificuldades e potencialidades)</h4>

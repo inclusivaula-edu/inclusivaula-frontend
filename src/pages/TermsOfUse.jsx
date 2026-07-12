@@ -181,7 +181,7 @@ export default function TermsOfUse() {
 
         <div style={{ marginTop: 40, textAlign: "center", borderTop: "0.5px solid #d3d1c7", paddingTop: 24 }}>
           <button
-            onClick={() => window.history.back()}
+            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
             style={{
               padding: "10px 28px", background: "linear-gradient(135deg, #2B9EC3, #4CAF82)",
               color: "#fff", border: "none", borderRadius: 8,

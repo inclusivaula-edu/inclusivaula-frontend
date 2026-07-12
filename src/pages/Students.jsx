@@ -17,9 +17,11 @@ const DISABILITIES = [
 ];
 
 const formVazio = {
-  full_name: "", birth_date: "", grade: "1º ano", turma: "",
-  observable_behavior: "", what_helps: "",
-  disability_type: "Nenhuma", guardian_name: "", guardian_phone: "", notes: ""
+  full_name: "", birth_date: "", grade: "1º ano", turma: "", endereco: "",
+  observable_behavior: "", what_helps: "", historico_escolar: "",
+  disability_type: "Nenhuma", deficiencia_hipotese: "", sistema_linguistico: "",
+  recursos_acessibilidade: "", atividades_adaptacoes: "", implicacoes_curriculares: "",
+  guardian_name: "", guardian_phone: "", notes: ""
 };
 
 export default function Students() {
@@ -75,9 +77,16 @@ export default function Students() {
       birth_date: aluno.birth_date || "",
       grade: aluno.grade || "1º ano",
       turma: aluno.turma || "",
+      endereco: aluno.endereco || "",
       observable_behavior: aluno.observable_behavior || "",
       what_helps: aluno.what_helps || "",
+      historico_escolar: aluno.historico_escolar || "",
       disability_type: aluno.disability_type || "Nenhuma",
+      deficiencia_hipotese: aluno.deficiencia_hipotese || "",
+      sistema_linguistico: aluno.sistema_linguistico || "",
+      recursos_acessibilidade: aluno.recursos_acessibilidade || "",
+      atividades_adaptacoes: aluno.atividades_adaptacoes || "",
+      implicacoes_curriculares: aluno.implicacoes_curriculares || "",
       guardian_name: aluno.guardian_name || "",
       guardian_phone: aluno.guardian_phone || "",
       notes: aluno.notes || ""
@@ -97,9 +106,16 @@ export default function Students() {
         birth_date: form.birth_date || null,
         grade: form.grade,
         turma: form.turma || null,
+        endereco: form.endereco?.trim() || null,
         observable_behavior: form.observable_behavior?.trim() || null,
         what_helps: form.what_helps?.trim() || null,
+        historico_escolar: form.historico_escolar?.trim() || null,
         disability_type: form.disability_type === "Nenhuma" ? null : form.disability_type,
+        deficiencia_hipotese: form.deficiencia_hipotese?.trim() || null,
+        sistema_linguistico: form.sistema_linguistico?.trim() || null,
+        recursos_acessibilidade: form.recursos_acessibilidade?.trim() || null,
+        atividades_adaptacoes: form.atividades_adaptacoes?.trim() || null,
+        implicacoes_curriculares: form.implicacoes_curriculares?.trim() || null,
         guardian_name: form.guardian_name,
         guardian_phone: form.guardian_phone,
         notes: form.notes
@@ -273,11 +289,64 @@ export default function Students() {
               </div>
 
               <div>
-                <label style={labelStyle}>Perfil / Necessidade especial <span style={{ color: "#999", fontWeight: 400 }}>(opcional)</span></label>
-                <select name="disability_type" value={form.disability_type}
-                  onChange={handleChange} style={inputStyle}>
-                  {DISABILITIES.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
+                <label style={labelStyle}>Endereço</label>
+                <input name="endereco" value={form.endereco} onChange={handleChange}
+                  placeholder="Rua, número, bairro, cidade" style={inputStyle} />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Histórico escolar — comum e antecedentes relevantes</label>
+                <textarea name="historico_escolar" value={form.historico_escolar}
+                  onChange={handleChange} rows={3} maxLength={1000}
+                  placeholder="Ex: Estudou na E.M. X até o 3º ano; reprovou o 4º ano; acompanhamento fonoaudiológico desde 2024; mudança de escola por transferência da família..."
+                  style={{ ...inputStyle, resize: "vertical", fontSize: 13 }} />
+              </div>
+
+              {/* 4. Necessidades Educacionais Especiais do(a) Estudante */}
+              <div style={{ border: "1px solid #534AB7", borderRadius: 10, padding: "14px 16px", background: "#f8f7ff" }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "#534AB7", margin: "0 0 12px" }}>
+                  ♿ Necessidades Educacionais Especiais do(a) Estudante
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div>
+                    <label style={labelStyle}>Perfil / Necessidade especial <span style={{ color: "#999", fontWeight: 400 }}>(opcional)</span></label>
+                    <select name="disability_type" value={form.disability_type}
+                      onChange={handleChange} style={inputStyle}>
+                      {DISABILITIES.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>4.1 Deficiência(s) ou hipótese específica apresentada</label>
+                    <input name="deficiencia_hipotese" value={form.deficiencia_hipotese} onChange={handleChange}
+                      placeholder="Ex: Transtorno do Espectro Autista (TEA) — CID-10: F84" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>4.2 Sistema linguístico utilizado na comunicação</label>
+                    <input name="sistema_linguistico" value={form.sistema_linguistico} onChange={handleChange}
+                      placeholder="Ex: Língua portuguesa (oral e escrita), Libras, comunicação alternativa..." style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>4.3 Recursos de acessibilidade ou equipamentos já utilizados</label>
+                    <textarea name="recursos_acessibilidade" value={form.recursos_acessibilidade}
+                      onChange={handleChange} rows={2} maxLength={500}
+                      placeholder="Ex: Tablet, computador e jogos digitais de concentração e sequência lógica."
+                      style={{ ...inputStyle, resize: "vertical", fontSize: 13 }} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>4.4 Atividades/adaptações que pretende desenvolver e recursos a providenciar</label>
+                    <textarea name="atividades_adaptacoes" value={form.atividades_adaptacoes}
+                      onChange={handleChange} rows={2} maxLength={500}
+                      placeholder="Ex: Atividades e avaliações adaptadas, notebook, curso de informática, tablet."
+                      style={{ ...inputStyle, resize: "vertical", fontSize: 13 }} />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>4.5 Implicações da NEE para a acessibilidade curricular</label>
+                    <textarea name="implicacoes_curriculares" value={form.implicacoes_curriculares}
+                      onChange={handleChange} rows={3} maxLength={1000}
+                      placeholder="Ex: Currículo flexibilizado, conteúdos claros e concretos com recursos visuais, tempo adequado ao ritmo do aluno, inclusão nas programações da escola..."
+                      style={{ ...inputStyle, resize: "vertical", fontSize: 13 }} />
+                  </div>
+                </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -294,9 +363,9 @@ export default function Students() {
               </div>
 
               <div>
-                <label style={labelStyle}>Observações pedagógicas</label>
+                <label style={labelStyle}>4.6 Outras informações relevantes / observações pedagógicas</label>
                 <textarea name="notes" value={form.notes} onChange={handleChange} rows={3}
-                  placeholder="Informações relevantes para o professor..."
+                  placeholder="Ex: Realiza atividades sozinho em sala regular; dificuldade em apresentar trabalhos; alterações de humor quando não compreendido..."
                   style={{ ...inputStyle, resize: "vertical" }} />
               </div>
 
