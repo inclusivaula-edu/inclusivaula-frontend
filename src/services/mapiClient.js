@@ -285,6 +285,14 @@ export async function getSchoolPanel() {
   return request("/api/management/school");
 }
 
+export async function getSchoolInvite() {
+  return request("/api/school/invite");
+}
+
+export async function rotateSchoolInvite() {
+  return request("/api/school/invite/rotate", { method: "POST" });
+}
+
 export async function getNetworkPanel() {
   return request("/api/management/network");
 }

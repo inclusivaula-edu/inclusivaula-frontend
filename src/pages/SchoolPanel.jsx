@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getSchoolPanel } from "../services/mapiClient";
+import { getSchoolPanel, getSchoolInvite, rotateSchoolInvite } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
 const cardStyle = {
@@ -15,6 +15,83 @@ function Indicador({ rotulo, valor, sufixo = "", cor = "#2B9EC3" }) {
         {valor === null || valor === undefined ? "—" : valor}{sufixo}
       </p>
       <p style={{ fontSize: 12, color: "#5f5e5a", margin: "4px 0 0" }}>{rotulo}</p>
+    </div>
+  );
+}
+
+function ConviteProfessores() {
+  const [convite, setConvite] = useState(null);
+  const [copiado, setCopiado] = useState(null);
+  const [girando, setGirando] = useState(false);
+
+  useEffect(() => {
+    getSchoolInvite().then(res => setConvite(res.data)).catch(() => {});
+  }, []);
+
+  if (!convite) return null;
+
+  const link = `https://www.inclusivaula.com.br/cadastro?convite=${convite.inviteCode}`;
+  const vagasCheias = convite.professoresLimite !== -1 && convite.professoresAtivos >= convite.professoresLimite;
+  const msgWhats = encodeURIComponent(
+    `Olá! Você foi convidado(a) a entrar na ${convite.schoolName} na InclusivAula, plataforma de educação inclusiva com IA. Crie sua conta pelo link (o código de convite já vai preenchido): ${link}`
+  );
+
+  function copiar(texto, qual) {
+    navigator.clipboard.writeText(texto);
+    setCopiado(qual);
+    setTimeout(() => setCopiado(null), 2000);
+  }
+
+  async function novoCodigo() {
+    if (!window.confirm("Gerar um novo código invalida o atual. Links já enviados deixarão de funcionar. Continuar?")) return;
+    setGirando(true);
+    try {
+      const res = await rotateSchoolInvite();
+      setConvite(prev => ({ ...prev, inviteCode: res.data.inviteCode }));
+    } catch { /* toast global já avisa */ }
+    setGirando(false);
+  }
+
+  return (
+    <div style={{ ...cardStyle, marginBottom: 24, border: "1px solid #4CAF82" }}>
+      <p style={{ fontSize: 14, fontWeight: 600, color: "#4CAF82", margin: "0 0 4px" }}>
+        👩‍🏫 Convidar professores
+      </p>
+      <p style={{ fontSize: 12, color: "#5f5e5a", margin: "0 0 12px" }}>
+        Compartilhe o link — o professor cria a própria conta já vinculada à escola.{" "}
+        <strong>{convite.professoresAtivos}</strong>
+        {convite.professoresLimite !== -1 ? ` de ${convite.professoresLimite}` : ""} vaga(s) do plano em uso.
+      </p>
+
+      {vagasCheias && (
+        <p role="alert" style={{ fontSize: 12, color: "#791f1f", background: "#fcebeb", borderRadius: 6, padding: "6px 10px", marginBottom: 10 }}>
+          Limite de professores do plano atingido — novos convites serão recusados até um upgrade.
+        </p>
+      )}
+
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+        <code style={{
+          fontSize: 18, letterSpacing: 3, background: "#f1efe8",
+          padding: "8px 14px", borderRadius: 8, fontWeight: 600
+        }}>
+          {convite.inviteCode}
+        </code>
+        <button onClick={() => copiar(convite.inviteCode, "codigo")} style={{ fontSize: 12, padding: "8px 12px", borderRadius: 8, border: "1px solid #d3d1c7", background: "#fff", cursor: "pointer" }}>
+          {copiado === "codigo" ? "✅ Copiado" : "Copiar código"}
+        </button>
+        <button onClick={() => copiar(link, "link")} style={{ fontSize: 12, padding: "8px 12px", borderRadius: 8, border: "1px solid #2B9EC3", color: "#2B9EC3", background: "#fff", cursor: "pointer" }}>
+          {copiado === "link" ? "✅ Copiado" : "🔗 Copiar link de convite"}
+        </button>
+        <a href={`https://wa.me/?text=${msgWhats}`} target="_blank" rel="noreferrer" style={{
+          fontSize: 12, padding: "8px 12px", borderRadius: 8, border: "1px solid #4CAF82",
+          color: "#4CAF82", background: "#fff", textDecoration: "none"
+        }}>
+          💬 Enviar por WhatsApp
+        </a>
+        <button onClick={novoCodigo} disabled={girando} style={{ fontSize: 12, padding: "8px 12px", borderRadius: 8, border: "none", background: "none", color: "#5f5e5a", cursor: "pointer", textDecoration: "underline" }}>
+          {girando ? "Gerando..." : "Gerar novo código"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -47,6 +124,8 @@ export default function SchoolPanel() {
         <p style={{ fontSize: 13, color: "#5f5e5a", marginBottom: 24 }}>
           Visão consolidada de gestão — alunos, frequência, desempenho, documentos e alertas
         </p>
+
+        <ConviteProfessores />
 
         {loading && <p role="status">Carregando indicadores...</p>}
         {error && (

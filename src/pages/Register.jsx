@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "../services/supabaseClient";
 import logo from "../assets/logo.png";
 
@@ -9,15 +9,18 @@ const EDGE_URL = "https://mauafavxvwzcvcotdjdi.supabase.co/functions/v1/register
 
 export default function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const conviteURL = (searchParams.get("convite") || "").toUpperCase();
+
   const [step, setStep] = useState(1);
-  const [schoolMode, setSchoolMode] = useState(null);
+  const [schoolMode, setSchoolMode] = useState(conviteURL ? "entrar" : null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const [auth, setAuth] = useState({ email: "", password: "", confirmPassword: "", full_name: "", phone: "", cargo: "professor" });
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [school, setSchool] = useState({ name: "", city: "", state: "AP", cnpj: "", phone: "", address: "" });
-  const [inviteCode, setInviteCode] = useState("");
+  const [inviteCode, setInviteCode] = useState(conviteURL);
 
   function handleAuth(e) { setAuth(prev => ({ ...prev, [e.target.name]: e.target.value })); }
   function handleSchool(e) { setSchool(prev => ({ ...prev, [e.target.name]: e.target.value })); }
@@ -373,7 +376,9 @@ export default function Register() {
                 Código de convite
               </h2>
               <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
-                Solicite o código ao administrador da sua escola
+                {conviteURL
+                  ? "🎉 Você recebeu um convite! O código já está preenchido — confirme abaixo."
+                  : "Solicite o código ao administrador da sua escola"}
               </p>
             </div>
 
@@ -382,8 +387,8 @@ export default function Register() {
               <input
                 value={inviteCode}
                 onChange={e => setInviteCode(e.target.value.toUpperCase())}
-                placeholder="Ex: AB12CD"
-                maxLength={8}
+                placeholder="Ex: AB12CD34EF"
+                maxLength={12}
                 style={{
                   ...inputStyle,
                   fontFamily: "monospace", fontSize: 22,
