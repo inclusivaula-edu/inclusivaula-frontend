@@ -149,6 +149,7 @@ export default function Assessments() {
       await supabase.from("evaluations").insert([{
         student_id: alunoId,
         school_id: schoolId,
+        created_by: user.id,
         title: `${form.disciplina} — ${form.periodo}`,
         score: Number(nota),
         max_score: maxPts,
