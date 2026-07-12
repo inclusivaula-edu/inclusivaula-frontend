@@ -9,6 +9,7 @@ import GenerateLesson from "./pages/GenerateLesson";
 import LessonResult from "./pages/LessonResult";
 import History from "./pages/History";
 import Students from "./pages/Students";
+import ImportStudents from "./pages/ImportStudents";
 import SchoolAdmin from "./pages/SchoolAdmin";
 import Exercises from "./pages/Exercises";
 import Reports from "./pages/Reports";
@@ -67,6 +68,7 @@ function AppRoutes() {
         <Route path="/resultado" element={<PrivateRoute><LessonResult /></PrivateRoute>} />
         <Route path="/historico" element={<PrivateRoute><History /></PrivateRoute>} />
         <Route path="/alunos" element={<PrivateRoute><Students /></PrivateRoute>} />
+        <Route path="/alunos/importar" element={<PrivateRoute><ImportStudents /></PrivateRoute>} />
         <Route path="/escola" element={<PrivateRoute><SchoolAdmin /></PrivateRoute>} />
         <Route path="/exercicios" element={<PrivateRoute><Exercises /></PrivateRoute>} />
         <Route path="/relatorios" element={<PrivateRoute><Reports /></PrivateRoute>} />

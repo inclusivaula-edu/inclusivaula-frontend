@@ -285,6 +285,13 @@ export async function getSchoolPanel() {
   return request("/api/management/school");
 }
 
+export async function importStudents(alunos, confirmacaoLGPD) {
+  return request("/api/students/import", {
+    method: "POST",
+    body: JSON.stringify({ alunos, confirmacaoLGPD })
+  });
+}
+
 export async function getSchoolInvite() {
   return request("/api/school/invite");
 }

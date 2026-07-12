@@ -174,6 +174,10 @@ export default function Students() {
           color: "#fff", border: "none", borderRadius: 8,
           padding: "8px 16px", fontSize: 13, cursor: "pointer"
         }}>+ Novo aluno</button>
+        <button onClick={() => navigate("/alunos/importar")} style={{
+          background: "#fff", color: "#2B9EC3", border: "1px solid #2B9EC3",
+          borderRadius: 8, padding: "8px 16px", fontSize: 13, cursor: "pointer", marginLeft: 8
+        }}>📥 Importar planilha</button>
       </header>
 
       <main style={{ maxWidth: 800, margin: "0 auto", padding: "2rem 1rem" }}>
