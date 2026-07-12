@@ -376,6 +376,11 @@ export default function Students() {
                     color: "#BA7517", border: "0.5px solid #BA7517",
                     borderRadius: 6, cursor: "pointer"
                   }}>✏️ Editar</button>
+                  <button onClick={() => navigate(`/alunos/${s.id}/documentos`)} style={{
+                    fontSize: 12, padding: "4px 12px", background: "#fff",
+                    color: "#534AB7", border: "0.5px solid #534AB7",
+                    borderRadius: 6, cursor: "pointer"
+                  }}>📎 Documentos</button>
                 </div>
               </div>
             ))}
