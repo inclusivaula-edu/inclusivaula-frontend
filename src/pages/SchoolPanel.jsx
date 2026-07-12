@@ -155,7 +155,7 @@ export default function SchoolPanel() {
                 </p>
               </div>
               <div style={cardStyle}>
-                <p style={{ fontSize: 14, fontWeight: 500, color: "#2B9EC3", margin: "0 0 6px" }}>♿ Planos AEE</p>
+                <p style={{ fontSize: 14, fontWeight: 500, color: "#2B9EC3", margin: "0 0 6px" }}>♿ PAEE</p>
                 <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
                   {dados.documentos.aee.concluidos} concluído(s) de {dados.documentos.aee.total} gerado(s)
                 </p>

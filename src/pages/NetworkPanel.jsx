@@ -59,7 +59,7 @@ export default function NetworkPanel() {
                 ["Alunos", dados.totais.alunos, "#2B9EC3"],
                 ["Professores", dados.totais.professores, "#2B9EC3"],
                 ["PEIs concluídos", dados.totais.pei_concluidos, "#534AB7"],
-                ["Planos AEE concluídos", dados.totais.aee_concluidos, "#4CAF82"]
+                ["PAEEs concluídos", dados.totais.aee_concluidos, "#4CAF82"]
               ].map(([rotulo, valor, cor]) => (
                 <div key={rotulo} style={cardStyle}>
                   <p style={{ fontSize: 26, fontWeight: 600, color: cor, margin: 0 }}>{valor}</p>

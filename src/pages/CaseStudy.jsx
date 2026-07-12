@@ -304,7 +304,7 @@ export default function CaseStudy() {
                   → Elaborar PEI/PDI deste aluno
                 </button>
                 <button onClick={() => navigate("/aee")} style={{ flex: 1, padding: 10, background: "#fff", color: "#534AB7", border: "1px solid #534AB7", borderRadius: 8, fontSize: 14, cursor: "pointer" }}>
-                  → Elaborar Plano AEE
+                  → Elaborar PAEE
                 </button>
               </div>
             )}

@@ -86,7 +86,7 @@ export default function AEE() {
           clearInterval(interval);
         } else if (res.status === "error") {
           setStatus("error");
-          setLocalError("Erro ao gerar Plano AEE. Tente novamente.");
+          setLocalError("Erro ao gerar PAEE. Tente novamente.");
           clearInterval(interval);
         }
       } catch { /* retry */ }
@@ -117,7 +117,7 @@ export default function AEE() {
     try {
       await approveAEE(jobId);
       setAprovado(true);
-      mostrarFeedback("✅ Plano AEE aprovado!");
+      mostrarFeedback("✅ PAEE aprovado!");
     } catch {
       mostrarFeedback("Erro ao aprovar.", "erro");
     }
@@ -174,11 +174,11 @@ export default function AEE() {
   }
 
   async function handleExcluirAEE(id) {
-    if (!window.confirm("Excluir este Plano AEE? Esta ação não pode ser desfeita.")) return;
+    if (!window.confirm("Excluir este PAEE? Esta ação não pode ser desfeita.")) return;
     try {
       await supabase.from("aee_documents").delete().eq("id", id);
       setHistorico(prev => prev.filter(h => h.id !== id));
-      mostrarFeedback("Plano AEE excluído.");
+      mostrarFeedback("PAEE excluído.");
     } catch {
       mostrarFeedback("Erro ao excluir.", "erro");
     }
@@ -195,7 +195,7 @@ export default function AEE() {
       await supabase.from("aee_documents").update({ result: resultadoEdit }).eq("id", jobId);
       setResultado(resultadoEdit);
       setEditando(false);
-      mostrarFeedback("Plano AEE salvo!");
+      mostrarFeedback("PAEE salvo!");
     } catch {
       mostrarFeedback("Erro ao salvar.", "erro");
     } finally {
@@ -246,7 +246,7 @@ export default function AEE() {
               color: tab === t ? "#fff" : "#5f5e5a",
               fontSize: 13, fontWeight: 500, cursor: "pointer"
             }}>
-              {t === "gerar" ? "Gerar Plano AEE" : "Histórico"}
+              {t === "gerar" ? "Gerar PAEE" : "Histórico"}
             </button>
           ))}
         </div>
@@ -307,7 +307,7 @@ export default function AEE() {
               color: "#fff", border: "none", borderRadius: 8,
               fontSize: 15, fontWeight: 500, cursor: (loading || status === "processing") ? "not-allowed" : "pointer"
             }}>
-              {status === "processing" ? "⏳ Gerando Plano AEE..." : loading ? "Enviando..." : "🏫 Gerar Plano AEE"}
+              {status === "processing" ? "⏳ Gerando PAEE..." : loading ? "Enviando..." : "🏫 Gerar PAEE"}
             </button>
           </div>
         )}
@@ -319,7 +319,7 @@ export default function AEE() {
             boxShadow: "0 2px 8px rgba(43,158,195,0.06)"
           }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>⏳</div>
-            <p style={{ fontSize: 15, fontWeight: 500, color: "#534AB7" }}>Gerando Plano AEE com inteligência artificial...</p>
+            <p style={{ fontSize: 15, fontWeight: 500, color: "#534AB7" }}>Gerando PAEE com inteligência artificial...</p>
             <p style={{ fontSize: 13, color: "#5f5e5a", marginTop: 8 }}>
               O Nexus7 está elaborando o plano de atendimento especializado.
               Isso pode levar até 30 segundos.
@@ -330,7 +330,7 @@ export default function AEE() {
         {resultado && status === "completed" && (
           <div style={{ marginTop: 20 }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16, alignItems: "center", justifyContent: "space-between" }}>
-              <h3 style={{ fontSize: 18, fontWeight: 500, color: "#534AB7", margin: 0 }}>Plano AEE Gerado</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 500, color: "#534AB7", margin: 0 }}>PAEE Gerado</h3>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <button onClick={() => { setResultado(null); setStatus(null); setJobId(null); setAprovado(false); setEditando(false); }}
                   style={{ ...btnBase, background: "#fff", color: "#5f5e5a" }}>
@@ -377,7 +377,7 @@ export default function AEE() {
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {loadingHist && <p style={{ fontSize: 13, color: "#5f5e5a" }}>Carregando...</p>}
             {!loadingHist && historico.length === 0 && (
-              <p style={{ fontSize: 13, color: "#5f5e5a" }}>Nenhum Plano AEE gerado ainda.</p>
+              <p style={{ fontSize: 13, color: "#5f5e5a" }}>Nenhum PAEE gerado ainda.</p>
             )}
             {historico.map(h => (
               <div key={h.id} style={{
@@ -519,6 +519,30 @@ function renderAEE(aee) {
               <ul style={listStyle}>{(aee.avaliacao_inicial.barreiras_aprendizagem || []).map((b, i) => <li key={i}>{b}</li>)}</ul>
             </div>
           </div>
+        </div>
+      )}
+
+      {aee.desenvolvimento_do_estudante && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>Desenvolvimento do(a) Estudante (dificuldades e potencialidades)</h4>
+          {aee.desenvolvimento_do_estudante.funcao_cognitiva && (
+            <div style={{ marginBottom: 10 }}>
+              <strong style={{ fontSize: 12, color: "#534AB7" }}>Função Cognitiva:</strong>
+              <ul style={listStyle}>
+                {aee.desenvolvimento_do_estudante.funcao_cognitiva.percepcao && <li><strong>Percepção:</strong> {aee.desenvolvimento_do_estudante.funcao_cognitiva.percepcao}</li>}
+                {aee.desenvolvimento_do_estudante.funcao_cognitiva.atencao && <li><strong>Atenção:</strong> {aee.desenvolvimento_do_estudante.funcao_cognitiva.atencao}</li>}
+                {aee.desenvolvimento_do_estudante.funcao_cognitiva.memoria && <li><strong>Memória:</strong> {aee.desenvolvimento_do_estudante.funcao_cognitiva.memoria}</li>}
+                {aee.desenvolvimento_do_estudante.funcao_cognitiva.linguagem && <li><strong>Linguagem:</strong> {aee.desenvolvimento_do_estudante.funcao_cognitiva.linguagem}</li>}
+                {aee.desenvolvimento_do_estudante.funcao_cognitiva.raciocinio_logico && <li><strong>Raciocínio lógico:</strong> {aee.desenvolvimento_do_estudante.funcao_cognitiva.raciocinio_logico}</li>}
+              </ul>
+            </div>
+          )}
+          {aee.desenvolvimento_do_estudante.funcao_motora_psicomotora?.desenvolvimento_e_capacidade_motora && (
+            <p style={textStyle}><strong style={{ color: "#2B9EC3" }}>Função Motora e Psicomotora:</strong> {aee.desenvolvimento_do_estudante.funcao_motora_psicomotora.desenvolvimento_e_capacidade_motora}</p>
+          )}
+          {aee.desenvolvimento_do_estudante.funcao_interpessoal_afetiva?.area_emocional_afetiva_social && (
+            <p style={textStyle}><strong style={{ color: "#4CAF82" }}>Funções Interpessoais — Afetivas (emocional, afetiva e social):</strong> {aee.desenvolvimento_do_estudante.funcao_interpessoal_afetiva.area_emocional_afetiva_social}</p>
+          )}
         </div>
       )}
 
