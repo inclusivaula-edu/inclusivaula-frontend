@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 .env
 echo ".env" >> .gitignore
+.vercel
+.claude/
