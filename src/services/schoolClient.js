@@ -32,10 +32,18 @@ export async function createTeacher({ user_id, school_id, full_name, email, phon
   return data;
 }
 
-export async function createStudent({ school_id, full_name, birth_date, grade, disability_type, guardian_name, guardian_phone, notes }) {
+export async function createStudent({ school_id, full_name, birth_date, grade, turma, observable_behavior, what_helps, disability_type, guardian_name, guardian_phone, notes }) {
+  const { data: { user } } = await supabase.auth.getUser();
   const { data, error } = await supabase
     .from("students")
-    .insert([{ school_id, full_name, birth_date, grade, disability_type, guardian_name, guardian_phone, notes }])
+    .insert([{
+      school_id, full_name, birth_date, grade,
+      turma: turma || null,
+      observable_behavior: observable_behavior || null,
+      what_helps: what_helps || null,
+      disability_type, guardian_name, guardian_phone, notes,
+      created_by: user?.id || null
+    }])
     .select()
     .single();
 
