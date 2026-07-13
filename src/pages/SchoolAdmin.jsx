@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../services/supabaseClient";
 import icone from "../assets/icone.png";
+import ConviteProfessores from "../components/ConviteProfessores";
 
 const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
@@ -11,7 +12,6 @@ export default function SchoolAdmin() {
   const navigate = useNavigate();
   const [school, setSchool] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
   const [teachers, setTeachers] = useState([]);
   const [editando, setEditando] = useState(false);
   const [formEscola, setFormEscola] = useState({});
@@ -48,12 +48,6 @@ export default function SchoolAdmin() {
     }
     if (user) load();
   }, [user]);
-
-  function handleCopy() {
-    navigator.clipboard.writeText(school.invite_code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
 
   async function handleSalvarEscola() {
     if (!formEscola.name?.trim() || !formEscola.city?.trim()) {
@@ -284,37 +278,11 @@ export default function SchoolAdmin() {
               )}
             </div>
 
-            {/* Código de convite */}
-            <div style={{
-              background: "linear-gradient(135deg, #e8f7fd, #edfff6)",
-              border: "0.5px solid #2B9EC3", borderRadius: 10, padding: "14px 16px"
-            }}>
-              <p style={{ fontSize: 12, color: "#1a6e8a", marginBottom: 8, fontWeight: 500 }}>
-                🔑 Código de convite para novos professores
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <span style={{
-                  fontFamily: "monospace", fontSize: 22, fontWeight: 700,
-                  letterSpacing: 4, color: "#2B9EC3"
-                }}>
-                  {school.invite_code}
-                </span>
-                <button onClick={handleCopy} style={{
-                  fontSize: 12, padding: "6px 14px",
-                  background: copied ? "#4CAF82" : "#fff",
-                  color: copied ? "#fff" : "#2B9EC3",
-                  border: `0.5px solid ${copied ? "#4CAF82" : "#2B9EC3"}`,
-                  borderRadius: 6, cursor: "pointer"
-                }}>
-                  {copied ? "✅ Copiado!" : "Copiar"}
-                </button>
-              </div>
-              <p style={{ fontSize: 11, color: "#5f5e5a", marginTop: 8, marginBottom: 0 }}>
-                Compartilhe este código com professores da sua escola para que eles entrem na plataforma.
-              </p>
-            </div>
           </div>
         )}
+
+        {/* CONVITE DE PROFESSORES */}
+        <ConviteProfessores />
 
         {/* LISTA DE PROFESSORES */}
         <div style={{
