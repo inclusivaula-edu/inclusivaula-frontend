@@ -50,6 +50,23 @@ export default function ConviteProfessores() {
         {convite.professoresLimite !== -1 ? ` de ${convite.professoresLimite}` : ""} vaga(s) do plano em uso.
       </p>
 
+      {convite.vagasFree && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+          {Object.entries(convite.vagasFree).map(([k, v]) => {
+            const cheia = v.usadas >= v.limite;
+            return (
+              <span key={k} style={{
+                fontSize: 11, padding: "4px 10px", borderRadius: 12, fontWeight: 600,
+                background: cheia ? "#f1efe8" : "#edfff6",
+                color: cheia ? "#9b9a96" : "#0F6E56"
+              }}>
+                {v.rotulo}: {v.usadas}/{v.limite}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
       {vagasCheias && (
         <p role="alert" style={{ fontSize: 12, color: "#791f1f", background: "#fcebeb", borderRadius: 6, padding: "6px 10px", marginBottom: 10 }}>
           Limite de professores do plano atingido — novos convites serão recusados até um upgrade.
