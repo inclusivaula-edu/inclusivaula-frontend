@@ -374,7 +374,9 @@ export default function PEI() {
               </div>
             </div>
 
-            {editando ? renderPEIEdit(resultado, resultadoEdit, setResultadoEdit) : renderPEI(resultado)}
+            {editando
+              ? renderPEIEdit(resultado, resultadoEdit, setResultadoEdit)
+              : (resultado.dimensoes_desenvolvimento ? renderPDI(resultado) : renderPEI(resultado))}
           </div>
         )}
 
@@ -461,6 +463,127 @@ function renderPEIEdit(original, edit, setEdit) {
       <p style={{ fontSize: 12, color: "#888", marginTop: 8 }}>
         Edite os campos acima e clique em "Salvar" para atualizar o PEI.
       </p>
+    </div>
+  );
+}
+
+function renderPDI(pdi) {
+  const sectionStyle = {
+    background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 10,
+    padding: "16px 20px", marginBottom: 14,
+    boxShadow: "0 1px 4px rgba(43,158,195,0.04)"
+  };
+  const titleStyle = { fontSize: 14, fontWeight: 600, color: "#2B9EC3", marginBottom: 10 };
+  const textStyle = { fontSize: 13, color: "#333", lineHeight: 1.6 };
+  const listStyle = { fontSize: 13, color: "#333", lineHeight: 1.8, paddingLeft: 20 };
+
+  return (
+    <div>
+      {pdi.identificacao && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>1. Identificação</h4>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px 24px", fontSize: 13, color: "#333" }}>
+            <span><strong>Aluno:</strong> {pdi.identificacao.nome_aluno}</span>
+            <span><strong>Série:</strong> {pdi.identificacao.serie}</span>
+            <span><strong>Escola:</strong> {pdi.identificacao.escola}</span>
+            <span><strong>Período:</strong> {pdi.identificacao.periodo}</span>
+            <span><strong>NEE:</strong> {pdi.identificacao.deficiencia_nee}</span>
+            <span><strong>Responsável:</strong> {pdi.identificacao.responsavel}</span>
+            <span><strong>Data:</strong> {pdi.identificacao.data_elaboracao}</span>
+          </div>
+        </div>
+      )}
+
+      {pdi.perfil_desenvolvimento && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>2. Perfil de Desenvolvimento</h4>
+          <p style={textStyle}>{pdi.perfil_desenvolvimento.nivel_atual}</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 10 }}>
+            <div>
+              <strong style={{ fontSize: 12, color: "#4CAF82" }}>Potencialidades:</strong>
+              <ul style={listStyle}>{(pdi.perfil_desenvolvimento.potencialidades || []).map((p, i) => <li key={i}>{p}</li>)}</ul>
+            </div>
+            <div>
+              <strong style={{ fontSize: 12, color: "#BA7517" }}>Necessidades:</strong>
+              <ul style={listStyle}>{(pdi.perfil_desenvolvimento.necessidades || []).map((n, i) => <li key={i}>{n}</li>)}</ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {(pdi.dimensoes_desenvolvimento || []).length > 0 && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>3. Dimensões do Desenvolvimento — metas do período</h4>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {pdi.dimensoes_desenvolvimento.map((d, i) => (
+              <div key={i} style={{ border: "0.5px solid #e5e7eb", borderLeft: "3px solid #534AB7", borderRadius: 8, padding: "10px 14px" }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "#534AB7", margin: "0 0 6px" }}>{d.dimensao}</p>
+                {d.situacao_atual && <p style={textStyle}><strong>Situação atual:</strong> {d.situacao_atual}</p>}
+                {d.meta_periodo && <p style={textStyle}><strong>🎯 Meta do período:</strong> {d.meta_periodo}</p>}
+                {(d.marcos_verificaveis || []).length > 0 && (
+                  <p style={textStyle}><strong>Marcos verificáveis:</strong> {d.marcos_verificaveis.join("; ")}</p>
+                )}
+                {(d.estrategias || []).length > 0 && (
+                  <p style={textStyle}><strong>Estratégias:</strong> {d.estrategias.join("; ")}</p>
+                )}
+                {d.responsavel && <p style={{ ...textStyle, color: "#5f5e5a" }}><strong>Responsável:</strong> {d.responsavel}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(pdi.recursos_apoios || []).length > 0 && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>4. Recursos e Apoios</h4>
+          <ul style={listStyle}>{pdi.recursos_apoios.map((r, i) => <li key={i}>{r}</li>)}</ul>
+        </div>
+      )}
+
+      {(pdi.tecnologia_assistiva || []).length > 0 && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>5. Tecnologia Assistiva</h4>
+          <ul style={listStyle}>
+            {pdi.tecnologia_assistiva.map((ta, i) => (
+              <li key={i}>{typeof ta === "string" ? ta : <><strong>{ta.recurso}</strong>: {ta.finalidade}{ta.como_obter ? ` — ${ta.como_obter}` : ""}</>}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {pdi.avaliacao_progresso && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>6. Avaliação do Progresso</h4>
+          {(pdi.avaliacao_progresso.instrumentos || []).length > 0 && (
+            <p style={textStyle}><strong>Instrumentos:</strong> {pdi.avaliacao_progresso.instrumentos.join("; ")}</p>
+          )}
+          {pdi.avaliacao_progresso.frequencia && <p style={textStyle}><strong>Frequência:</strong> {pdi.avaliacao_progresso.frequencia}</p>}
+          {pdi.avaliacao_progresso.criterios_avanco && <p style={textStyle}><strong>Critérios de avanço:</strong> {pdi.avaliacao_progresso.criterios_avanco}</p>}
+        </div>
+      )}
+
+      {(pdi.participacao_familia || []).length > 0 && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>7. Participação da Família</h4>
+          <ul style={listStyle}>{pdi.participacao_familia.map((o, i) => <li key={i}>{o}</li>)}</ul>
+        </div>
+      )}
+
+      {pdi.cronograma_revisao && (
+        <div style={sectionStyle}>
+          <h4 style={titleStyle}>8. Cronograma de Revisão</h4>
+          {(pdi.cronograma_revisao.datas_revisao || []).length > 0 && (
+            <p style={textStyle}><strong>Revisões:</strong> {pdi.cronograma_revisao.datas_revisao.join("; ")}</p>
+          )}
+          {pdi.cronograma_revisao.responsavel_revisao && (
+            <p style={textStyle}><strong>Responsáveis:</strong> {pdi.cronograma_revisao.responsavel_revisao}</p>
+          )}
+        </div>
+      )}
+
+      {pdi.base_legal && (
+        <p style={{ fontSize: 11, color: "#9b9a96", marginTop: 4 }}>Base legal: {pdi.base_legal}</p>
+      )}
     </div>
   );
 }
