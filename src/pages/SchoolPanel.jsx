@@ -190,6 +190,42 @@ export default function SchoolPanel() {
               </div>
             )}
 
+            {/* Frequência do AEE — base do FUNDEB */}
+            {dados.frequencia_aee && dados.frequencia_aee.total_nee > 0 && (
+              <div style={{ ...cardStyle, marginBottom: 24, border: "1px solid #0F6E56" }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "#0F6E56", margin: "0 0 4px" }}>
+                  🩺 Frequência do AEE (base do FUNDEB)
+                </p>
+                <p style={{ fontSize: 12, color: "#5f5e5a", margin: "0 0 12px" }}>
+                  Últimos 30 dias: <strong>{dados.frequencia_aee.sessoes_30d}</strong> sessão(ões) ·{" "}
+                  <strong>{dados.frequencia_aee.alunos_atendidos_30d}</strong> de {dados.frequencia_aee.total_nee} aluno(s) com NEE atendido(s).
+                  {" "}O FUNDEB considera o aluno matriculado no AEE — atendimento sem registro é repasse perdido.
+                </p>
+                {dados.frequencia_aee.sem_atendimento_30d.length === 0 ? (
+                  <p style={{ fontSize: 13, color: "#0F6E56", margin: 0 }}>✅ Todos os alunos com NEE têm atendimento registrado nos últimos 30 dias.</p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 220, overflowY: "auto" }}>
+                    {dados.frequencia_aee.sem_atendimento_30d.map(a => (
+                      <div key={a.id} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, fontSize: 13, padding: "6px 10px", background: "#fff5f5", borderRadius: 8 }}>
+                        <span style={{ flex: 1, minWidth: 140 }}><strong>{a.nome}</strong> <span style={{ color: "#9b9a96" }}>({a.nee})</span></span>
+                        <span style={{ fontSize: 12, color: "#791f1f", fontWeight: 600 }}>
+                          {a.ultima_sessao === null
+                            ? "nunca atendido"
+                            : `${a.dias_sem_atendimento} dias sem atendimento (último: ${new Date(a.ultima_sessao).toLocaleDateString("pt-BR")})`}
+                        </span>
+                        <button onClick={() => navigate("/agenda")} style={{
+                          fontSize: 11, padding: "3px 10px", borderRadius: 12, border: "1px solid #0F6E56",
+                          background: "#fff", color: "#0F6E56", cursor: "pointer", fontWeight: 600
+                        }}>
+                          📅 Agendar
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Documentos por tipo */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
               <div style={cardStyle}>
