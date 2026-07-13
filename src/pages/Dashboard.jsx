@@ -14,16 +14,16 @@ const CARDS = [
   { emoji: "📅", label: "Frequência", desc: "Registre presenças e faltas", rota: "/frequencia", cor: "#2B9EC3" },
   { emoji: "✏️", label: "Avaliações", desc: "Avaliações por bimestre/semestre", rota: "/avaliacoes", cor: "#534AB7" },
   { emoji: "📋", label: "PEI", desc: "Plano Educacional Individualizado", rota: "/pei", cor: "#2B9EC3" },
-  { emoji: "🎓", label: "PAEE", desc: "Plano de Atendimento Educacional Especializado", rota: "/aee", cor: "#534AB7" },
-  { emoji: "📝", label: "Sessões AEE", desc: "Frequência e evolução — FUNDEB", rota: "/aee-sessoes", cor: "#0F6E56" },
+  { emoji: "🎓", label: "PAEE", desc: "Plano de Atendimento Educacional Especializado", rota: "/aee", cor: "#534AB7", aeeOnly: true },
+  { emoji: "📝", label: "Sessões AEE", desc: "Frequência e evolução — FUNDEB", rota: "/aee-sessoes", cor: "#0F6E56", aeeOnly: true },
   { emoji: "📅", label: "Agenda", desc: "Atendimentos com lembrete por e-mail", rota: "/agenda", cor: "#2B9EC3" },
-  { emoji: "💡", label: "Intervenções", desc: "Estratégias prontas por perfil de NEE", rota: "/intervencoes", cor: "#4CAF82" },
+  { emoji: "💡", label: "Intervenções", desc: "Estratégias prontas por perfil de NEE", rota: "/intervencoes", cor: "#4CAF82", aeeOnly: true },
   // --- Coordenador+ ---
   { emoji: "📝", label: "Simulado", desc: "Simulados baseados nas aulas geradas", rota: "/simulado", cor: "#534AB7", minRole: "coordenador" },
   { emoji: "🏫", label: "Turmas", desc: "Gerencie turmas e matrículas", rota: "/turmas", cor: "#534AB7", minRole: "coordenador" },
   { emoji: "🏫", label: "Minha escola", desc: "Código de convite e professores", rota: "/escola", cor: "#2B9EC3", minRole: "coordenador" },
   { emoji: "📄", label: "Relatórios", desc: "Relatórios pedagógicos por aluno", rota: "/relatorios", cor: "#BA7517", minRole: "coordenador" },
-  { emoji: "🔍", label: "Estudo de Caso", desc: "Avaliação biopsicossocial (Portaria 421/2026)", rota: "/estudo-caso", cor: "#BA7517" },
+  { emoji: "🔍", label: "Estudo de Caso", desc: "Avaliação biopsicossocial (Portaria 421/2026)", rota: "/estudo-caso", cor: "#BA7517", aeeOnly: true },
   { emoji: "📊", label: "Painel da escola", desc: "Indicadores, alertas e tendências", rota: "/painel-escola", cor: "#0F6E56", minRole: "coordenador" },
   { emoji: "🏛️", label: "Painel da rede", desc: "Visão de todas as escolas da rede", rota: "/painel-rede", cor: "#534AB7", minRole: "secretaria" },
 ];
@@ -277,7 +277,12 @@ export default function Dashboard() {
           gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(auto-fit, minmax(200px, 1fr))",
           gap: isMobile ? 10 : 16
         }}>
-          {CARDS.filter(card => !card.minRole || hasRole(card.minRole)).map(card => (
+          {CARDS.filter(card => {
+            if (card.minRole && !hasRole(card.minRole)) return false;
+            // Cards de AEE: apenas profissionais de AEE (cargo) ou gestão (coordenador+)
+            if (card.aeeOnly && profile?.cargo !== "aee" && !hasRole("coordenador")) return false;
+            return true;
+          }).map(card => (
             <div key={card.rota} onClick={() => handleCard(card.rota)}
               role="button" tabIndex={0} aria-label={`${card.label} — ${card.desc}`}
               onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleCard(card.rota); } }}
