@@ -496,6 +496,11 @@ function renderPEI(pei) {
         <div style={sectionStyle}>
           <h4 style={titleStyle}>2. Diagnóstico Pedagógico</h4>
           <p style={textStyle}><strong>Nível atual:</strong> {pei.diagnostico_pedagogico.nivel_atual}</p>
+          {pei.diagnostico_pedagogico.desempenho_registrado && (
+            <p style={{ ...textStyle, marginTop: 8, background: "#eaf6fa", borderRadius: 8, padding: "8px 12px" }}>
+              <strong>📊 Desempenho registrado (frequência, notas e AEE):</strong> {pei.diagnostico_pedagogico.desempenho_registrado}
+            </p>
+          )}
           <p style={{ ...textStyle, marginTop: 8 }}><strong>Estilo de aprendizagem:</strong> {pei.diagnostico_pedagogico.estilo_aprendizagem}</p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 10 }}>
             <div>
