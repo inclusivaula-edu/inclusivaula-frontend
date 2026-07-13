@@ -18,6 +18,9 @@ export default function SchoolAdmin() {
   const [salvando, setSalvando] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [editandoProf, setEditandoProf] = useState(null);
+  const [formProf, setFormProf] = useState({ full_name: "", phone: "", specialization: "" });
+  const [salvandoProf, setSalvandoProf] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -29,7 +32,7 @@ export default function SchoolAdmin() {
         .from("schools").select("*").eq("id", profile.school_id).single();
 
       const { data: teachersData } = await supabase
-        .from("teachers").select("id, full_name, email, created_at")
+        .from("teachers").select("id, full_name, email, phone, specialization, created_at")
         .eq("school_id", profile.school_id).order("full_name");
 
       setSchool(schoolData);
@@ -48,6 +51,30 @@ export default function SchoolAdmin() {
     }
     if (user) load();
   }, [user]);
+
+  async function salvarProfessor(teacherId) {
+    if (!formProf.full_name.trim()) { mostrarFeedback("Informe o nome do professor.", "erro"); return; }
+    setSalvandoProf(true);
+    try {
+      const { data, error } = await supabase
+        .from("teachers")
+        .update({
+          full_name: formProf.full_name.trim(),
+          phone: formProf.phone.trim() || null,
+          specialization: formProf.specialization.trim() || null
+        })
+        .eq("id", teacherId)
+        .select().single();
+      if (error) throw error;
+      setTeachers(prev => prev.map(t => t.id === teacherId ? data : t));
+      setEditandoProf(null);
+      mostrarFeedback("✅ Dados do professor atualizados.");
+    } catch {
+      mostrarFeedback("Erro ao salvar os dados do professor.", "erro");
+    } finally {
+      setSalvandoProf(false);
+    }
+  }
 
   async function handleSalvarEscola() {
     if (!formEscola.name?.trim() || !formEscola.city?.trim()) {
@@ -302,20 +329,55 @@ export default function SchoolAdmin() {
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {teachers.map(t => (
                 <div key={t.id} style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
                   padding: "12px 14px", background: "#f5f9ff",
                   border: "0.5px solid #d3d1c7", borderRadius: 8
                 }}>
-                  <div>
-                    <p style={{ fontWeight: 500, marginBottom: 2, fontSize: 14 }}>{t.full_name}</p>
-                    <p style={{ fontSize: 12, color: "#5f5e5a", margin: 0 }}>{t.email}</p>
-                  </div>
-                  <span style={{
-                    fontSize: 11, padding: "3px 10px",
-                    background: "#e8f7fd", color: "#1a6e8a", borderRadius: 20
-                  }}>
-                    Professor
-                  </span>
+                  {editandoProf === t.id ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      <input value={formProf.full_name}
+                        onChange={e => setFormProf(p => ({ ...p, full_name: e.target.value }))}
+                        placeholder="Nome completo" style={{ fontSize: 13, padding: 8 }} />
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                        <input value={formProf.phone}
+                          onChange={e => setFormProf(p => ({ ...p, phone: e.target.value }))}
+                          placeholder="Telefone" style={{ fontSize: 13, padding: 8 }} />
+                        <input value={formProf.specialization}
+                          onChange={e => setFormProf(p => ({ ...p, specialization: e.target.value }))}
+                          placeholder="Cargo/especialização (ex: aee, professor)" style={{ fontSize: 13, padding: 8 }} />
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => salvarProfessor(t.id)} disabled={salvandoProf}
+                          style={{ fontSize: 12, padding: "6px 14px", background: "#4CAF82", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }}>
+                          {salvandoProf ? "Salvando..." : "💾 Salvar"}
+                        </button>
+                        <button onClick={() => setEditandoProf(null)}
+                          style={{ fontSize: 12, padding: "6px 14px", background: "#fff", color: "#5f5e5a", border: "0.5px solid #d3d1c7", borderRadius: 6, cursor: "pointer" }}>
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <div>
+                        <p style={{ fontWeight: 500, marginBottom: 2, fontSize: 14 }}>{t.full_name || "(sem nome)"}</p>
+                        <p style={{ fontSize: 12, color: "#5f5e5a", margin: 0 }}>{t.email}{t.phone ? ` · ${t.phone}` : ""}</p>
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{
+                          fontSize: 11, padding: "3px 10px",
+                          background: "#e8f7fd", color: "#1a6e8a", borderRadius: 20
+                        }}>
+                          {t.specialization === "aee" ? "Profissional de AEE" : (t.specialization || "Professor")}
+                        </span>
+                        <button onClick={() => {
+                          setEditandoProf(t.id);
+                          setFormProf({ full_name: t.full_name || "", phone: t.phone || "", specialization: t.specialization || "" });
+                        }} style={{ fontSize: 12, padding: "4px 12px", background: "#fff", color: "#BA7517", border: "0.5px solid #BA7517", borderRadius: 6, cursor: "pointer" }}>
+                          ✏️ Editar
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

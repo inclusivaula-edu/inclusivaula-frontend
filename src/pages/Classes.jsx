@@ -17,11 +17,7 @@ const DISCIPLINAS = [
   "Geografia", "Artes", "Educação Física", "Inglês", "Outra"
 ];
 
-const PERIODOS = [
-  "1º Bimestre 2026", "2º Bimestre 2026", "3º Bimestre 2026", "4º Bimestre 2026",
-  "1º Trimestre 2026", "2º Trimestre 2026", "3º Trimestre 2026",
-  "1º Semestre 2026", "2º Semestre 2026", "Ano letivo 2026"
-];
+const TURNOS = ["Matutino", "Vespertino", "Noturno", "Integral"];
 
 export default function Classes() {
   const { user } = useAuth();
@@ -51,7 +47,7 @@ export default function Classes() {
   // Formulário nova turma
   const [formTurma, setFormTurma] = useState({
     name: "", grade: "1º ano", turma: "", disciplina: "Ciências",
-    periodo: "1º Bimestre 2026", year: "2026", school_id: ""
+    turno: "Matutino", year: "2026", school_id: ""
   });
   const [salvandoTurma, setSalvandoTurma] = useState(false);
 
@@ -170,13 +166,14 @@ export default function Classes() {
           grade: formTurma.grade,
           turma: formTurma.turma || null,
           disciplina: formTurma.disciplina,
-          periodo: formTurma.periodo,
+          turno: formTurma.turno,
+          periodo: `Ano letivo ${formTurma.year || "2026"}`,
           year: formTurma.year
         }])
         .select().single();
       if (error) throw new Error(error.message);
       setTodasTurmas(prev => [data, ...prev]);
-      setFormTurma({ name: "", grade: "1º ano", turma: "", disciplina: "Ciências", periodo: "1º Bimestre 2026", year: "2026", school_id: schoolId });
+      setFormTurma({ name: "", grade: "1º ano", turma: "", disciplina: "Ciências", turno: "Matutino", year: "2026", school_id: schoolId });
       setAba("lista");
       mostrarFeedback("Turma criada com sucesso!");
     } catch (err) {
@@ -432,7 +429,7 @@ export default function Classes() {
                           <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
                             {t.grade}{t.turma ? ` · Turma ${t.turma}` : ""}
                             {t.disciplina ? ` · ${t.disciplina}` : ""}
-                            {t.periodo ? ` · ${t.periodo}` : ""}
+                            {t.turno ? ` · ${t.turno}` : ""}
                           </p>
                           {temMultiEscolas && escola && (
                             <p style={{ fontSize: 12, color: "#BA7517", margin: "4px 0 0" }}>
@@ -505,9 +502,9 @@ export default function Classes() {
                     </select>
                   </div>
                   <div>
-                    <label style={labelStyle}>Período</label>
-                    <select value={formTurma.periodo} onChange={e => setFormTurma(p => ({ ...p, periodo: e.target.value }))} style={inputFull}>
-                      {PERIODOS.map(p => <option key={p} value={p}>{p}</option>)}
+                    <label style={labelStyle}>Turno</label>
+                    <select value={formTurma.turno} onChange={e => setFormTurma(p => ({ ...p, turno: e.target.value }))} style={inputFull}>
+                      {TURNOS.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                 </div>
@@ -538,7 +535,7 @@ export default function Classes() {
               <p style={{ fontSize: 13, opacity: 0.9, margin: 0 }}>
                 {turmaSelecionada.grade}{turmaSelecionada.turma ? ` · Turma ${turmaSelecionada.turma}` : ""}
                 {turmaSelecionada.disciplina ? ` · ${turmaSelecionada.disciplina}` : ""}
-                {turmaSelecionada.periodo ? ` · ${turmaSelecionada.periodo}` : ""}
+                {turmaSelecionada.turno ? ` · ${turmaSelecionada.turno}` : ""}
                 {temMultiEscolas && escolasMap[turmaSelecionada.school_id] && (
                   <span style={{ marginLeft: 8, opacity: 0.85 }}>
                     · {escolasMap[turmaSelecionada.school_id].name}
