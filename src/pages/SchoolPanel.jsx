@@ -146,18 +146,74 @@ export default function SchoolPanel() {
               <Indicador rotulo="Média de notas (0-10)" valor={dados.desempenho.media_notas} cor={dados.desempenho.media_notas !== null && dados.desempenho.media_notas < 6 ? "#BA7517" : "#4CAF82"} />
             </div>
 
-            {/* PEI / AEE */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 24 }}>
+            {/* Pendências documentais — o raio-X da inclusão */}
+            {dados.pendencias_documentais && dados.pendencias_documentais.total_nee > 0 && (
+              <div style={{ ...cardStyle, marginBottom: 24, border: "1px solid #BA7517" }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "#854F0B", margin: "0 0 4px" }}>
+                  📌 Pendências documentais — alunos com NEE
+                </p>
+                <p style={{ fontSize: 12, color: "#5f5e5a", margin: "0 0 12px" }}>
+                  {dados.pendencias_documentais.total_nee} aluno(s) com NEE ·{" "}
+                  <strong style={{ color: dados.pendencias_documentais.sem_estudo_caso ? "#a32d2d" : "#0F6E56" }}>
+                    {dados.pendencias_documentais.sem_estudo_caso} sem estudo de caso
+                  </strong>{" · "}
+                  <strong style={{ color: dados.pendencias_documentais.sem_pei ? "#a32d2d" : "#0F6E56" }}>
+                    {dados.pendencias_documentais.sem_pei} sem PEI
+                  </strong>{" · "}
+                  <strong style={{ color: dados.pendencias_documentais.sem_paee ? "#a32d2d" : "#0F6E56" }}>
+                    {dados.pendencias_documentais.sem_paee} sem PAEE
+                  </strong>
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 260, overflowY: "auto" }}>
+                  {dados.pendencias_documentais.alunos.map(a => (
+                    <div key={a.id} style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, fontSize: 13, padding: "6px 10px", background: "#fffbf3", borderRadius: 8 }}>
+                      <span style={{ flex: 1, minWidth: 140 }}><strong>{a.nome}</strong> <span style={{ color: "#9b9a96" }}>({a.nee})</span></span>
+                      {[
+                        ["Estudo de caso", a.tem_estudo_caso, "/estudo-caso"],
+                        ["PEI", a.tem_pei, "/pei"],
+                        ["PAEE", a.tem_paee, "/aee"]
+                      ].map(([rotulo, tem, rota]) => (
+                        <button key={rotulo} onClick={() => !tem && navigate(rota)} disabled={tem}
+                          title={tem ? `${rotulo} concluído` : `Gerar ${rotulo} agora`}
+                          style={{
+                            fontSize: 11, padding: "3px 10px", borderRadius: 12,
+                            border: "none", cursor: tem ? "default" : "pointer",
+                            background: tem ? "#edfff6" : "#fcebeb",
+                            color: tem ? "#0F6E56" : "#791f1f", fontWeight: 600
+                          }}>
+                          {tem ? `✓ ${rotulo}` : `✗ ${rotulo}`}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Documentos por tipo */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
+              <div style={cardStyle}>
+                <p style={{ fontSize: 14, fontWeight: 500, color: "#BA7517", margin: "0 0 6px" }}>🔎 Estudo de Caso</p>
+                <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
+                  {dados.documentos.estudo_caso?.concluidos ?? 0} concluído(s) de {dados.documentos.estudo_caso?.total ?? 0}
+                </p>
+              </div>
               <div style={cardStyle}>
                 <p style={{ fontSize: 14, fontWeight: 500, color: "#534AB7", margin: "0 0 6px" }}>📋 PEI</p>
                 <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
-                  {dados.documentos.pei.concluidos} concluído(s) de {dados.documentos.pei.total} gerado(s)
+                  {dados.documentos.pei.concluidos} concluído(s) de {dados.documentos.pei.total}
+                </p>
+              </div>
+              <div style={cardStyle}>
+                <p style={{ fontSize: 14, fontWeight: 500, color: "#0F6E56", margin: "0 0 6px" }}>🗂 PDI</p>
+                <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
+                  {dados.documentos.pdi?.concluidos ?? 0} concluído(s) de {dados.documentos.pdi?.total ?? 0}
                 </p>
               </div>
               <div style={cardStyle}>
                 <p style={{ fontSize: 14, fontWeight: 500, color: "#2B9EC3", margin: "0 0 6px" }}>♿ PAEE</p>
                 <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
-                  {dados.documentos.aee.concluidos} concluído(s) de {dados.documentos.aee.total} gerado(s)
+                  {dados.documentos.aee.concluidos} concluído(s) de {dados.documentos.aee.total}
                 </p>
               </div>
             </div>
