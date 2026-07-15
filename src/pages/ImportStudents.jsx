@@ -38,6 +38,7 @@ const MODELO_CSV = "Nome do aluno;Data de nascimento;Série;Turma;NEE;Responsáv
 export default function ImportStudents() {
   const navigate = useNavigate();
   const [linhas, setLinhas] = useState(null);
+  const [marcadas, setMarcadas] = useState([]); // índices das linhas que serão importadas
   const [mapa, setMapa] = useState(null);
   const [nomeArquivo, setNomeArquivo] = useState("");
   const [erro, setErro] = useState(null);
@@ -91,6 +92,7 @@ export default function ImportStudents() {
         if (dados.length === 0) { setErro("Nenhuma linha com nome de aluno encontrada."); return; }
         if (dados.length > 500) { setErro(`A planilha tem ${dados.length} alunos — o limite é 500 por importação. Divida em arquivos menores.`); return; }
         setLinhas(dados);
+        setMarcadas(dados.map((_, i) => i)); // todas selecionadas por padrão
         setMapa(m);
       } catch {
         setErro("Não consegui ler o arquivo. Use .xlsx, .xls ou .csv.");
@@ -101,10 +103,12 @@ export default function ImportStudents() {
 
   async function handleImportar() {
     if (!lgpd) { setErro("Confirme a declaração de base legal (LGPD) para prosseguir."); return; }
+    const paraImportar = linhas.filter((_, i) => marcadas.includes(i));
+    if (paraImportar.length === 0) { setErro("Marque pelo menos um aluno para importar."); return; }
     setErro(null);
     setEnviando(true);
     try {
-      const res = await importStudents(linhas, true);
+      const res = await importStudents(paraImportar, true);
       setResultado(res.data);
       setLinhas(null);
     } catch (err) {
@@ -216,6 +220,13 @@ export default function ImportStudents() {
               <table style={{ borderCollapse: "collapse", width: "100%", fontSize: 12 }}>
                 <thead>
                   <tr style={{ background: "#f1efe8", position: "sticky", top: 0 }}>
+                    <th style={{ padding: "6px 10px" }}>
+                      <input type="checkbox"
+                        checked={marcadas.length === linhas.length}
+                        onChange={e => setMarcadas(e.target.checked ? linhas.map((_, i) => i) : [])}
+                        aria-label="Selecionar todos"
+                        style={{ accentColor: "#2B9EC3" }} />
+                    </th>
                     {["#", "Nome", "Nascimento", "Série", "Turma", "NEE", "Responsável", "Telefone"].map(h => (
                       <th key={h} style={{ padding: "6px 10px", textAlign: "left", whiteSpace: "nowrap" }}>{h}</th>
                     ))}
@@ -223,7 +234,14 @@ export default function ImportStudents() {
                 </thead>
                 <tbody>
                   {linhas.slice(0, 100).map((l, i) => (
-                    <tr key={i} style={{ borderTop: "0.5px solid #eee" }}>
+                    <tr key={i} style={{ borderTop: "0.5px solid #eee", opacity: marcadas.includes(i) ? 1 : 0.45 }}>
+                      <td style={{ padding: "5px 10px" }}>
+                        <input type="checkbox"
+                          checked={marcadas.includes(i)}
+                          onChange={e => setMarcadas(prev => e.target.checked ? [...prev, i] : prev.filter(x => x !== i))}
+                          aria-label={`Importar ${l.full_name}`}
+                          style={{ accentColor: "#2B9EC3" }} />
+                      </td>
                       <td style={{ padding: "5px 10px", color: "#9b9a96" }}>{i + 2}</td>
                       <td style={{ padding: "5px 10px" }}>{l.full_name}</td>
                       <td style={{ padding: "5px 10px" }}>{l.birth_date || "—"}</td>
@@ -238,7 +256,7 @@ export default function ImportStudents() {
               </table>
             </div>
             {linhas.length > 100 && (
-              <p style={{ fontSize: 12, color: "#9b9a96", margin: "6px 0 0" }}>Mostrando as 100 primeiras — todas as {linhas.length} serão importadas.</p>
+              <p style={{ fontSize: 12, color: "#9b9a96", margin: "6px 0 0" }}>Mostrando as 100 primeiras — as demais seguem marcadas e serão importadas junto.</p>
             )}
 
             <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: "#5f5e5a", lineHeight: 1.5, cursor: "pointer", margin: "16px 0" }}>
@@ -255,7 +273,7 @@ export default function ImportStudents() {
               background: enviando ? "#ccc" : "linear-gradient(135deg, #2B9EC3, #4CAF82)",
               color: "#fff", cursor: enviando ? "not-allowed" : "pointer"
             }}>
-              {enviando ? "Importando..." : `✅ Importar ${linhas.length} aluno(s)`}
+              {enviando ? "Importando..." : `✅ Importar ${marcadas.length} de ${linhas.length} aluno(s)`}
             </button>
           </div>
         )}

@@ -40,6 +40,7 @@ export default function Students() {
   const [feedback, setFeedback] = useState(null);
   const [form, setForm] = useState(formVazio);
   const [filtro, setFiltro] = useState("");
+  const [selecionados, setSelecionados] = useState([]);
 
   useEffect(() => {
     async function load() {
@@ -185,8 +186,12 @@ export default function Students() {
       ["Observações (4.6)", "notes"]
     ];
     const esc = v => `"${String(v ?? "").replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+    // Exporta só os selecionados; sem seleção, exporta todos os visíveis no filtro
+    const base = selecionados.length > 0
+      ? alunosFiltrados.filter(a => selecionados.includes(a.id))
+      : alunosFiltrados;
     const csv = "﻿" + colunas.map(c => esc(c[0])).join(";") + "\n" +
-      alunosFiltrados.map(a => colunas.map(c => esc(a[c[1]])).join(";")).join("\n");
+      base.map(a => colunas.map(c => esc(a[c[1]])).join(";")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -245,7 +250,7 @@ export default function Students() {
         <button onClick={handleExportarCSV} style={{
           background: "#fff", color: "#0F6E56", border: "1px solid #0F6E56",
           borderRadius: 8, padding: "8px 16px", fontSize: 13, cursor: "pointer", marginLeft: 8
-        }}>⬇️ Exportar dados</button>
+        }}>⬇️ Exportar{selecionados.length > 0 ? ` (${selecionados.length})` : " dados"}</button>
       </header>
 
       <main style={{ maxWidth: 800, margin: "0 auto", padding: "2rem 1rem" }}>
@@ -492,14 +497,36 @@ export default function Students() {
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Barra de seleção para exportar */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 12, color: "#5f5e5a", padding: "0 4px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+                <input type="checkbox"
+                  checked={alunosFiltrados.length > 0 && selecionados.length === alunosFiltrados.length}
+                  onChange={e => setSelecionados(e.target.checked ? alunosFiltrados.map(a => a.id) : [])}
+                  style={{ accentColor: "#0F6E56" }} />
+                Selecionar todos
+              </label>
+              {selecionados.length > 0 && (
+                <span style={{ color: "#0F6E56", fontWeight: 600 }}>
+                  {selecionados.length} selecionado(s) — a exportação usará apenas estes
+                </span>
+              )}
+            </div>
             {alunosFiltrados.map(s => (
               <div key={s.id} style={{
-                background: "#fff",
+                background: selecionados.includes(s.id) ? "#f2fbf7" : "#fff",
                 border: "0.5px solid #d3d1c7",
                 borderLeft: s.disability_type ? "3px solid #2B9EC3" : "3px solid #d3d1c7",
                 borderRadius: 10, padding: "14px 16px",
-                display: "flex", justifyContent: "space-between", alignItems: "center"
+                display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10
               }}>
+                <input type="checkbox"
+                  checked={selecionados.includes(s.id)}
+                  onChange={e => setSelecionados(prev =>
+                    e.target.checked ? [...prev, s.id] : prev.filter(id => id !== s.id)
+                  )}
+                  aria-label={`Selecionar ${s.full_name}`}
+                  style={{ accentColor: "#0F6E56", width: 16, height: 16, flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
                   <p style={{ fontWeight: 500, marginBottom: 4 }}>{s.full_name}</p>
                   <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
