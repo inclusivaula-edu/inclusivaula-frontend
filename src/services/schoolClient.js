@@ -32,7 +32,7 @@ export async function createTeacher({ user_id, school_id, full_name, email, phon
   return data;
 }
 
-export async function createStudent({ school_id, full_name, birth_date, grade, turma, endereco, observable_behavior, what_helps, historico_escolar, disability_type, deficiencia_hipotese, sistema_linguistico, recursos_acessibilidade, atividades_adaptacoes, implicacoes_curriculares, guardian_name, guardian_phone, notes }) {
+export async function createStudent({ school_id, full_name, birth_date, grade, turma, endereco, endereco_numero, endereco_bairro, endereco_cidade, observable_behavior, what_helps, historico_escolar, disability_type, deficiencia_hipotese, sistema_linguistico, recursos_acessibilidade, atividades_adaptacoes, implicacoes_curriculares, guardian_name, guardian_relationship, guardian_phone, notes }) {
   const { data: { user } } = await supabase.auth.getUser();
   const { data, error } = await supabase
     .from("students")
@@ -40,6 +40,10 @@ export async function createStudent({ school_id, full_name, birth_date, grade, t
       school_id, full_name, birth_date, grade,
       turma: turma || null,
       endereco: endereco || null,
+      endereco_numero: endereco_numero || null,
+      endereco_bairro: endereco_bairro || null,
+      endereco_cidade: endereco_cidade || null,
+      guardian_relationship: guardian_relationship || null,
       observable_behavior: observable_behavior || null,
       what_helps: what_helps || null,
       historico_escolar: historico_escolar || null,

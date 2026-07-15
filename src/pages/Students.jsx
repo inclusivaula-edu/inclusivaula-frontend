@@ -17,7 +17,9 @@ const DISABILITIES = [
 ];
 
 const formVazio = {
-  full_name: "", birth_date: "", grade: "1º ano", turma: "", endereco: "",
+  full_name: "", birth_date: "", grade: "1º ano", turma: "",
+  endereco: "", endereco_numero: "", endereco_bairro: "", endereco_cidade: "",
+  guardian_relationship: "",
   observable_behavior: "", what_helps: "", historico_escolar: "",
   disability_type: "Nenhuma", deficiencia_hipotese: "", sistema_linguistico: "",
   recursos_acessibilidade: "", atividades_adaptacoes: "", implicacoes_curriculares: "",
@@ -78,6 +80,10 @@ export default function Students() {
       grade: aluno.grade || "1º ano",
       turma: aluno.turma || "",
       endereco: aluno.endereco || "",
+      endereco_numero: aluno.endereco_numero || "",
+      endereco_bairro: aluno.endereco_bairro || "",
+      endereco_cidade: aluno.endereco_cidade || "",
+      guardian_relationship: aluno.guardian_relationship || "",
       observable_behavior: aluno.observable_behavior || "",
       what_helps: aluno.what_helps || "",
       historico_escolar: aluno.historico_escolar || "",
@@ -107,6 +113,10 @@ export default function Students() {
         grade: form.grade,
         turma: form.turma || null,
         endereco: form.endereco?.trim() || null,
+        endereco_numero: form.endereco_numero?.trim() || null,
+        endereco_bairro: form.endereco_bairro?.trim() || null,
+        endereco_cidade: form.endereco_cidade?.trim() || null,
+        guardian_relationship: form.guardian_relationship?.trim() || null,
         observable_behavior: form.observable_behavior?.trim() || null,
         what_helps: form.what_helps?.trim() || null,
         historico_escolar: form.historico_escolar?.trim() || null,
@@ -145,6 +155,44 @@ export default function Students() {
   function mostrarFeedback(msg) {
     setFeedback(msg);
     setTimeout(() => setFeedback(null), 3000);
+  }
+
+  async function handleExcluirAluno(aluno) {
+    if (!window.confirm(`Excluir o aluno "${aluno.full_name}"? Esta ação não pode ser desfeita.`)) return;
+    const { error: delError } = await supabase.from("students").delete().eq("id", aluno.id);
+    if (delError) {
+      if (delError.code === "23503" || /foreign key|violates/i.test(delError.message)) {
+        mostrarFeedback("⚠️ Este aluno possui registros vinculados (aulas, documentos, avaliações ou frequência) e não pode ser excluído.");
+      } else {
+        mostrarFeedback("⚠️ Erro ao excluir o aluno.");
+      }
+      return;
+    }
+    setStudents(prev => prev.filter(s => s.id !== aluno.id));
+    mostrarFeedback("✅ Aluno excluído.");
+  }
+
+  function handleExportarCSV() {
+    const colunas = [
+      ["Nome", "full_name"], ["Nascimento", "birth_date"], ["Série", "grade"], ["Turma", "turma"],
+      ["Endereço", "endereco"], ["Número", "endereco_numero"], ["Bairro", "endereco_bairro"], ["Cidade", "endereco_cidade"],
+      ["NEE", "disability_type"], ["Deficiência/hipótese (4.1)", "deficiencia_hipotese"],
+      ["Sistema linguístico (4.2)", "sistema_linguistico"], ["Recursos utilizados (4.3)", "recursos_acessibilidade"],
+      ["Adaptações pretendidas (4.4)", "atividades_adaptacoes"], ["Implicações curriculares (4.5)", "implicacoes_curriculares"],
+      ["Dados educacionais específicos", "observable_behavior"], ["Metodologia utilizada", "what_helps"],
+      ["Histórico escolar", "historico_escolar"],
+      ["Responsável", "guardian_name"], ["Parentesco", "guardian_relationship"], ["Telefone", "guardian_phone"],
+      ["Observações (4.6)", "notes"]
+    ];
+    const esc = v => `"${String(v ?? "").replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+    const csv = "﻿" + colunas.map(c => esc(c[0])).join(";") + "\n" +
+      alunosFiltrados.map(a => colunas.map(c => esc(a[c[1]])).join(";")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `alunos-inclusivaula-${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
   }
 
   const alunosFiltrados = students.filter(s => {
@@ -194,6 +242,10 @@ export default function Students() {
           background: "#fff", color: "#2B9EC3", border: "1px solid #2B9EC3",
           borderRadius: 8, padding: "8px 16px", fontSize: 13, cursor: "pointer", marginLeft: 8
         }}>📥 Importar planilha</button>
+        <button onClick={handleExportarCSV} style={{
+          background: "#fff", color: "#0F6E56", border: "1px solid #0F6E56",
+          borderRadius: 8, padding: "8px 16px", fontSize: 13, cursor: "pointer", marginLeft: 8
+        }}>⬇️ Exportar dados</button>
       </header>
 
       <main style={{ maxWidth: 800, margin: "0 auto", padding: "2rem 1rem" }}>
@@ -269,7 +321,7 @@ export default function Students() {
 
               <div>
                 <label style={labelStyle}>
-                  O que esse aluno faz diferente da turma?{" "}
+                  Dados educacionais específicos do estudante{" "}
                   <span style={{ color: "#2B9EC3", fontWeight: 600 }}>★ Campo mais importante</span>
                 </label>
                 <textarea name="observable_behavior" value={form.observable_behavior}
@@ -280,7 +332,7 @@ export default function Students() {
               </div>
 
               <div>
-                <label style={labelStyle}>O que já funciona com esse aluno?</label>
+                <label style={labelStyle}>Tipo de metodologia educacional utilizada com esse aluno</label>
                 <textarea name="what_helps" value={form.what_helps}
                   onChange={handleChange} rows={2} maxLength={500}
                   placeholder="Ex: Responde melhor quando recebe instrução individual antes da atividade coletiva. Gosta de desenhar para registrar o que aprendeu."
@@ -288,10 +340,30 @@ export default function Students() {
                 <span style={{ fontSize: 11, color: "#999" }}>{form.what_helps.length}/500</span>
               </div>
 
-              <div>
-                <label style={labelStyle}>Endereço</label>
-                <input name="endereco" value={form.endereco} onChange={handleChange}
-                  placeholder="Rua, número, bairro, cidade" style={inputStyle} />
+              <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={labelStyle}>Endereço (rua/logradouro)</label>
+                  <input name="endereco" value={form.endereco} onChange={handleChange}
+                    placeholder="Rua das Flores" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Número</label>
+                  <input name="endereco_numero" value={form.endereco_numero} onChange={handleChange}
+                    placeholder="123" style={inputStyle} />
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={labelStyle}>Bairro</label>
+                  <input name="endereco_bairro" value={form.endereco_bairro} onChange={handleChange}
+                    placeholder="Centro" style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Cidade</label>
+                  <input name="endereco_cidade" value={form.endereco_cidade} onChange={handleChange}
+                    placeholder="Macapá" style={inputStyle} />
+                </div>
               </div>
 
               <div>
@@ -360,6 +432,17 @@ export default function Students() {
                   <input name="guardian_phone" value={form.guardian_phone}
                     onChange={handleChange} placeholder="(96) 99999-9999" style={inputStyle} />
                 </div>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Grau de parentesco do responsável</label>
+                <select name="guardian_relationship" value={form.guardian_relationship}
+                  onChange={handleChange} style={inputStyle}>
+                  <option value="">— Selecione —</option>
+                  {["Mãe", "Pai", "Avó", "Avô", "Tia", "Tio", "Irmã", "Irmão", "Madrasta", "Padrasto", "Tutor(a) legal", "Outro"].map(g =>
+                    <option key={g} value={g}>{g}</option>
+                  )}
+                </select>
               </div>
 
               <div>
@@ -450,6 +533,11 @@ export default function Students() {
                     color: "#534AB7", border: "0.5px solid #534AB7",
                     borderRadius: 6, cursor: "pointer"
                   }}>📎 Documentos</button>
+                  <button onClick={() => handleExcluirAluno(s)} style={{
+                    fontSize: 12, padding: "4px 12px", background: "#fff",
+                    color: "#a32d2d", border: "0.5px solid #f7c1c1",
+                    borderRadius: 6, cursor: "pointer"
+                  }}>🗑 Excluir</button>
                 </div>
               </div>
             ))}
