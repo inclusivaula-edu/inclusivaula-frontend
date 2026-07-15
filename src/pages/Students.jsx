@@ -186,12 +186,21 @@ export default function Students() {
       ["Observações (4.6)", "notes"]
     ];
     const esc = v => `"${String(v ?? "").replace(/"/g, '""').replace(/\r?\n/g, " ")}"`;
+    // Data de nascimento em formato brasileiro (o banco guarda AAAA-MM-DD)
+    const valor = (a, campo) => {
+      const v = a[campo];
+      if (campo === "birth_date" && v && /^\d{4}-\d{2}-\d{2}/.test(String(v))) {
+        const [ano, mes, dia] = String(v).substring(0, 10).split("-");
+        return `${dia}/${mes}/${ano}`;
+      }
+      return v;
+    };
     // Exporta só os selecionados; sem seleção, exporta todos os visíveis no filtro
     const base = selecionados.length > 0
       ? alunosFiltrados.filter(a => selecionados.includes(a.id))
       : alunosFiltrados;
     const csv = "﻿" + colunas.map(c => esc(c[0])).join(";") + "\n" +
-      base.map(a => colunas.map(c => esc(a[c[1]])).join(";")).join("\n");
+      base.map(a => colunas.map(c => esc(valor(a, c[1]))).join(";")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
