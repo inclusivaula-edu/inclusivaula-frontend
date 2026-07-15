@@ -16,6 +16,18 @@ const COLUNAS = {
   notes: ["observacoes", "observações", "observacao", "observação", "obs", "notas", "anotacoes", "anotações"]
 };
 
+// Converte data serial do Excel (dias desde 1900) para dd/mm/aaaa
+function converterDataExcel(valor) {
+  const s = String(valor || "").trim();
+  if (!/^\d+([.,]\d+)?$/.test(s)) return s; // não é serial — devolve como veio
+  const serial = parseFloat(s.replace(",", "."));
+  if (serial < 1000 || serial > 80000) return s; // fora da faixa de datas plausíveis
+  const d = new Date(Date.UTC(1899, 11, 30) + Math.round(serial) * 86400000);
+  const dia = String(d.getUTCDate()).padStart(2, "0");
+  const mes = String(d.getUTCMonth() + 1).padStart(2, "0");
+  return `${dia}/${mes}/${d.getUTCFullYear()}`;
+}
+
 function normalizarCabecalho(h) {
   return String(h || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
@@ -80,7 +92,7 @@ export default function ImportStudents() {
           .filter(row => String(row[m.full_name] || "").trim())
           .map(row => ({
             full_name: String(row[m.full_name] || "").trim(),
-            birth_date: m.birth_date !== undefined ? String(row[m.birth_date] || "").trim() : "",
+            birth_date: m.birth_date !== undefined ? converterDataExcel(String(row[m.birth_date] || "").trim()) : "",
             grade: m.grade !== undefined ? String(row[m.grade] || "").trim() : "",
             turma: m.turma !== undefined ? String(row[m.turma] || "").trim() : "",
             disability_type: m.disability_type !== undefined ? String(row[m.disability_type] || "").trim() : "",
