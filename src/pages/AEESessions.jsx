@@ -307,7 +307,7 @@ export default function AEESessions() {
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 16, marginBottom: 16 }}>
               <div>
                 <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>Duração (min)</label>
                 <input type="number" min={10} max={200} value={form.duracao_minutos}

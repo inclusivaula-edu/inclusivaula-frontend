@@ -236,7 +236,8 @@ export default function Students() {
 
       <header style={{
         background: "#fff", borderBottom: "0.5px solid #d3d1c7",
-        padding: "10px 16px", display: "flex", justifyContent: "space-between", alignItems: "center"
+        padding: "10px 16px", display: "flex", justifyContent: "space-between",
+        alignItems: "center", flexWrap: "wrap", gap: 8
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <button onClick={() => navigate("/dashboard")} style={{ fontSize: 13 }}>← Voltar</button>
@@ -293,7 +294,7 @@ export default function Students() {
                   placeholder="Nome do aluno" style={inputStyle} />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
                 <div>
                   <label style={labelStyle}>Data de nascimento</label>
                   <input name="birth_date" type="date" value={form.birth_date}
@@ -551,7 +552,7 @@ export default function Students() {
                     <p style={{ fontSize: 12, color: "#888", margin: "4px 0 0" }}>📝 {s.notes}</p>
                   )}
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
                   <div style={{
                     fontSize: 11, padding: "4px 10px",
                     background: s.disability_type ? "#e8f7fd" : "#f1efe8",

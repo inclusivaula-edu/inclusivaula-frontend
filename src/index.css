@@ -63,3 +63,43 @@ button:disabled {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Responsividade global ─────────────────────────────────────── */
+
+/* Mídia nunca estoura a largura do container */
+img, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Tabelas longas rolam dentro do próprio bloco, não na página */
+table {
+  max-width: 100%;
+}
+
+/* Quebra e-mails/códigos longos em telas estreitas */
+code, a {
+  overflow-wrap: anywhere;
+}
+
+/* Toque: reduz o atraso de 300ms e evita gestos acidentais */
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+  /* iOS Safari dá zoom automático em campos com fonte < 16px */
+  input, select, textarea {
+    font-size: 16px;
+  }
+
+  /* Alvos de toque confortáveis (mín. 44px de altura) */
+  button {
+    min-height: 40px;
+  }
+
+  /* Página nunca rola na horizontal no celular */
+  body {
+    overflow-x: hidden;
+  }
+}

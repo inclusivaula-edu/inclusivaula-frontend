@@ -475,7 +475,7 @@ export default function Classes() {
                     placeholder="Ex: 7º Ano A — Ciências" style={inputFull} />
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
                   <div>
                     <label style={labelStyle}>Série</label>
                     <select value={formTurma.grade} onChange={e => setFormTurma(p => ({ ...p, grade: e.target.value }))} style={inputFull}>

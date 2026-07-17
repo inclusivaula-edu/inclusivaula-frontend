@@ -153,7 +153,7 @@ export default function Agenda() {
                 ))}
               </select>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
               <div>
                 <label htmlFor="ag-data" style={labelStyle}>Data *</label>
                 <input id="ag-data" type="date" min={new Date().toISOString().slice(0, 10)} value={form.data}
