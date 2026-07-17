@@ -78,7 +78,7 @@ export default function AuditLogs() {
           </button>
         </div>
 
-        <div style={{ background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 2px 8px rgba(43,158,195,0.06)" }}>
+        <div style={{ background: "#fff", borderRadius: 12, overflowX: "auto", boxShadow: "0 2px 8px rgba(43,158,195,0.06)" }}>
           {loading ? (
             <div style={{ padding: 32, textAlign: "center", color: "#5f5e5a" }}>Carregando...</div>
           ) : logs.length === 0 ? (
