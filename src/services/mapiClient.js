@@ -210,6 +210,10 @@ export async function approvePEI(id) {
   return request(`/api/pei/${id}/approve`, { method: "POST" });
 }
 
+export async function deletePEI(id) {
+  return request(`/api/pei/${id}`, { method: "DELETE" });
+}
+
 export async function approveAEE(id) {
   return request(`/api/aee/${id}/approve`, { method: "POST" });
 }

@@ -24,7 +24,7 @@ export default function Exercises() {
   const [notas, setNotas] = useState({});
   const [salvandoNota, setSalvandoNota] = useState(false);
   const [notasSalvas, setNotasSalvas] = useState({});
-  const [pontuacao, setPontuacao] = useState(10);
+  const [pontuacao, setPontuacao] = useState(5);
   const [quantidade, setQuantidade] = useState(5);
 
   // Carrega alunos da escola para registro de notas
@@ -205,12 +205,9 @@ export default function Exercises() {
                 <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
                   Valor total (pontos)
                 </label>
-                <select value={pontuacao} onChange={e => setPontuacao(Number(e.target.value))}
-                  style={{ width: "100%", boxSizing: "border-box" }}>
-                  {[5, 10, 15, 20, 25, 30, 40, 50, 100].map(v => (
-                    <option key={v} value={v}>{v} pontos</option>
-                  ))}
-                </select>
+                <input type="number" min="0" max="5" step="0.5" value={pontuacao}
+                  onChange={e => setPontuacao(Math.min(5, Math.max(0, Number(e.target.value) || 0)))}
+                  style={{ width: "100%", boxSizing: "border-box" }} />
                 <p style={{ fontSize: 11, color: "#888", margin: "4px 0 0" }}>
                   {(pontuacao / quantidade).toFixed(2)} pts/questão
                 </p>

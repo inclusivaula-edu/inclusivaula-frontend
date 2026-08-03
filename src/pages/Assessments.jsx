@@ -46,7 +46,7 @@ export default function Assessments() {
     alunoId: "",
     lessonIds: [],
     periodo: "1º Bimestre 2026",
-    disciplina: "Matemática",
+    disciplina: "",
     quantidade: 5,
     pontuacao: 10
   });
@@ -391,6 +391,7 @@ export default function Assessments() {
                   <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>Disciplina</label>
                   <select value={form.disciplina} onChange={e => setForm(p => ({ ...p, disciplina: e.target.value }))}
                     style={{ width: "100%", boxSizing: "border-box" }}>
+                    <option value="">Selecione a disciplina</option>
                     {DISCIPLINAS.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
@@ -461,12 +462,12 @@ export default function Assessments() {
                   <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
                     Valor total (pontos)
                   </label>
-                  <select value={form.pontuacao} onChange={e => setForm(p => ({ ...p, pontuacao: Number(e.target.value) }))}
-                    style={{ width: "100%", boxSizing: "border-box" }}>
-                    {[5, 10, 15, 20, 25, 30, 40, 50, 100].map(v => (
-                      <option key={v} value={v}>{v} pontos</option>
-                    ))}
-                  </select>
+                  <input type="number" min="0" max="10" step="0.5" value={form.pontuacao}
+                    onChange={e => {
+                      const v = Math.min(10, Math.max(0, Number(e.target.value) || 0));
+                      setForm(p => ({ ...p, pontuacao: v }));
+                    }}
+                    style={{ width: "100%", boxSizing: "border-box" }} />
                   <p style={{ fontSize: 11, color: "#888", margin: "4px 0 0" }}>
                     {(form.pontuacao / form.quantidade).toFixed(2)} pts/questão
                   </p>

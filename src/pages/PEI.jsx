@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { generatePEI, generatePDI, getPEIStatus, listPEIs, approvePEI, getPEIPDFBlob } from "../services/mapiClient";
+import { generatePEI, generatePDI, getPEIStatus, listPEIs, approvePEI, deletePEI, getPEIPDFBlob } from "../services/mapiClient";
 import { supabase } from "../services/supabaseClient";
 import icone from "../assets/icone.png";
 
@@ -140,7 +140,8 @@ export default function PEI() {
   async function handleExcluirPEI(id) {
     if (!window.confirm("Excluir este PEI? Esta ação não pode ser desfeita.")) return;
     try {
-      await supabase.from("pei_documents").delete().eq("id", id);
+      const res = await deletePEI(id);
+      if (!res?.success) throw new Error(res?.error || "Falha ao excluir");
       setHistorico(prev => prev.filter(h => h.id !== id));
       mostrarFeedback("PEI excluído.");
     } catch {
