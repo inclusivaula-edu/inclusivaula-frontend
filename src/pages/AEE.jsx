@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { generateAEE, getAEEStatus, listAEEs, approveAEE, getAEEPDFBlob } from "../services/mapiClient";
+import { generateAEE, getAEEStatus, listAEEs, approveAEE, deleteAEE, getAEEPDFBlob } from "../services/mapiClient";
 import { supabase } from "../services/supabaseClient";
 import icone from "../assets/icone.png";
 
@@ -176,7 +176,8 @@ export default function AEE() {
   async function handleExcluirAEE(id) {
     if (!window.confirm("Excluir este PAEE? Esta ação não pode ser desfeita.")) return;
     try {
-      await supabase.from("aee_documents").delete().eq("id", id);
+      const res = await deleteAEE(id);
+      if (!res?.success) throw new Error(res?.error || "Falha ao excluir");
       setHistorico(prev => prev.filter(h => h.id !== id));
       mostrarFeedback("PAEE excluído.");
     } catch {

@@ -326,7 +326,7 @@ export default function SchoolAdmin() {
               Nenhum professor cadastrado ainda além de você.
             </p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", maxWidth: "100%", gap: 10 }}>
               {teachers.map(t => (
                 <div key={t.id} style={{
                   padding: "12px 14px", background: "#f5f9ff",

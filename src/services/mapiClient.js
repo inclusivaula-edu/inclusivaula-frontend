@@ -218,6 +218,10 @@ export async function approveAEE(id) {
   return request(`/api/aee/${id}/approve`, { method: "POST" });
 }
 
+export async function deleteAEE(id) {
+  return request(`/api/aee/${id}`, { method: "DELETE" });
+}
+
 export async function getPEIPDFBlob(id, formato = "pdf") {
   const { data: { session } } = await (await import("./supabaseClient.js")).supabase.auth.getSession();
   const token = session?.access_token;
