@@ -222,6 +222,29 @@ export async function deleteAEE(id) {
   return request(`/api/aee/${id}`, { method: "DELETE" });
 }
 
+// ── ANAMNESE ─────────────────────────────────────────────────────
+
+export async function createAnamnese(student_id, data) {
+  return request("/api/anamnese", { method: "POST", body: JSON.stringify({ student_id, data }) });
+}
+
+export async function listAnamneses(student_id = null) {
+  const qs = student_id ? `?student_id=${student_id}` : "";
+  return request(`/api/anamnese${qs}`);
+}
+
+export async function getAnamnese(id) {
+  return request(`/api/anamnese/${id}`);
+}
+
+export async function updateAnamnese(id, data) {
+  return request(`/api/anamnese/${id}`, { method: "PUT", body: JSON.stringify({ data }) });
+}
+
+export async function deleteAnamnese(id) {
+  return request(`/api/anamnese/${id}`, { method: "DELETE" });
+}
+
 export async function getPEIPDFBlob(id, formato = "pdf") {
   const { data: { session } } = await (await import("./supabaseClient.js")).supabase.auth.getSession();
   const token = session?.access_token;

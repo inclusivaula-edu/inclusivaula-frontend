@@ -24,6 +24,7 @@ const CARDS = [
   { emoji: "🏫", label: "Minha escola", desc: "Código de convite e professores", rota: "/escola", cor: "#2B9EC3", minRole: "coordenador" },
   { emoji: "📄", label: "Relatórios", desc: "Relatórios pedagógicos por aluno", rota: "/relatorios", cor: "#BA7517", minRole: "coordenador" },
   { emoji: "🔍", label: "Estudo de Caso", desc: "Avaliação biopsicossocial (Portaria 421/2026)", rota: "/estudo-caso", cor: "#BA7517", aeeOnly: true },
+  { emoji: "🩺", label: "Anamnese", desc: "Histórico de desenvolvimento e saúde do aluno", rota: "/anamnese", cor: "#0F6E56", aeeOnly: true },
   { emoji: "📊", label: "Painel da escola", desc: "Indicadores, alertas e tendências", rota: "/painel-escola", cor: "#0F6E56", minRole: "coordenador" },
   { emoji: "🏛️", label: "Painel da rede", desc: "Visão de todas as escolas da rede", rota: "/painel-rede", cor: "#534AB7", minRole: "secretaria" },
 ];

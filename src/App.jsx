@@ -30,6 +30,7 @@ import AuditLogs from "./pages/AuditLogs";
 import Simulado from "./pages/Simulado";
 import SchoolPanel from "./pages/SchoolPanel";
 import CaseStudy from "./pages/CaseStudy";
+import Anamnese from "./pages/Anamnese";
 import Agenda from "./pages/Agenda";
 import InterventionBank from "./pages/InterventionBank";
 import NetworkPanel from "./pages/NetworkPanel";
@@ -85,6 +86,7 @@ function AppRoutes() {
         <Route path="/intervencoes" element={<PrivateRoute><InterventionBank /></PrivateRoute>} />
         <Route path="/agenda" element={<PrivateRoute><Agenda /></PrivateRoute>} />
         <Route path="/estudo-caso" element={<PrivateRoute><CaseStudy /></PrivateRoute>} />
+        <Route path="/anamnese" element={<PrivateRoute><Anamnese /></PrivateRoute>} />
         <Route path="/painel-escola" element={<PrivateRoute><SchoolPanel /></PrivateRoute>} />
         <Route path="/painel-rede" element={<PrivateRoute><NetworkPanel /></PrivateRoute>} />
         <Route path="/seguranca" element={<PrivateRoute><SecurityMFA /></PrivateRoute>} />
