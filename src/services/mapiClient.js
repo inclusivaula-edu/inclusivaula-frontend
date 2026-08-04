@@ -245,6 +245,40 @@ export async function deleteAnamnese(id) {
   return request(`/api/anamnese/${id}`, { method: "DELETE" });
 }
 
+// ── ADMIN (gestão global de escolas e redes) ────────────────────────
+
+export async function listAllSchools() {
+  return request("/api/admin/schools");
+}
+
+export async function createSchoolAdmin(payload) {
+  return request("/api/admin/schools", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export async function updateSchoolAdmin(id, payload) {
+  return request(`/api/admin/schools/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+}
+
+export async function deleteSchoolAdmin(id) {
+  return request(`/api/admin/schools/${id}`, { method: "DELETE" });
+}
+
+export async function listAllNetworks() {
+  return request("/api/admin/networks");
+}
+
+export async function createNetworkAdmin(payload) {
+  return request("/api/admin/networks", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export async function updateNetworkAdmin(id, payload) {
+  return request(`/api/admin/networks/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+}
+
+export async function deleteNetworkAdmin(id) {
+  return request(`/api/admin/networks/${id}`, { method: "DELETE" });
+}
+
 export async function getPEIPDFBlob(id, formato = "pdf") {
   const { data: { session } } = await (await import("./supabaseClient.js")).supabase.auth.getSession();
   const token = session?.access_token;

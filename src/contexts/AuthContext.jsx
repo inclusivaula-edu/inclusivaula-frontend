@@ -3,7 +3,7 @@ import { supabase } from "../services/supabaseClient";
 
 const AuthContext = createContext(null);
 
-const ROLE_HIERARCHY = ["professor", "coordenador", "diretor", "secretaria", "mec"];
+const ROLE_HIERARCHY = ["professor", "coordenador", "diretor", "secretaria", "mec", "admin"];
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

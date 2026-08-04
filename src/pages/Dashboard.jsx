@@ -27,6 +27,7 @@ const CARDS = [
   { emoji: "🩺", label: "Anamnese", desc: "Histórico de desenvolvimento e saúde do aluno", rota: "/anamnese", cor: "#0F6E56", aeeOnly: true },
   { emoji: "📊", label: "Painel da escola", desc: "Indicadores, alertas e tendências", rota: "/painel-escola", cor: "#0F6E56", minRole: "coordenador" },
   { emoji: "🏛️", label: "Painel da rede", desc: "Visão de todas as escolas da rede", rota: "/painel-rede", cor: "#534AB7", minRole: "secretaria" },
+  { emoji: "🌐", label: "Administração Global", desc: "Panorama nacional e gestão de escolas/redes", rota: "/admin", cor: "#0F6E56", minRole: "admin" },
 ];
 
 const PLANO_LABELS = {
