@@ -5,20 +5,67 @@ import { createAnamnese, listAnamneses, getAnamnese, updateAnamnese, deleteAnamn
 import { supabase } from "../services/supabaseClient";
 import icone from "../assets/icone.png";
 
-const CAMPOS = [
-  { key: "gestacao_parto", label: "Gestação e parto", placeholder: "Intercorrências na gestação, tipo de parto, prematuridade..." },
-  { key: "desenvolvimento_motor", label: "Desenvolvimento motor", placeholder: "Quando engatinhou, andou, marcos motores..." },
-  { key: "desenvolvimento_linguagem", label: "Desenvolvimento da linguagem", placeholder: "Primeiras palavras, frases, atraso de fala..." },
-  { key: "historico_saude", label: "Histórico de saúde", placeholder: "Internações, cirurgias, condições de saúde relevantes..." },
-  { key: "diagnostico_laudo", label: "Diagnóstico / laudo", placeholder: "CID, data do laudo, profissional responsável..." },
-  { key: "medicacoes_em_uso", label: "Medicações em uso", placeholder: "Nome, dosagem, horários, efeitos observados..." },
-  { key: "historico_familiar", label: "Histórico familiar", placeholder: "Composição familiar, casos semelhantes na família..." },
-  { key: "rotina_sono_alimentacao", label: "Rotina de sono e alimentação", placeholder: "Qualidade do sono, seletividade alimentar..." },
-  { key: "comportamento_observado", label: "Comportamento observado pela família", placeholder: "Comportamentos em casa, gatilhos, o que acalma..." },
-  { key: "observacoes_escolares", label: "Observações escolares complementares", placeholder: "Informações relevantes vindas da escola/AEE..." }
+// Estrutura fiel à Ficha de Anamnese – AEE (Resolução Nº 048/2025-CP/CEE-AP)
+
+const ATITUDES_SOCIAIS = ["Obediente", "Agressivo", "Independente", "Cooperador", "Comunicativo", "Agitado"];
+const CARACTERISTICAS_SONO = ["Tranquilo", "Agitado", "Range dentes", "Enurese", "Terror noturno", "Sonambulismo", "Fala dormindo"];
+const DOENCAS = [
+  "Febre alta", "Rubéola", "Complicação com vacinas", "Acidentes", "Bronquite", "Sarampo",
+  "Coqueluche", "Adenoide", "Asma", "Convulsões", "Meningite", "Desidratação grave",
+  "Caxumba", "Otite", "Alergias", "Catapora"
 ];
 
-const vazio = () => Object.fromEntries(CAMPOS.map(c => [c.key, ""]));
+const vazio = () => ({
+  // 1 — Identificação (complementa o que já está no cadastro do aluno)
+  turma: "", naturalidade: "", nacionalidade: "Brasileira", telefone_estudante: "", email: "",
+
+  // 2 — Motivo do atendimento / queixa principal / laudo
+  queixa_principal: "", laudo: "", diagnostico: "",
+  dificuldades_aprendizagem: "", dificuldades_interacao: "",
+  usa_medicacao: "", qual_medicacao: "",
+
+  // 3 — Dados familiares
+  nome_pai: "", nome_mae: "", responsavel: "", pais_situacao: "",
+  irmaos: [],
+  composicao_familiar: [],
+
+  // 4 — Histórico da escolaridade
+  inicio_escolarizacao: "", apoio_pedagogico_casa: "", apoio_pedagogico_quem: "",
+  avaliado_por_profissional: "", acompanhamento_profissional: "", acompanhamento_qual: "",
+
+  // 9 — Atitudes sociais predominantes
+  atitudes_sociais: [],
+
+  // 10 — Sono
+  onde_dorme: "", quarto_tipo: "", compartilha_com: "", dorme_com_pais: "",
+  hora_dormir: "", hora_acordar: "", caracteristicas_sono: [],
+
+  // 11 — Reação quando contrariado
+  reacao_contrariado: "",
+
+  // 12 — Saúde
+  acompanhamento_medico_psicologico: "", acompanhamento_qual_profissional: "",
+  usa_medicacao_controlada: "",
+
+  // 13 — Doenças
+  doencas: [], doenca_outra: "",
+
+  // Condições do nascimento
+  tipo_parto: "", tipo_parto_outro_local: "", trauma_craniano: "", tipo_anestesia: "",
+  altura_nascimento: "", peso_nascimento: "", duracao_parto: "",
+  primeiras_reacoes: "", chorou_logo: "", chorou_logo_tempo: "",
+  precisou_oxigenio: "", precisou_oxigenio_tempo: "",
+  reacao_primeiro_dia: "", ficou_ictérico: "", ictérico_tipo: "",
+
+  outras_observacoes: ""
+});
+
+const SIM_NAO = ["", "Sim", "Não"];
+const SIM_NAO_INVEST = ["", "Sim", "Não", "Em investigação"];
+
+function toggleArrayItem(arr, item) {
+  return arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item];
+}
 
 export default function Anamnese() {
   const navigate = useNavigate();
@@ -41,7 +88,8 @@ export default function Anamnese() {
         .from("profiles").select("school_id").eq("id", user.id).single();
       if (profile?.school_id) {
         const { data } = await supabase
-          .from("students").select("id, full_name, grade")
+          .from("students")
+          .select("id, full_name, grade, turma, birth_date, endereco, endereco_numero, endereco_bairro, endereco_cidade, guardian_name, guardian_phone, guardian_relationship, disability_type")
           .eq("school_id", profile.school_id).order("full_name");
         setAlunos(data || []);
       }
@@ -121,10 +169,91 @@ export default function Anamnese() {
     }
   }
 
+  const alunoSelecionado = alunos.find(a => a.id === alunoId);
+
+  // ── estilos ────────────────────────────────────────────────
   const labelStyle = { fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 };
   const inputFull = { width: "100%", boxSizing: "border-box" };
-  const textareaStyle = { ...inputFull, minHeight: 70, resize: "vertical", fontFamily: "inherit", fontSize: 14, padding: 10 };
+  const textareaStyle = { ...inputFull, minHeight: 60, resize: "vertical", fontFamily: "inherit", fontSize: 14, padding: 10 };
   const btnBase = { padding: "8px 16px", borderRadius: 8, border: "0.5px solid #d3d1c7", fontSize: 13, fontWeight: 500, cursor: "pointer" };
+  const sectionCard = { background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 12, padding: "1.3rem", display: "flex", flexDirection: "column", gap: 14 };
+  const sectionTitle = { fontSize: 14, fontWeight: 600, color: "#2B9EC3", margin: 0, paddingBottom: 8, borderBottom: "1px solid #eee" };
+  const row2 = { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 };
+  const row3 = { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 };
+
+  function Campo({ label, children }) {
+    return <div><label style={labelStyle}>{label}</label>{children}</div>;
+  }
+
+  function Texto({ campo, placeholder, maxLength = 500 }) {
+    return (
+      <input value={form[campo]} maxLength={maxLength} placeholder={placeholder}
+        onChange={e => setForm(p => ({ ...p, [campo]: e.target.value }))} style={inputFull} />
+    );
+  }
+
+  function Select({ campo, opcoes }) {
+    return (
+      <select value={form[campo]} onChange={e => setForm(p => ({ ...p, [campo]: e.target.value }))} style={inputFull}>
+        {opcoes.map(o => <option key={o} value={o}>{o || "Selecione"}</option>)}
+      </select>
+    );
+  }
+
+  function CheckboxGroup({ campo, opcoes }) {
+    return (
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        {opcoes.map(op => {
+          const marcado = form[campo].includes(op);
+          return (
+            <label key={op} style={{
+              display: "flex", alignItems: "center", gap: 6, fontSize: 13, padding: "6px 10px",
+              borderRadius: 20, border: `1px solid ${marcado ? "#2B9EC3" : "#d3d1c7"}`,
+              background: marcado ? "#eaf6fa" : "#fff", cursor: "pointer", color: marcado ? "#1a6e8a" : "#5f5e5a"
+            }}>
+              <input type="checkbox" checked={marcado} style={{ width: 14, height: 14 }}
+                onChange={() => setForm(p => ({ ...p, [campo]: toggleArrayItem(p[campo], op) }))} />
+              {op}
+            </label>
+          );
+        })}
+      </div>
+    );
+  }
+
+  function ListaPessoas({ campo, campos }) {
+    const itens = form[campo];
+    function atualizar(i, chave, valor) {
+      const novos = [...itens];
+      novos[i] = { ...novos[i], [chave]: valor };
+      setForm(p => ({ ...p, [campo]: novos }));
+    }
+    function remover(i) {
+      setForm(p => ({ ...p, [campo]: itens.filter((_, idx) => idx !== i) }));
+    }
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {itens.map((item, i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: `repeat(${campos.length}, 1fr) auto`, gap: 8, alignItems: "center" }}>
+            {campos.map(c => (
+              c.tipo === "select" ? (
+                <select key={c.key} value={item[c.key] || ""} onChange={e => atualizar(i, c.key, e.target.value)} style={{ fontSize: 13 }}>
+                  <option value="">{c.label}</option>
+                  {c.opcoes.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              ) : (
+                <input key={c.key} value={item[c.key] || ""} placeholder={c.label}
+                  onChange={e => atualizar(i, c.key, e.target.value)} style={{ fontSize: 13 }} />
+              )
+            ))}
+            <button onClick={() => remover(i)} style={{ ...btnBase, padding: "4px 10px", fontSize: 11, color: "#a32d2d", borderColor: "#f7c1c1" }}>Remover</button>
+          </div>
+        ))}
+        <button onClick={() => setForm(p => ({ ...p, [campo]: [...itens, {}] }))}
+          style={{ ...btnBase, alignSelf: "flex-start", fontSize: 12 }}>+ Adicionar</button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
@@ -149,10 +278,10 @@ export default function Anamnese() {
         </div>
       </header>
 
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "2rem 1rem" }}>
-        <h2 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>🩺 Anamnese</h2>
+      <main style={{ maxWidth: 820, margin: "0 auto", padding: "2rem 1rem" }}>
+        <h2 style={{ fontSize: 20, fontWeight: 500, marginBottom: 4 }}>🩺 Ficha de Anamnese — AEE</h2>
         <p style={{ fontSize: 13, color: "#5f5e5a", marginBottom: 20 }}>
-          Histórico de desenvolvimento e saúde do aluno, base para PEI, PAEE e Estudo de Caso
+          Coleta de dados com pais e responsáveis, base para o trabalho da equipe de AEE (modelo CEE-AP)
         </p>
 
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
@@ -167,27 +296,189 @@ export default function Anamnese() {
         </div>
 
         {tab === "form" && (
-          <div style={{ background: "#fff", border: "0.5px solid #d3d1c7", borderRadius: 12, padding: "1.5rem", display: "flex", flexDirection: "column", gap: 16 }}>
-            <div>
-              <label style={labelStyle}>Aluno</label>
-              <select value={alunoId} onChange={e => setAlunoId(e.target.value)} style={inputFull} disabled={!!editandoId}>
-                <option value="">Selecione o aluno</option>
-                {alunos.map(a => <option key={a.id} value={a.id}>{a.full_name}{a.grade ? ` — ${a.grade}` : ""}</option>)}
-              </select>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+            <div style={sectionCard}>
+              <p style={sectionTitle}>1. Identificação do estudante</p>
+              <Campo label="Aluno">
+                <select value={alunoId} onChange={e => setAlunoId(e.target.value)} style={inputFull} disabled={!!editandoId}>
+                  <option value="">Selecione o aluno</option>
+                  {alunos.map(a => <option key={a.id} value={a.id}>{a.full_name}{a.grade ? ` — ${a.grade}` : ""}</option>)}
+                </select>
+              </Campo>
+              {alunoSelecionado && (
+                <div style={{ fontSize: 12, color: "#5f5e5a", background: "#f5f9ff", borderRadius: 8, padding: "8px 12px" }}>
+                  Nascimento: {alunoSelecionado.birth_date ? new Date(alunoSelecionado.birth_date + "T00:00:00").toLocaleDateString("pt-BR") : "—"} ·
+                  {" "}Turma: {alunoSelecionado.turma || "—"} ·
+                  {" "}Endereço: {alunoSelecionado.endereco || "—"}{alunoSelecionado.endereco_numero ? `, ${alunoSelecionado.endereco_numero}` : ""}{alunoSelecionado.endereco_bairro ? ` — ${alunoSelecionado.endereco_bairro}` : ""} ·
+                  {" "}Responsável: {alunoSelecionado.guardian_name || "—"} ({alunoSelecionado.guardian_relationship || "—"}) · {alunoSelecionado.guardian_phone || "—"}
+                  <br />Esses dados vêm do cadastro do aluno — para corrigi-los, use a página Alunos.
+                </div>
+              )}
+              <div style={row3}>
+                <Campo label="Turma (se diferente do cadastro)"><Texto campo="turma" /></Campo>
+                <Campo label="Naturalidade"><Texto campo="naturalidade" /></Campo>
+                <Campo label="Nacionalidade"><Texto campo="nacionalidade" /></Campo>
+              </div>
+              <div style={row2}>
+                <Campo label="Telefone do estudante"><Texto campo="telefone_estudante" /></Campo>
+                <Campo label="E-mail"><Texto campo="email" /></Campo>
+              </div>
             </div>
 
-            {CAMPOS.map(c => (
-              <div key={c.key}>
-                <label style={labelStyle}>{c.label}</label>
-                <textarea
-                  value={form[c.key]}
-                  onChange={e => setForm(p => ({ ...p, [c.key]: e.target.value }))}
-                  placeholder={c.placeholder}
-                  style={textareaStyle}
-                  maxLength={2000}
-                />
+            <div style={sectionCard}>
+              <p style={sectionTitle}>2. Motivo do atendimento / queixa principal / laudo</p>
+              <Campo label="Queixa principal"><textarea style={textareaStyle} value={form.queixa_principal}
+                onChange={e => setForm(p => ({ ...p, queixa_principal: e.target.value }))} maxLength={500} /></Campo>
+              <div style={row2}>
+                <Campo label="Laudo"><Select campo="laudo" opcoes={SIM_NAO_INVEST} /></Campo>
+                <Campo label="Faz uso de medicação?"><Select campo="usa_medicacao" opcoes={SIM_NAO} /></Campo>
               </div>
-            ))}
+              {form.usa_medicacao === "Sim" && (
+                <Campo label="Qual medicação?"><Texto campo="qual_medicacao" /></Campo>
+              )}
+              <Campo label="Diagnóstico"><Texto campo="diagnostico" /></Campo>
+              <div style={row2}>
+                <Campo label="Dificuldades de aprendizagem"><Texto campo="dificuldades_aprendizagem" /></Campo>
+                <Campo label="Dificuldades de interação"><Texto campo="dificuldades_interacao" /></Campo>
+              </div>
+            </div>
+
+            <div style={sectionCard}>
+              <p style={sectionTitle}>3. Dados familiares</p>
+              <div style={row2}>
+                <Campo label="Nome do pai"><Texto campo="nome_pai" /></Campo>
+                <Campo label="Nome da mãe"><Texto campo="nome_mae" /></Campo>
+              </div>
+              <div style={row2}>
+                <Campo label="Responsável pelo estudante"><Texto campo="responsavel" /></Campo>
+                <Campo label="Situação dos pais"><Select campo="pais_situacao" opcoes={["", "Casados", "Separados"]} /></Campo>
+              </div>
+              <Campo label="Irmãos">
+                <ListaPessoas campo="irmaos" campos={[
+                  { key: "nome", label: "Nome" },
+                  { key: "genero", label: "Gênero", tipo: "select", opcoes: ["Masculino", "Feminino"] },
+                  { key: "idade", label: "Idade" }
+                ]} />
+              </Campo>
+              <Campo label="Composição familiar (quem mora com o estudante)">
+                <ListaPessoas campo="composicao_familiar" campos={[
+                  { key: "nome", label: "Nome" },
+                  { key: "parentesco", label: "Parentesco" },
+                  { key: "idade", label: "Idade" }
+                ]} />
+              </Campo>
+            </div>
+
+            <div style={sectionCard}>
+              <p style={sectionTitle}>4. Histórico da escolaridade</p>
+              <Campo label="Início da escolarização (idade)"><Texto campo="inicio_escolarizacao" placeholder="Ex: 4 anos" /></Campo>
+              <div style={row2}>
+                <Campo label="Recebe apoio pedagógico em casa?"><Select campo="apoio_pedagogico_casa" opcoes={SIM_NAO} /></Campo>
+                {form.apoio_pedagogico_casa === "Sim" && (
+                  <Campo label="De quem?"><Texto campo="apoio_pedagogico_quem" /></Campo>
+                )}
+              </div>
+              <div style={row2}>
+                <Campo label="Já foi avaliado por algum profissional?"><Select campo="avaliado_por_profissional" opcoes={SIM_NAO} /></Campo>
+                <Campo label="Ainda faz acompanhamento específico?"><Select campo="acompanhamento_profissional" opcoes={SIM_NAO} /></Campo>
+              </div>
+              {form.acompanhamento_profissional === "Sim" && (
+                <Campo label="Qual profissional?"><Texto campo="acompanhamento_qual" /></Campo>
+              )}
+            </div>
+
+            <div style={sectionCard}>
+              <p style={sectionTitle}>9. Atitudes sociais predominantes</p>
+              <CheckboxGroup campo="atitudes_sociais" opcoes={ATITUDES_SOCIAIS} />
+            </div>
+
+            <div style={sectionCard}>
+              <p style={sectionTitle}>10. Sono</p>
+              <div style={row3}>
+                <Campo label="Onde o estudante dorme"><Texto campo="onde_dorme" placeholder="Ex: cama" /></Campo>
+                <Campo label="Quarto"><Select campo="quarto_tipo" opcoes={["", "Exclusivo", "Compartilhado"]} /></Campo>
+                {form.quarto_tipo === "Compartilhado" && (
+                  <Campo label="Com quem?"><Texto campo="compartilha_com" /></Campo>
+                )}
+              </div>
+              <div style={row3}>
+                <Campo label="Tem costume de dormir com os pais?"><Select campo="dorme_com_pais" opcoes={SIM_NAO} /></Campo>
+                <Campo label="Que horas dorme?"><Texto campo="hora_dormir" placeholder="Ex: 22h" /></Campo>
+                <Campo label="Que horas acorda?"><Texto campo="hora_acordar" placeholder="Ex: 6h" /></Campo>
+              </div>
+              <Campo label="Características do sono">
+                <CheckboxGroup campo="caracteristicas_sono" opcoes={CARACTERISTICAS_SONO} />
+              </Campo>
+            </div>
+
+            <div style={sectionCard}>
+              <p style={sectionTitle}>11. Reação quando contrariado(a)</p>
+              <textarea style={textareaStyle} value={form.reacao_contrariado}
+                onChange={e => setForm(p => ({ ...p, reacao_contrariado: e.target.value }))} maxLength={500} />
+            </div>
+
+            <div style={sectionCard}>
+              <p style={sectionTitle}>12. Saúde</p>
+              <div style={row2}>
+                <Campo label="Faz acompanhamento médico/psicológico?"><Select campo="acompanhamento_medico_psicologico" opcoes={SIM_NAO} /></Campo>
+                <Campo label="Faz uso de medicação controlada?"><Select campo="usa_medicacao_controlada" opcoes={SIM_NAO} /></Campo>
+              </div>
+              {form.acompanhamento_medico_psicologico === "Sim" && (
+                <Campo label="Qual profissional (ex: psiquiatra)?"><Texto campo="acompanhamento_qual_profissional" /></Campo>
+              )}
+            </div>
+
+            <div style={sectionCard}>
+              <p style={sectionTitle}>13. Doenças</p>
+              <CheckboxGroup campo="doencas" opcoes={DOENCAS} />
+              <Campo label="Outra doença"><Texto campo="doenca_outra" /></Campo>
+            </div>
+
+            <div style={sectionCard}>
+              <p style={sectionTitle}>Condições do nascimento</p>
+              <div style={row2}>
+                <Campo label="Tipo de parto"><Select campo="tipo_parto" opcoes={["", "Normal", "Fórceps", "Cesariana", "Outro local"]} /></Campo>
+                {form.tipo_parto === "Outro local" && (
+                  <Campo label="Qual local?"><Texto campo="tipo_parto_outro_local" /></Campo>
+                )}
+              </div>
+              <div style={row3}>
+                <Campo label="Houve trauma craniano?"><Select campo="trauma_craniano" opcoes={SIM_NAO} /></Campo>
+                <Campo label="Tipo de anestesia"><Texto campo="tipo_anestesia" /></Campo>
+                <Campo label="Duração do parto"><Texto campo="duracao_parto" /></Campo>
+              </div>
+              <div style={row2}>
+                <Campo label="Altura ao nascer"><Texto campo="altura_nascimento" /></Campo>
+                <Campo label="Peso ao nascer"><Texto campo="peso_nascimento" /></Campo>
+              </div>
+              <Campo label="Primeiras reações"><Texto campo="primeiras_reacoes" /></Campo>
+              <div style={row2}>
+                <Campo label="Chorou logo?"><Select campo="chorou_logo" opcoes={SIM_NAO} /></Campo>
+                {form.chorou_logo === "Sim" && (
+                  <Campo label="Quanto tempo?"><Texto campo="chorou_logo_tempo" /></Campo>
+                )}
+              </div>
+              <div style={row2}>
+                <Campo label="Precisou de oxigênio?"><Select campo="precisou_oxigenio" opcoes={SIM_NAO} /></Campo>
+                {form.precisou_oxigenio === "Sim" && (
+                  <Campo label="Quanto tempo?"><Texto campo="precisou_oxigenio_tempo" /></Campo>
+                )}
+              </div>
+              <Campo label="Reação ao primeiro dia de vida"><Texto campo="reacao_primeiro_dia" /></Campo>
+              <div style={row2}>
+                <Campo label="Ficou ictérico?"><Select campo="ficou_ictérico" opcoes={SIM_NAO} /></Campo>
+                {form.ficou_ictérico === "Sim" && (
+                  <Campo label="Tipo (amarelo/esverdeado)"><Texto campo="ictérico_tipo" /></Campo>
+                )}
+              </div>
+            </div>
+
+            <div style={sectionCard}>
+              <p style={sectionTitle}>Outras observações</p>
+              <textarea style={textareaStyle} value={form.outras_observacoes}
+                onChange={e => setForm(p => ({ ...p, outras_observacoes: e.target.value }))} maxLength={1000} />
+            </div>
 
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={handleSalvar} disabled={salvando} style={{
@@ -239,12 +530,15 @@ export default function Anamnese() {
                         </div>
                       </div>
                       {aberta === h.id && h.data && (
-                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: "0.5px solid #eee", display: "flex", flexDirection: "column", gap: 8 }}>
-                          {CAMPOS.filter(c => h.data[c.key]).map(c => (
-                            <p key={c.key} style={{ fontSize: 13, margin: 0 }}>
-                              <strong>{c.label}:</strong> {h.data[c.key]}
-                            </p>
-                          ))}
+                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: "0.5px solid #eee", display: "flex", flexDirection: "column", gap: 6, fontSize: 13 }}>
+                          {h.data.queixa_principal && <p style={{ margin: 0 }}><strong>Queixa principal:</strong> {h.data.queixa_principal}</p>}
+                          {h.data.laudo && <p style={{ margin: 0 }}><strong>Laudo:</strong> {h.data.laudo}</p>}
+                          {h.data.diagnostico && <p style={{ margin: 0 }}><strong>Diagnóstico:</strong> {h.data.diagnostico}</p>}
+                          {h.data.atitudes_sociais?.length > 0 && <p style={{ margin: 0 }}><strong>Atitudes sociais:</strong> {h.data.atitudes_sociais.join(", ")}</p>}
+                          {h.data.caracteristicas_sono?.length > 0 && <p style={{ margin: 0 }}><strong>Sono:</strong> {h.data.caracteristicas_sono.join(", ")}</p>}
+                          {h.data.doencas?.length > 0 && <p style={{ margin: 0 }}><strong>Doenças:</strong> {h.data.doencas.join(", ")}</p>}
+                          {h.data.reacao_contrariado && <p style={{ margin: 0 }}><strong>Reação quando contrariado:</strong> {h.data.reacao_contrariado}</p>}
+                          {h.data.outras_observacoes && <p style={{ margin: 0 }}><strong>Observações:</strong> {h.data.outras_observacoes}</p>}
                         </div>
                       )}
                     </div>
