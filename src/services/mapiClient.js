@@ -400,8 +400,12 @@ export async function rotateSchoolInvite() {
   return request("/api/school/invite/rotate", { method: "POST" });
 }
 
-export async function getNetworkPanel() {
-  return request("/api/management/network");
+export async function getNetworkPanel(networkId = null) {
+  return request(`/api/management/network${networkId ? `?network_id=${networkId}` : ""}`);
+}
+
+export async function listManagementNetworks() {
+  return request("/api/management/networks");
 }
 
 export async function getGlobalPanel() {

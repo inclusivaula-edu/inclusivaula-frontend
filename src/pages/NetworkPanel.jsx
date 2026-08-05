@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getNetworkPanel } from "../services/mapiClient";
+import { getNetworkPanel, listManagementNetworks } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
 const cardStyle = {
@@ -13,13 +13,34 @@ export default function NetworkPanel() {
   const [dados, setDados] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [redes, setRedes] = useState([]);
+  const [redeId, setRedeId] = useState("");
+
+  // Carrega as redes visíveis. Para secretaria vem só a própria rede;
+  // admin/mec não pertencem a uma rede e precisam escolher qual ver.
+  useEffect(() => {
+    listManagementNetworks()
+      .then(res => {
+        const lista = res.data || [];
+        setRedes(lista);
+        if (lista.length === 1) setRedeId(lista[0].id);
+        else if (lista.length === 0) carregarPainel(null);
+      })
+      .catch(() => carregarPainel(null));
+  }, []);
 
   useEffect(() => {
-    getNetworkPanel()
+    if (redeId) carregarPainel(redeId);
+  }, [redeId]);
+
+  function carregarPainel(id) {
+    setLoading(true);
+    setError(null);
+    getNetworkPanel(id)
       .then(res => setDados(res.data))
-      .catch(err => setError(err.message))
+      .catch(err => { setError(err.message); setDados(null); })
       .finally(() => setLoading(false));
-  }, []);
+  }
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
@@ -37,10 +58,36 @@ export default function NetworkPanel() {
           Visão consolidada de todas as escolas da rede — secretaria de educação
         </p>
 
+        {redes.length > 1 && (
+          <div style={{ ...cardStyle, marginBottom: 20 }}>
+            <label htmlFor="seletor-rede" style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
+              Rede de ensino
+            </label>
+            <select id="seletor-rede" value={redeId} onChange={e => setRedeId(e.target.value)}
+              style={{ width: "100%", maxWidth: 420, boxSizing: "border-box" }}>
+              <option value="">Selecione uma rede</option>
+              {redes.map(r => (
+                <option key={r.id} value={r.id}>
+                  {r.name}{r.city ? ` — ${r.city}` : ""}{r.state ? `/${r.state}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {loading && <p role="status">Carregando dados da rede...</p>}
         {error && (
           <div role="alert" style={{ background: "#fcebeb", border: "0.5px solid #a32d2d", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#791f1f" }}>
             {error}
+            {redes.length === 0 && (
+              <p style={{ margin: "8px 0 0" }}>
+                Nenhuma rede cadastrada ainda. Crie a rede em{" "}
+                <button onClick={() => navigate("/admin")} style={{ background: "none", border: "none", padding: 0, color: "#2B9EC3", textDecoration: "underline", cursor: "pointer", fontSize: 13 }}>
+                  Administração Global
+                </button>{" "}
+                e vincule as escolas a ela.
+              </p>
+            )}
           </div>
         )}
 
