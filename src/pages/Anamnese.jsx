@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { createAnamnese, listAnamneses, getAnamnese, updateAnamnese, deleteAnamnese } from "../services/mapiClient";
+import { createAnamnese, listAnamneses, getAnamnese, updateAnamnese, deleteAnamnese, getAnamnesePDFBlob } from "../services/mapiClient";
 import { supabase } from "../services/supabaseClient";
 import icone from "../assets/icone.png";
 
@@ -81,6 +81,7 @@ export default function Anamnese() {
   const [salvando, setSalvando] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [aberta, setAberta] = useState(null);
+  const [baixandoPDF, setBaixandoPDF] = useState(null);
 
   useEffect(() => {
     async function carregar() {
@@ -155,6 +156,26 @@ export default function Anamnese() {
     setForm({ ...vazio(), ...item.data });
     setEditandoId(item.id);
     setTab("form");
+  }
+
+  async function handleBaixarPDF(item) {
+    setBaixandoPDF(item.id);
+    try {
+      const blob = await getAnamnesePDFBlob(item.id);
+      const aluno = alunos.find(a => a.id === item.student_id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `anamnese-${(aluno?.full_name || "aluno").replace(/ /g, "-")}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      mostrarFeedback("Erro ao gerar PDF.", "erro");
+    } finally {
+      setBaixandoPDF(null);
+    }
   }
 
   async function handleExcluir(id) {
@@ -524,6 +545,10 @@ export default function Anamnese() {
                         <div style={{ display: "flex", gap: 6 }}>
                           <button onClick={() => handleAbrir(h.id)} style={{ ...btnBase, padding: "4px 10px", fontSize: 11 }}>
                             {aberta === h.id ? "Fechar" : "Ver detalhes"}
+                          </button>
+                          <button onClick={() => handleBaixarPDF(h)} disabled={baixandoPDF === h.id}
+                            style={{ ...btnBase, padding: "4px 10px", fontSize: 11, color: "#0F6E56", borderColor: "#9fd8c4" }}>
+                            {baixandoPDF === h.id ? "Gerando..." : "📄 PDF"}
                           </button>
                           <button onClick={() => handleEditarItem(h)} style={{ ...btnBase, padding: "4px 10px", fontSize: 11 }}>Editar</button>
                           <button onClick={() => handleExcluir(h.id)} style={{ ...btnBase, padding: "4px 10px", fontSize: 11, color: "#a32d2d", borderColor: "#f7c1c1" }}>Excluir</button>

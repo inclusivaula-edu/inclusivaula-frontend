@@ -245,6 +245,16 @@ export async function deleteAnamnese(id) {
   return request(`/api/anamnese/${id}`, { method: "DELETE" });
 }
 
+export async function getAnamnesePDFBlob(id) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  const res = await fetch(`${BASE_URL}/api/anamnese/${id}/pdf`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erro ao gerar PDF da anamnese");
+  return res.blob();
+}
+
 // ── ADMIN (gestão global de escolas e redes) ────────────────────────
 
 export async function listAllSchools() {
