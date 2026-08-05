@@ -389,7 +389,8 @@ export default function Assessments() {
                 </div>
                 <div>
                   <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>Disciplina</label>
-                  <select value={form.disciplina} onChange={e => setForm(p => ({ ...p, disciplina: e.target.value }))}
+                  <select value={form.disciplina}
+                    onChange={e => setForm(p => ({ ...p, disciplina: e.target.value, lessonIds: [] }))}
                     style={{ width: "100%", boxSizing: "border-box" }}>
                     <option value="">Selecione a disciplina</option>
                     {DISCIPLINAS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -402,19 +403,36 @@ export default function Assessments() {
                 <label style={{ fontSize: 13, color: "#5f5e5a", display: "block", marginBottom: 6 }}>
                   Aula(s) base *
                   <span style={{ color: "#888", marginLeft: 6, fontWeight: 400 }}>
-                    {form.alunoId ? "(aulas do aluno selecionado)" : "(selecione uma ou mais aulas como base)"}
+                    {[
+                      form.disciplina ? `de ${form.disciplina}` : null,
+                      form.alunoId ? "do aluno selecionado" : null
+                    ].filter(Boolean).join(", ") || "(selecione uma ou mais aulas como base)"}
                   </span>
                 </label>
                 {(() => {
-                  const aulasFiltradas = form.alunoId
-                    ? aulas.filter(a => {
-                        const inp = typeof a.input === "string" ? (() => { try { return JSON.parse(a.input); } catch { return {}; } })() : (a.input || {});
-                        return inp.student_id === form.alunoId;
-                      })
-                    : aulas;
+                  const lerInput = (a) => typeof a.input === "string"
+                    ? (() => { try { return JSON.parse(a.input); } catch { return {}; } })()
+                    : (a.input || {});
+
+                  // A avaliação é de uma disciplina: só faz sentido oferecer as
+                  // aulas dessa disciplina como base.
+                  const aulasFiltradas = aulas.filter(a => {
+                    const inp = lerInput(a);
+                    if (form.alunoId && inp.student_id !== form.alunoId) return false;
+                    if (form.disciplina && inp.disciplina !== form.disciplina) return false;
+                    return true;
+                  });
+
+                  if (!form.disciplina) return (
+                    <div style={{ background: "#f1efe8", border: "0.5px solid #d3d1c7", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#5f5e5a" }}>
+                      Selecione a disciplina acima para ver as aulas disponíveis.
+                    </div>
+                  );
+
                   if (aulasFiltradas.length === 0) return (
                     <div style={{ background: "#f1efe8", border: "0.5px solid #d3d1c7", borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#5f5e5a" }}>
-                      {form.alunoId ? "Nenhuma aula encontrada para este aluno." : "Nenhuma aula gerada ainda. Gere uma aula primeiro."}
+                      Nenhuma aula de {form.disciplina}
+                      {form.alunoId ? " para este aluno" : ""} foi gerada ainda.
                     </div>
                   );
                   return (

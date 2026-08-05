@@ -8,6 +8,58 @@ import EstruturaAEE from "../components/EstruturaAEE";
 
 const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
+const DISCIPLINAS = [
+  "Matemática", "Língua Portuguesa", "Ciências", "História",
+  "Geografia", "Artes", "Educação Física", "Inglês",
+  "Física", "Química", "Biologia", "Filosofia", "Sociologia",
+  "Ensino Religioso", "Pedagogia (polivalente)"
+];
+
+const SERIES = [
+  "1º ano", "2º ano", "3º ano", "4º ano", "5º ano",
+  "6º ano", "7º ano", "8º ano", "9º ano",
+  "1º EM", "2º EM", "3º EM"
+];
+
+const TURNOS = ["Matutino", "Vespertino", "Noturno", "Integral"];
+
+// Seleção múltipla em chips, no mesmo padrão da Estrutura de AEE
+function ChipsProf({ titulo, campo, opcoes, form, setForm }) {
+  const marcados = form[campo] || [];
+  return (
+    <div>
+      <label style={{ fontSize: 12, color: "#5f5e5a", display: "block", marginBottom: 4 }}>{titulo}</label>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+        {opcoes.map(op => {
+          const ativo = marcados.includes(op);
+          return (
+            <label key={op} style={{
+              display: "flex", alignItems: "center", gap: 4, fontSize: 12,
+              padding: "4px 8px", borderRadius: 16, cursor: "pointer",
+              border: `1px solid ${ativo ? "#2B9EC3" : "#d3d1c7"}`,
+              background: ativo ? "#eaf6fa" : "#fff",
+              color: ativo ? "#1a6e8a" : "#5f5e5a"
+            }}>
+              <input type="checkbox" checked={ativo} style={{ width: 12, height: 12 }}
+                onChange={() => setForm(p => ({
+                  ...p,
+                  [campo]: ativo ? marcados.filter(v => v !== op) : [...marcados, op]
+                }))} />
+              {op}
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const formProfVazio = () => ({
+  full_name: "", phone: "", specialization: "",
+  disciplinas: [], series_atendidas: [], turnos: [],
+  formacao: "", matricula: ""
+});
+
 export default function SchoolAdmin() {
   const { user, hasRole } = useAuth();
   const navigate = useNavigate();
@@ -20,7 +72,7 @@ export default function SchoolAdmin() {
   const [feedback, setFeedback] = useState(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [editandoProf, setEditandoProf] = useState(null);
-  const [formProf, setFormProf] = useState({ full_name: "", phone: "", specialization: "" });
+  const [formProf, setFormProf] = useState(formProfVazio());
   const [salvandoProf, setSalvandoProf] = useState(false);
 
   useEffect(() => {
@@ -33,7 +85,7 @@ export default function SchoolAdmin() {
         .from("schools").select("*").eq("id", profile.school_id).single();
 
       const { data: teachersData } = await supabase
-        .from("teachers").select("id, full_name, email, phone, specialization, created_at")
+        .from("teachers").select("id, full_name, email, phone, specialization, disciplinas, series_atendidas, turnos, formacao, matricula, created_at")
         .eq("school_id", profile.school_id).order("full_name");
 
       setSchool(schoolData);
@@ -62,7 +114,12 @@ export default function SchoolAdmin() {
         .update({
           full_name: formProf.full_name.trim(),
           phone: formProf.phone.trim() || null,
-          specialization: formProf.specialization.trim() || null
+          specialization: formProf.specialization.trim() || null,
+          disciplinas: formProf.disciplinas.length ? formProf.disciplinas : null,
+          series_atendidas: formProf.series_atendidas.length ? formProf.series_atendidas : null,
+          turnos: formProf.turnos.length ? formProf.turnos : null,
+          formacao: formProf.formacao.trim() || null,
+          matricula: formProf.matricula.trim() || null
         })
         .eq("id", teacherId)
         .select().single();
@@ -349,8 +406,31 @@ export default function SchoolAdmin() {
                           placeholder="Telefone" style={{ fontSize: 13, padding: 8 }} />
                         <input value={formProf.specialization}
                           onChange={e => setFormProf(p => ({ ...p, specialization: e.target.value }))}
-                          placeholder="Cargo/especialização (ex: aee, professor)" style={{ fontSize: 13, padding: 8 }} />
+                          placeholder="Cargo (ex: aee, professor)" style={{ fontSize: 13, padding: 8 }} />
                       </div>
+
+                      <ChipsProf titulo="Disciplinas que leciona" campo="disciplinas" opcoes={DISCIPLINAS}
+                        form={formProf} setForm={setFormProf} />
+                      <ChipsProf titulo="Séries que atende" campo="series_atendidas" opcoes={SERIES}
+                        form={formProf} setForm={setFormProf} />
+                      <ChipsProf titulo="Turnos" campo="turnos" opcoes={TURNOS}
+                        form={formProf} setForm={setFormProf} />
+
+                      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 8 }}>
+                        <input value={formProf.formacao}
+                          onChange={e => setFormProf(p => ({ ...p, formacao: e.target.value }))}
+                          placeholder="Formação (ex: Pedagogia + Esp. em Educação Especial)"
+                          style={{ fontSize: 13, padding: 8 }} />
+                        <input value={formProf.matricula}
+                          onChange={e => setFormProf(p => ({ ...p, matricula: e.target.value }))}
+                          placeholder="Matrícula funcional" style={{ fontSize: 13, padding: 8 }} />
+                      </div>
+                      {formProf.specialization === "aee" && !formProf.formacao.trim() && (
+                        <p style={{ fontSize: 11, color: "#a35d17", margin: 0 }}>
+                          A Res. CNE/CEB 4/2009 (art. 12) exige formação específica para atuar no AEE —
+                          registre a formação deste profissional.
+                        </p>
+                      )}
                       <div style={{ display: "flex", gap: 8 }}>
                         <button onClick={() => salvarProfessor(t.id)} disabled={salvandoProf}
                           style={{ fontSize: 12, padding: "6px 14px", background: "#4CAF82", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }}>
@@ -367,6 +447,24 @@ export default function SchoolAdmin() {
                       <div>
                         <p style={{ fontWeight: 500, marginBottom: 2, fontSize: 14 }}>{t.full_name || "(sem nome)"}</p>
                         <p style={{ fontSize: 12, color: "#5f5e5a", margin: 0 }}>{t.email}{t.phone ? ` · ${t.phone}` : ""}</p>
+                        {t.disciplinas?.length > 0 && (
+                          <p style={{ fontSize: 11, color: "#1a6e8a", margin: "4px 0 0" }}>
+                            📘 {t.disciplinas.join(", ")}
+                          </p>
+                        )}
+                        {(t.series_atendidas?.length > 0 || t.turnos?.length > 0) && (
+                          <p style={{ fontSize: 11, color: "#5f5e5a", margin: "2px 0 0" }}>
+                            {t.series_atendidas?.length ? t.series_atendidas.join(", ") : ""}
+                            {t.series_atendidas?.length && t.turnos?.length ? " · " : ""}
+                            {t.turnos?.length ? t.turnos.join(", ") : ""}
+                          </p>
+                        )}
+                        {t.formacao && (
+                          <p style={{ fontSize: 11, color: "#5f5e5a", margin: "2px 0 0" }}>🎓 {t.formacao}</p>
+                        )}
+                        {t.matricula && (
+                          <p style={{ fontSize: 11, color: "#888", margin: "2px 0 0" }}>Matrícula: {t.matricula}</p>
+                        )}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                         <span style={{
@@ -377,7 +475,15 @@ export default function SchoolAdmin() {
                         </span>
                         <button onClick={() => {
                           setEditandoProf(t.id);
-                          setFormProf({ full_name: t.full_name || "", phone: t.phone || "", specialization: t.specialization || "" });
+                          setFormProf({
+                            ...formProfVazio(),
+                            full_name: t.full_name || "", phone: t.phone || "",
+                            specialization: t.specialization || "",
+                            disciplinas: t.disciplinas || [],
+                            series_atendidas: t.series_atendidas || [],
+                            turnos: t.turnos || [],
+                            formacao: t.formacao || "", matricula: t.matricula || ""
+                          });
                         }} style={{ fontSize: 12, padding: "4px 12px", background: "#fff", color: "#BA7517", border: "0.5px solid #BA7517", borderRadius: 6, cursor: "pointer" }}>
                           ✏️ Editar
                         </button>
