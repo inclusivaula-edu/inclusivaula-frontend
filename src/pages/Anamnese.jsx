@@ -15,6 +15,22 @@ const DOENCAS = [
   "Caxumba", "Otite", "Alergias", "Catapora"
 ];
 
+// Campos da primeira versão do formulário. Anamneses salvas antes da
+// reformulação para o modelo oficial ainda usam estes nomes — mantemos a
+// exibição para que esses registros não pareçam vazios.
+const CAMPOS_LEGADOS = [
+  ["gestacao_parto", "Gestação e parto"],
+  ["desenvolvimento_motor", "Desenvolvimento motor"],
+  ["desenvolvimento_linguagem", "Desenvolvimento da linguagem"],
+  ["historico_saude", "Histórico de saúde"],
+  ["historico_familiar", "Histórico familiar"],
+  ["diagnostico_laudo", "Diagnóstico / laudo"],
+  ["medicacoes_em_uso", "Medicações em uso"],
+  ["rotina_sono_alimentacao", "Rotina de sono e alimentação"],
+  ["comportamento_observado", "Comportamento observado pela família"],
+  ["observacoes_escolares", "Observações escolares"]
+];
+
 const vazio = () => ({
   // 1 — Identificação (complementa o que já está no cadastro do aluno)
   turma: "", naturalidade: "", nacionalidade: "Brasileira", telefone_estudante: "", email: "",
@@ -564,6 +580,9 @@ export default function Anamnese() {
                           {h.data.doencas?.length > 0 && <p style={{ margin: 0 }}><strong>Doenças:</strong> {h.data.doencas.join(", ")}</p>}
                           {h.data.reacao_contrariado && <p style={{ margin: 0 }}><strong>Reação quando contrariado:</strong> {h.data.reacao_contrariado}</p>}
                           {h.data.outras_observacoes && <p style={{ margin: 0 }}><strong>Observações:</strong> {h.data.outras_observacoes}</p>}
+                          {CAMPOS_LEGADOS.filter(([campo]) => h.data[campo]).map(([campo, rotulo]) => (
+                            <p key={campo} style={{ margin: 0 }}><strong>{rotulo}:</strong> {h.data[campo]}</p>
+                          ))}
                         </div>
                       )}
                     </div>

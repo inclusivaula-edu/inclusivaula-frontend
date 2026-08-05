@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import {
   getGlobalPanel,
   listAllNetworks, createNetworkAdmin, updateNetworkAdmin, deleteNetworkAdmin,
-  listAllSchools, createSchoolAdmin, updateSchoolAdmin, deleteSchoolAdmin
+  listAllSchools, createSchoolAdmin, updateSchoolAdmin, deleteSchoolAdmin,
+  listAllUsers, updateUserVinculo
 } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
@@ -17,6 +18,15 @@ const btnBase = { padding: "8px 16px", borderRadius: 8, border: "0.5px solid #d3
 const btnSmall = { ...btnBase, padding: "4px 10px", fontSize: 11 };
 
 const TIPOS_REDE = ["municipal", "estadual", "federal", "privada"];
+const PAPEIS = ["professor", "coordenador", "diretor", "secretaria", "mec", "admin"];
+const PAPEL_DESC = {
+  professor: "vê apenas os próprios alunos e documentos",
+  coordenador: "vê toda a escola",
+  diretor: "gestão completa da escola",
+  secretaria: "vê todas as escolas da rede vinculada",
+  mec: "panorama nacional (dados agregados)",
+  admin: "acesso global e gestão da plataforma"
+};
 
 const redeVazia = () => ({ name: "", type: "municipal", city: "", state: "" });
 const escolaVazia = () => ({ name: "", city: "", state: "", network_id: "" });
@@ -35,16 +45,22 @@ export default function AdminPanel() {
   const [formEscola, setFormEscola] = useState(escolaVazia());
   const [editandoEscola, setEditandoEscola] = useState(null);
   const [salvando, setSalvando] = useState(false);
+  const [usuarios, setUsuarios] = useState([]);
+  const [editandoUsuario, setEditandoUsuario] = useState(null);
+  const [formUsuario, setFormUsuario] = useState({ role: "", network_id: "", school_id: "" });
 
   useEffect(() => { carregarTudo(); }, []);
 
   async function carregarTudo() {
     setLoading(true);
     try {
-      const [pRes, rRes, eRes] = await Promise.all([getGlobalPanel(), listAllNetworks(), listAllSchools()]);
+      const [pRes, rRes, eRes, uRes] = await Promise.all([
+        getGlobalPanel(), listAllNetworks(), listAllSchools(), listAllUsers()
+      ]);
       setPanorama(pRes.data);
       setRedes(rRes.data || []);
       setEscolas(eRes.data || []);
+      setUsuarios(uRes.data || []);
     } catch (err) {
       mostrarFeedback(err.message || "Erro ao carregar dados.", "erro");
     } finally {
@@ -134,7 +150,27 @@ export default function AdminPanel() {
     }
   }
 
+  function handleEditarUsuario(u) {
+    setFormUsuario({ role: u.role || "", network_id: u.network_id || "", school_id: u.school_id || "" });
+    setEditandoUsuario(u.id);
+  }
+
+  async function handleSalvarUsuario(id) {
+    setSalvando(true);
+    try {
+      const res = await updateUserVinculo(id, formUsuario);
+      setUsuarios(prev => prev.map(u => u.id === id ? { ...u, ...res.data } : u));
+      setEditandoUsuario(null);
+      mostrarFeedback("Vínculo atualizado!");
+    } catch (err) {
+      mostrarFeedback(err.message || "Erro ao atualizar vínculo.", "erro");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
   const nomeRede = (id) => redes.find(r => r.id === id)?.name || "—";
+  const nomeEscola = (id) => escolas.find(e => e.id === id)?.name || "—";
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f9ff" }}>
@@ -164,7 +200,8 @@ export default function AdminPanel() {
           {[
             ["panorama", "Panorama"],
             ["redes", `Redes (${redes.length})`],
-            ["escolas", `Escolas (${escolas.length})`]
+            ["escolas", `Escolas (${escolas.length})`],
+            ["usuarios", `Usuários (${usuarios.length})`]
           ].map(([k, l]) => (
             <button key={k} onClick={() => setTab(k)} style={{
               ...btnBase,
@@ -342,6 +379,98 @@ export default function AdminPanel() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {!loading && tab === "usuarios" && (
+          <div style={cardStyle}>
+            <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 4px" }}>Usuários da plataforma</p>
+            <p style={{ fontSize: 12, color: "#5f5e5a", margin: "0 0 16px" }}>
+              Defina o papel de cada usuário e o vínculo com escola ou rede de ensino.
+              Um usuário com papel <strong>secretaria</strong> precisa estar vinculado a uma rede
+              para acessar o Painel da Rede.
+            </p>
+
+            {usuarios.length === 0 ? (
+              <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>Nenhum usuário cadastrado.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {usuarios.map(u => (
+                  <div key={u.id} style={{
+                    padding: "12px 14px", background: "#f5f9ff",
+                    border: "0.5px solid #d3d1c7", borderRadius: 8
+                  }}>
+                    {editandoUsuario === u.id ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                        <strong style={{ fontSize: 13 }}>{u.full_name || u.email}</strong>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+                          <div>
+                            <label style={labelStyle}>Papel</label>
+                            <select value={formUsuario.role}
+                              onChange={e => setFormUsuario(p => ({ ...p, role: e.target.value }))}
+                              style={inputFull}>
+                              {PAPEIS.map(p => <option key={p} value={p}>{p}</option>)}
+                            </select>
+                            <p style={{ fontSize: 11, color: "#5f5e5a", margin: "4px 0 0" }}>
+                              {PAPEL_DESC[formUsuario.role] || ""}
+                            </p>
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Rede de ensino</label>
+                            <select value={formUsuario.network_id}
+                              onChange={e => setFormUsuario(p => ({ ...p, network_id: e.target.value }))}
+                              style={inputFull}>
+                              <option value="">Sem rede</option>
+                              {redes.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label style={labelStyle}>Escola</label>
+                            <select value={formUsuario.school_id}
+                              onChange={e => setFormUsuario(p => ({ ...p, school_id: e.target.value }))}
+                              style={inputFull}>
+                              <option value="">Sem escola</option>
+                              {escolas.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                            </select>
+                          </div>
+                        </div>
+                        {formUsuario.role === "secretaria" && !formUsuario.network_id && (
+                          <p style={{ fontSize: 12, color: "#a35d17", margin: 0 }}>
+                            Sem uma rede vinculada, este usuário não conseguirá abrir o Painel da Rede.
+                          </p>
+                        )}
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <button onClick={() => handleSalvarUsuario(u.id)} disabled={salvando}
+                            style={{ ...btnBase, background: "#2B9EC3", color: "#fff", borderColor: "#2B9EC3" }}>
+                            {salvando ? "Salvando..." : "Salvar vínculo"}
+                          </button>
+                          <button onClick={() => setEditandoUsuario(null)} style={btnBase}>Cancelar</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                        <div>
+                          <strong style={{ fontSize: 13 }}>{u.full_name || "(sem nome)"}</strong>
+                          <p style={{ fontSize: 11, color: "#5f5e5a", margin: "2px 0 0" }}>{u.email}</p>
+                          <p style={{ fontSize: 11, color: "#5f5e5a", margin: "4px 0 0" }}>
+                            Papel: <strong>{u.role || "—"}</strong>
+                            {u.cargo ? ` · cargo: ${u.cargo}` : ""}
+                            {" · "}Escola: {nomeEscola(u.school_id)}
+                            {" · "}Rede: {nomeRede(u.network_id)}
+                          </p>
+                          {u.role === "secretaria" && !u.network_id && (
+                            <p style={{ fontSize: 11, color: "#a35d17", margin: "4px 0 0" }}>
+                              Sem rede vinculada — Painel da Rede indisponível para este usuário.
+                            </p>
+                          )}
+                        </div>
+                        <button onClick={() => handleEditarUsuario(u)} style={btnSmall}>Editar vínculo</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </main>

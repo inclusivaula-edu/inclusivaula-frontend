@@ -289,6 +289,14 @@ export async function deleteNetworkAdmin(id) {
   return request(`/api/admin/networks/${id}`, { method: "DELETE" });
 }
 
+export async function listAllUsers() {
+  return request("/api/admin/users");
+}
+
+export async function updateUserVinculo(id, payload) {
+  return request(`/api/admin/users/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+}
+
 export async function getPEIPDFBlob(id, formato = "pdf") {
   const { data: { session } } = await (await import("./supabaseClient.js")).supabase.auth.getSession();
   const token = session?.access_token;
