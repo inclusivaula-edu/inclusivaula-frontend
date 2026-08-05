@@ -5,15 +5,18 @@ import { useLesson } from "../contexts/LessonContext";
 import { getUsage, subscribePlan } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
-// Ordem mobile: Gerar aula (full), Alunos|Turmas, Historico|Avaliações, Frequencia|Sessões AEE, Minha escola|Relatórios, PEI|AEE
+// A ordem do array é a ordem na tela. Para o professor, as duas primeiras
+// linhas seguem o fluxo do dia a dia:
+//   Gerar plano de aula | Avaliações | PEI
+//   Alunos              | Histórico  | Frequência
 const CARDS = [
   // --- Professor ---
   { emoji: "🧠", label: "Gerar Plano de aula", desc: "Crie uma aula adaptada com IA", rota: "/gerar", cor: "#2B9EC3", salaComum: true },
+  { emoji: "✏️", label: "Avaliações", desc: "Avaliações por bimestre/semestre", rota: "/avaliacoes", cor: "#534AB7", salaComum: true },
+  { emoji: "📋", label: "PEI", desc: "Plano Educacional Individualizado", rota: "/pei", cor: "#2B9EC3" },
   { emoji: "👨‍🎓", label: "Alunos", desc: "Gerencie seus alunos", rota: "/alunos", cor: "#4CAF82" },
   { emoji: "📚", label: "Histórico", desc: "Veja suas aulas geradas", rota: "/historico", cor: "#4CAF82", salaComum: true },
   { emoji: "📅", label: "Frequência", desc: "Registre presenças e faltas", rota: "/frequencia", cor: "#2B9EC3", salaComum: true },
-  { emoji: "✏️", label: "Avaliações", desc: "Avaliações por bimestre/semestre", rota: "/avaliacoes", cor: "#534AB7", salaComum: true },
-  { emoji: "📋", label: "PEI", desc: "Plano Educacional Individualizado", rota: "/pei", cor: "#2B9EC3" },
   { emoji: "🎓", label: "PAEE", desc: "Plano de Atendimento Educacional Especializado", rota: "/aee", cor: "#534AB7", aeeOnly: true },
   { emoji: "📝", label: "Sessões AEE", desc: "Frequência e evolução — FUNDEB", rota: "/aee-sessoes", cor: "#0F6E56", aeeOnly: true },
   { emoji: "📅", label: "Agenda", desc: "Atendimentos com lembrete por e-mail", rota: "/agenda", cor: "#2B9EC3", aeeOnly: true },
@@ -276,7 +279,9 @@ export default function Dashboard() {
         {/* Cards de navegação */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(auto-fit, minmax(200px, 1fr))",
+          // 3 por linha no desktop (com auto-fit cabiam 4 e a ordem pretendida
+          // dos cards do professor quebrava), 2 no mobile.
+          gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
           gap: isMobile ? 10 : 16
         }}>
           {CARDS.filter(card => {
