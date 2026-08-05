@@ -169,6 +169,15 @@ export default function AdminPanel() {
     }
   }
 
+  async function copiarConvite(codigo) {
+    try {
+      await navigator.clipboard.writeText(codigo);
+      mostrarFeedback(`Código ${codigo} copiado!`);
+    } catch {
+      mostrarFeedback(`Código: ${codigo}`, "erro");
+    }
+  }
+
   const nomeRede = (id) => redes.find(r => r.id === id)?.name || "—";
   const nomeEscola = (id) => escolas.find(e => e.id === id)?.name || "—";
 
@@ -357,6 +366,7 @@ export default function AdminPanel() {
                         <th style={{ padding: "6px 8px" }}>Nome</th>
                         <th style={{ padding: "6px 8px" }}>Cidade/UF</th>
                         <th style={{ padding: "6px 8px" }}>Rede</th>
+                        <th style={{ padding: "6px 8px" }}>Convite</th>
                         <th style={{ padding: "6px 8px" }}></th>
                       </tr>
                     </thead>
@@ -368,6 +378,21 @@ export default function AdminPanel() {
                             {e.city || "—"}{e.state ? `/${e.state}` : ""}
                           </td>
                           <td style={{ padding: "8px", color: "#5f5e5a" }}>{nomeRede(e.network_id)}</td>
+                          <td style={{ padding: "8px" }}>
+                            {e.invite_code ? (
+                              <button onClick={() => copiarConvite(e.invite_code)}
+                                title="Copiar código de convite"
+                                style={{
+                                  fontFamily: "monospace", fontSize: 12, letterSpacing: 1,
+                                  background: "#eaf6fa", color: "#1a6e8a", border: "1px solid #b9e0ee",
+                                  borderRadius: 6, padding: "3px 8px", cursor: "pointer"
+                                }}>
+                                {e.invite_code} 📋
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: 11, color: "#a35d17" }}>sem código</span>
+                            )}
+                          </td>
                           <td style={{ padding: "8px", display: "flex", gap: 6 }}>
                             <button onClick={() => handleEditarEscola(e)} style={btnSmall}>Editar</button>
                             <button onClick={() => handleExcluirEscola(e.id)} style={{ ...btnSmall, color: "#a32d2d", borderColor: "#f7c1c1" }}>Excluir</button>
