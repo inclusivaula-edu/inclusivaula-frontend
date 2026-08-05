@@ -289,6 +289,16 @@ export async function deleteNetworkAdmin(id) {
   return request(`/api/admin/networks/${id}`, { method: "DELETE" });
 }
 
+// ── ESTRUTURA DE AEE DA ESCOLA ──────────────────────────────────────
+
+export async function getEstruturaAEE() {
+  return request("/api/school/estrutura-aee");
+}
+
+export async function saveEstruturaAEE(estrutura) {
+  return request("/api/school/estrutura-aee", { method: "PUT", body: JSON.stringify({ estrutura }) });
+}
+
 export async function listAllUsers() {
   return request("/api/admin/users");
 }

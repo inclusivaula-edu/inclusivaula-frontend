@@ -4,11 +4,12 @@ import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../services/supabaseClient";
 import icone from "../assets/icone.png";
 import ConviteProfessores from "../components/ConviteProfessores";
+import EstruturaAEE from "../components/EstruturaAEE";
 
 const STATES = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
 export default function SchoolAdmin() {
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const navigate = useNavigate();
   const [school, setSchool] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -310,6 +311,11 @@ export default function SchoolAdmin() {
 
         {/* CONVITE DE PROFESSORES */}
         <ConviteProfessores />
+
+        {/* ESTRUTURA DE AEE — alimenta os prompts do Nexus7 */}
+        <div style={{ marginTop: 24 }}>
+          <EstruturaAEE podeEditar={hasRole("coordenador")} onFeedback={mostrarFeedback} />
+        </div>
 
         {/* LISTA DE PROFESSORES */}
         <div style={{
