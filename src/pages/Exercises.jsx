@@ -330,11 +330,21 @@ export default function Exercises() {
             {/* Critérios de avaliação */}
             <div style={{
               background: "#f1efe8", border: "0.5px solid #d3d1c7",
-              borderRadius: 8, padding: "12px 16px", marginBottom: 24,
+              borderRadius: 8, padding: "12px 16px", marginBottom: exercicios.orientacoes_aplicador ? 8 : 24,
               fontSize: 13, color: "#5f5e5a"
             }}>
               <strong>📊 Critérios de avaliação:</strong> {exercicios.criterios_avaliacao}
             </div>
+
+            {exercicios.orientacoes_aplicador && (
+              <div style={{
+                background: "#e8f7fd", border: "0.5px solid #b9e0ee",
+                borderRadius: 8, padding: "12px 16px", marginBottom: 24,
+                fontSize: 13, color: "#1a6e8a"
+              }}>
+                <strong>💡 Orientações para aplicar:</strong> {exercicios.orientacoes_aplicador}
+              </div>
+            )}
 
             {/* Registro de notas */}
             <div style={{

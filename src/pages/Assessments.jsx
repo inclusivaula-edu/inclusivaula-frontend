@@ -181,6 +181,7 @@ export default function Assessments() {
       disciplina: partes[0] || "—",
       periodo: partes[1] || "—",
       criterios_avaliacao: atividade.gabarito?.criterios || "",
+      orientacoes_aplicador: atividade.gabarito?.orientacoes_aplicador || "",
       pontuacao_maxima: atividade.gabarito?.pontuacao_maxima || 10
     });
     setAba("gerar");
