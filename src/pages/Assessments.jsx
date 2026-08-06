@@ -376,6 +376,18 @@ export default function Assessments() {
                     </option>
                   ))}
                 </select>
+                {/* Sem aluno o Nexus7 não tem perfil para adaptar e gera prova comum */}
+                {!form.alunoId ? (
+                  <p style={{ fontSize: 12, color: "#a35d17", margin: "6px 0 0" }}>
+                    Sem aluno selecionado, as questões saem no formato padrão da turma.
+                    Selecione o aluno para que sejam adaptadas ao perfil, à série e à faixa etária dele.
+                  </p>
+                ) : (
+                  <p style={{ fontSize: 12, color: "#0F6E56", margin: "6px 0 0" }}>
+                    As questões serão adaptadas ao perfil deste aluno — enunciados calibrados
+                    para a idade e formatos adequados à NEE.
+                  </p>
+                )}
               </div>
 
               {/* Período e disciplina */}
