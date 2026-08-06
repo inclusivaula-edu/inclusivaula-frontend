@@ -242,6 +242,123 @@ export default function AdminPanel() {
           </div>
         )}
 
+        {!loading && tab === "panorama" && panorama && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16 }}>
+
+            {/* Distribuição geográfica */}
+            <div style={cardStyle}>
+              <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>🗺️ Distribuição geográfica</p>
+              {Object.keys(panorama.distribuicao_geografica?.escolas_por_estado || {}).length === 0 ? (
+                <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>Nenhuma escola cadastrada ainda.</p>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ textAlign: "left", color: "#5f5e5a", borderBottom: "1px solid #d3d1c7" }}>
+                        <th scope="col" style={{ padding: "6px 8px" }}>UF</th>
+                        <th scope="col" style={{ padding: "6px 8px", textAlign: "right" }}>Redes</th>
+                        <th scope="col" style={{ padding: "6px 8px", textAlign: "right" }}>Escolas</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(panorama.distribuicao_geografica.escolas_por_estado)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([uf, qtdEscolas]) => (
+                          <tr key={uf} style={{ borderBottom: "0.5px solid #f1efe8" }}>
+                            <td style={{ padding: "6px 8px", fontWeight: 500 }}>{uf}</td>
+                            <td style={{ padding: "6px 8px", textAlign: "right" }}>{panorama.distribuicao_geografica.redes_por_estado[uf] || 0}</td>
+                            <td style={{ padding: "6px 8px", textAlign: "right" }}>{qtdEscolas}</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 }}>
+              {/* Perfis de NEE — agregado nacional, anônimo */}
+              <div style={cardStyle}>
+                <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>♿ Perfis de NEE (agregado nacional)</p>
+                {Object.keys(panorama.nee_nacional || {}).length === 0 ? (
+                  <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>Nenhum aluno com NEE cadastrado.</p>
+                ) : (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {Object.entries(panorama.nee_nacional).sort((a, b) => b[1] - a[1]).map(([tipo, qtd]) => (
+                      <span key={tipo} style={{ fontSize: 12, padding: "4px 12px", background: "#e8f7fd", color: "#1a6e8a", borderRadius: 20 }}>
+                        {tipo}: <strong>{qtd}</strong>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Cobertura de SRM nacional */}
+              <div style={cardStyle}>
+                <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>🏫 Cobertura de Sala de Recursos</p>
+                <p style={{ fontSize: 26, fontWeight: 600, margin: 0, color: (panorama.cobertura_estrutura?.percentual_com_srm ?? 0) < 50 ? "#a32d2d" : "#0F6E56" }}>
+                  {panorama.cobertura_estrutura?.percentual_com_srm ?? "—"}%
+                </p>
+                <p style={{ fontSize: 12, color: "#5f5e5a", margin: "4px 0 0" }}>
+                  {panorama.cobertura_estrutura?.escolas_com_srm ?? 0} de {panorama.cobertura_estrutura?.total_escolas ?? 0} escolas com SRM cadastrada (Decreto 7.611/2011)
+                </p>
+              </div>
+            </div>
+
+            {/* Taxa de conclusão documental agregada */}
+            <div style={cardStyle}>
+              <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>📄 Taxa de conclusão documental (efetividade)</p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10 }}>
+                {[
+                  ["PEI", panorama.taxa_conclusao_documental?.pei],
+                  ["PDI", panorama.taxa_conclusao_documental?.pdi],
+                  ["PAEE", panorama.taxa_conclusao_documental?.paee],
+                  ["Estudo de Caso", panorama.taxa_conclusao_documental?.estudo_caso]
+                ].map(([rotulo, valor]) => (
+                  <div key={rotulo}>
+                    <p style={{ fontSize: 20, fontWeight: 600, margin: 0, color: valor === null ? "#9b9a96" : valor < 60 ? "#a32d2d" : "#0F6E56" }}>
+                      {valor === null || valor === undefined ? "—" : `${valor}%`}
+                    </p>
+                    <p style={{ fontSize: 11, color: "#5f5e5a", margin: "2px 0 0" }}>{rotulo}</p>
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontSize: 11, color: "#9b9a96", margin: "10px 0 0" }}>% de documentos iniciados que foram efetivamente concluídos — não é volume, é efetividade.</p>
+            </div>
+
+            {/* Evolução mensal — adoção da plataforma */}
+            <div style={cardStyle}>
+              <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>📈 Evolução mensal (últimos 6 meses)</p>
+              {Object.keys(panorama.evolucao_mensal?.aulas || {}).length === 0 ? (
+                <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>Sem dados suficientes ainda.</p>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ textAlign: "left", color: "#5f5e5a", borderBottom: "1px solid #d3d1c7" }}>
+                        <th scope="col" style={{ padding: "6px 8px" }}>Mês</th>
+                        <th scope="col" style={{ padding: "6px 8px", textAlign: "right" }}>Aulas geradas</th>
+                        <th scope="col" style={{ padding: "6px 8px", textAlign: "right" }}>Documentos concluídos</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.keys({ ...panorama.evolucao_mensal.aulas, ...panorama.evolucao_mensal.documentos })
+                        .sort()
+                        .map(mes => (
+                          <tr key={mes} style={{ borderBottom: "0.5px solid #f1efe8" }}>
+                            <td style={{ padding: "6px 8px", fontWeight: 500 }}>{mes}</td>
+                            <td style={{ padding: "6px 8px", textAlign: "right" }}>{panorama.evolucao_mensal.aulas[mes] || 0}</td>
+                            <td style={{ padding: "6px 8px", textAlign: "right" }}>{panorama.evolucao_mensal.documentos[mes] || 0}</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {!loading && tab === "redes" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
             <div style={cardStyle}>
