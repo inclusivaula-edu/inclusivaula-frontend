@@ -105,6 +105,7 @@ export default function NetworkPanel() {
                 ["Escolas", dados.total_escolas, "#2B9EC3"],
                 ["Alunos", dados.totais.alunos, "#2B9EC3"],
                 ["Professores", dados.totais.professores, "#2B9EC3"],
+                ["Alunos com NEE", dados.totais.total_nee, "#0F6E56"],
                 ["PEIs concluídos", dados.totais.pei_concluidos, "#534AB7"],
                 ["PAEEs concluídos", dados.totais.aee_concluidos, "#4CAF82"]
               ].map(([rotulo, valor, cor]) => (
@@ -114,6 +115,76 @@ export default function NetworkPanel() {
                 </div>
               ))}
             </div>
+
+            {/* Cobertura de infraestrutura — sustenta pedido de recurso à rede */}
+            {dados.cobertura_estrutura && (
+              <div style={{ ...cardStyle, marginBottom: 20 }}>
+                <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>♿ Cobertura de estrutura de AEE na rede</p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+                  <div style={{ fontSize: 13 }}>
+                    <strong style={{ fontSize: 20, color: dados.cobertura_estrutura.percentual_com_srm < 50 ? "#a32d2d" : "#0F6E56" }}>
+                      {dados.cobertura_estrutura.percentual_com_srm ?? "—"}%
+                    </strong>
+                    <p style={{ margin: "2px 0 0", color: "#5f5e5a" }}>
+                      das escolas têm Sala de Recursos Multifuncionais ({dados.cobertura_estrutura.escolas_com_srm} de {dados.total_escolas})
+                    </p>
+                  </div>
+                  <div style={{ fontSize: 13 }}>
+                    <strong style={{ fontSize: 20, color: dados.cobertura_estrutura.escolas_sem_profissional_aee > 0 ? "#a32d2d" : "#0F6E56" }}>
+                      {dados.cobertura_estrutura.escolas_sem_profissional_aee}
+                    </strong>
+                    <p style={{ margin: "2px 0 0", color: "#5f5e5a" }}>
+                      escola(s) com aluno NEE e nenhum profissional de AEE cadastrado
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* FUNDEB agregado da rede */}
+            {dados.fundeb_rede && dados.fundeb_rede.total_nee > 0 && (
+              <div style={{ ...cardStyle, marginBottom: 20, border: "1px solid #0F6E56" }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "#0F6E56", margin: "0 0 4px" }}>🩺 Frequência do AEE — base do FUNDEB (rede)</p>
+                <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
+                  <strong>{dados.fundeb_rede.sessoes_30d}</strong> sessão(ões) registradas nos últimos 30 dias na rede ·{" "}
+                  <strong style={{ color: dados.fundeb_rede.alunos_sem_atendimento_30d > 0 ? "#a32d2d" : "#0F6E56" }}>
+                    {dados.fundeb_rede.alunos_sem_atendimento_30d}
+                  </strong> de {dados.fundeb_rede.total_nee} aluno(s) com NEE sem atendimento registrado — repasse em risco.
+                </p>
+              </div>
+            )}
+
+            {/* Ranking de risco — onde a rede precisa intervir primeiro */}
+            {dados.escolas_por_risco && dados.escolas_por_risco.length > 0 && (
+              <div style={{ ...cardStyle, marginBottom: 20 }}>
+                <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 4px" }}>📊 Escolas por prioridade de atenção</p>
+                <p style={{ fontSize: 12, color: "#5f5e5a", margin: "0 0 12px" }}>
+                  Ordenadas por pendência documental — PEI/PDI, PAEE e Estudo de Caso faltantes de alunos com NEE.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {dados.escolas_por_risco.map((e, i) => (
+                    <div key={e.id} style={{
+                      display: "flex", alignItems: "center", gap: 10, fontSize: 13,
+                      padding: "8px 10px", borderRadius: 8,
+                      background: e.pendencias_count > 0 ? "#fffbf3" : "#f5f9ff"
+                    }}>
+                      <span style={{ color: "#9b9a96", minWidth: 18 }}>{i + 1}º</span>
+                      <span style={{ flex: 1, fontWeight: 500 }}>{e.nome}</span>
+                      {e.estrutura_gaps_count > 0 && (
+                        <span style={{ fontSize: 11, color: "#a32d2d" }}>⚠️ {e.estrutura_gaps_count} lacuna(s) de estrutura</span>
+                      )}
+                      <span style={{
+                        fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 12,
+                        background: e.pendencias_count > 0 ? "#fcebeb" : "#edfff6",
+                        color: e.pendencias_count > 0 ? "#791f1f" : "#0F6E56"
+                      }}>
+                        {e.pendencias_count} pendência(s)
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div style={cardStyle}>
               <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 12px" }}>Escolas da rede</p>
@@ -130,8 +201,11 @@ export default function NetworkPanel() {
                         <th scope="col" style={{ padding: "8px 6px" }}>Cidade</th>
                         <th scope="col" style={{ padding: "8px 6px", textAlign: "right" }}>Alunos</th>
                         <th scope="col" style={{ padding: "8px 6px", textAlign: "right" }}>Professores</th>
+                        <th scope="col" style={{ padding: "8px 6px", textAlign: "right" }}>NEE</th>
                         <th scope="col" style={{ padding: "8px 6px", textAlign: "right" }}>PEIs</th>
                         <th scope="col" style={{ padding: "8px 6px", textAlign: "right" }}>AEE</th>
+                        <th scope="col" style={{ padding: "8px 6px", textAlign: "right" }}>Prof. AEE</th>
+                        <th scope="col" style={{ padding: "8px 6px", textAlign: "right" }}>SRM</th>
                         <th scope="col" style={{ padding: "8px 6px", textAlign: "right" }}>Frequência</th>
                       </tr>
                     </thead>
@@ -142,8 +216,13 @@ export default function NetworkPanel() {
                           <td style={{ padding: "8px 6px", color: "#5f5e5a" }}>{e.cidade || "—"}</td>
                           <td style={{ padding: "8px 6px", textAlign: "right" }}>{e.alunos}</td>
                           <td style={{ padding: "8px 6px", textAlign: "right" }}>{e.professores}</td>
+                          <td style={{ padding: "8px 6px", textAlign: "right" }}>{e.total_nee}</td>
                           <td style={{ padding: "8px 6px", textAlign: "right" }}>{e.pei_concluidos}</td>
                           <td style={{ padding: "8px 6px", textAlign: "right" }}>{e.aee_concluidos}</td>
+                          <td style={{ padding: "8px 6px", textAlign: "right", color: e.total_nee > 0 && e.profissionais_aee === 0 ? "#a32d2d" : "inherit" }}>
+                            {e.profissionais_aee}
+                          </td>
+                          <td style={{ padding: "8px 6px", textAlign: "right" }}>{e.tem_srm ? "✓" : "—"}</td>
                           <td style={{ padding: "8px 6px", textAlign: "right", color: e.taxa_frequencia !== null && e.taxa_frequencia < 75 ? "#a32d2d" : "#0F6E56" }}>
                             {e.taxa_frequencia === null ? "—" : `${e.taxa_frequencia}%`}
                           </td>

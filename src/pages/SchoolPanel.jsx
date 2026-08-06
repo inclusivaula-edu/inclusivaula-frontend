@@ -175,6 +175,43 @@ export default function SchoolPanel() {
               </div>
             </div>
 
+            {/* Estrutura de AEE × perfil de NEE matriculado */}
+            {dados.estrutura_gaps && dados.estrutura_gaps.length > 0 && (
+              <div style={{ ...cardStyle, marginBottom: 24, border: "1px solid #a32d2d" }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "#791f1f", margin: "0 0 4px" }}>
+                  ♿ Lacunas de estrutura de AEE
+                </p>
+                <p style={{ fontSize: 12, color: "#5f5e5a", margin: "0 0 12px" }}>
+                  Cruzamento entre o perfil de NEE dos alunos matriculados e o inventário cadastrado em Minha Escola.
+                  Use esta lista como justificativa em pedido de recurso à secretaria.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {dados.estrutura_gaps.map((g, i) => (
+                    <div key={i} style={{ fontSize: 13, padding: "6px 10px", background: "#fff5f5", borderRadius: 8, color: "#791f1f" }}>
+                      ⚠️ {g.mensagem}
+                    </div>
+                  ))}
+                </div>
+                <button onClick={() => navigate("/escola")} style={{
+                  marginTop: 10, fontSize: 12, padding: "5px 12px", borderRadius: 8,
+                  border: "1px solid #a32d2d", background: "#fff", color: "#a32d2d", cursor: "pointer"
+                }}>
+                  Atualizar estrutura de AEE
+                </button>
+              </div>
+            )}
+
+            {/* Uso da plataforma pelos professores */}
+            <div style={{ ...cardStyle, marginBottom: 24 }}>
+              <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 6px" }}>👩‍🏫 Uso da plataforma pelos professores</p>
+              <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
+                <strong style={{ color: dados.uso_professores.total > 0 && dados.uso_professores.ativos_30d === 0 ? "#a32d2d" : "#0F6E56" }}>
+                  {dados.uso_professores.ativos_30d}
+                </strong> de {dados.uso_professores.total} professor(es) geraram ao menos uma aula nos últimos 30 dias
+                {" · "}{dados.profissionais_aee} profissional(is) de AEE cadastrado(s)
+              </p>
+            </div>
+
             {/* Perfis NEE */}
             <div style={{ ...cardStyle, marginBottom: 24 }}>
               <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>Alunos por perfil de NEE</p>
