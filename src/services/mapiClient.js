@@ -263,7 +263,24 @@ export async function getNetworkPanelPDFBlob(networkId = null) {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF do painel da rede");
-  return res.blob();
+  return { blob: await res.blob(), filename: nomeDoContentDisposition(res, "painel-rede.pdf") };
+}
+
+/**
+ * Extrai o nome do arquivo do header Content-Disposition da resposta.
+ * O backend já monta o nome (com os acentos transliterados); lê-lo daqui
+ * evita duplicar essa lógica no frontend e vê-la divergir com o tempo.
+ * Requer que o CORS do backend exponha o header — se não expuser, cai no padrão.
+ */
+function nomeDoContentDisposition(res, padrao) {
+  const header = res.headers.get("Content-Disposition") || "";
+  const match = header.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+  if (!match) return padrao;
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
 }
 
 // ── ADMIN (gestão global de escolas e redes) ────────────────────────
