@@ -201,6 +201,33 @@ export default function SchoolPanel() {
               </div>
             )}
 
+            {/* Evolução mensal — o painel era só foto do momento */}
+            {dados.evolucao_mensal?.length > 0 && (
+              <div style={{ ...cardStyle, marginBottom: 24 }}>
+                <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>📈 Evolução da escola (últimos 6 meses)</p>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ textAlign: "left", color: "#5f5e5a", borderBottom: "1px solid #d3d1c7" }}>
+                        <th scope="col" style={{ padding: "6px 8px" }}>Mês</th>
+                        <th scope="col" style={{ padding: "6px 8px", textAlign: "right" }}>Aulas geradas</th>
+                        <th scope="col" style={{ padding: "6px 8px", textAlign: "right" }}>Documentos concluídos</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dados.evolucao_mensal.map(m => (
+                        <tr key={m.mes} style={{ borderBottom: "0.5px solid #f1efe8" }}>
+                          <td style={{ padding: "6px 8px", fontWeight: 500 }}>{m.mes}</td>
+                          <td style={{ padding: "6px 8px", textAlign: "right", color: m.aulas === 0 ? "#9b9a96" : "inherit" }}>{m.aulas}</td>
+                          <td style={{ padding: "6px 8px", textAlign: "right", color: m.documentos === 0 ? "#9b9a96" : "inherit" }}>{m.documentos}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {/* Uso da plataforma pelos professores */}
             <div style={{ ...cardStyle, marginBottom: 24 }}>
               <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 6px" }}>👩‍🏫 Uso da plataforma pelos professores</p>

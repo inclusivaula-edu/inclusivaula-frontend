@@ -154,6 +154,62 @@ export default function NetworkPanel() {
               </div>
             )}
 
+            {/* Formação docente — Res. CNE/CEB 4/2009 art. 12 */}
+            {dados.formacao_docente && (
+              <div style={{ ...cardStyle, marginBottom: 20 }}>
+                <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>🎓 Formação docente na rede</p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+                  <div style={{ fontSize: 13 }}>
+                    <strong style={{ fontSize: 20, color: "#0F6E56" }}>{dados.formacao_docente.profissionais_aee}</strong>
+                    <p style={{ margin: "2px 0 0", color: "#5f5e5a" }}>profissional(is) de AEE na rede</p>
+                  </div>
+                  <div style={{ fontSize: 13 }}>
+                    <strong style={{ fontSize: 20, color: dados.formacao_docente.aee_sem_formacao > 0 ? "#a32d2d" : "#0F6E56" }}>
+                      {dados.formacao_docente.aee_sem_formacao}
+                    </strong>
+                    <p style={{ margin: "2px 0 0", color: "#5f5e5a" }}>
+                      atuando no AEE sem formação registrada (Res. CNE/CEB 4/2009, art. 12)
+                    </p>
+                  </div>
+                  <div style={{ fontSize: 13 }}>
+                    <strong style={{ fontSize: 20, color: "#5f5e5a" }}>
+                      {dados.formacao_docente.professores_sem_disciplina}
+                    </strong>
+                    <p style={{ margin: "2px 0 0", color: "#5f5e5a" }}>
+                      de {dados.formacao_docente.total_professores} professor(es) sem disciplina cadastrada
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Evolução mensal da rede */}
+            {dados.evolucao_mensal?.length > 0 && (
+              <div style={{ ...cardStyle, marginBottom: 20 }}>
+                <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>📈 Evolução da rede (últimos 6 meses)</p>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ textAlign: "left", color: "#5f5e5a", borderBottom: "1px solid #d3d1c7" }}>
+                        <th scope="col" style={{ padding: "6px 8px" }}>Mês</th>
+                        <th scope="col" style={{ padding: "6px 8px", textAlign: "right" }}>Aulas geradas</th>
+                        <th scope="col" style={{ padding: "6px 8px", textAlign: "right" }}>Documentos concluídos</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dados.evolucao_mensal.map(m => (
+                        <tr key={m.mes} style={{ borderBottom: "0.5px solid #f1efe8" }}>
+                          <td style={{ padding: "6px 8px", fontWeight: 500 }}>{m.mes}</td>
+                          <td style={{ padding: "6px 8px", textAlign: "right", color: m.aulas === 0 ? "#9b9a96" : "inherit" }}>{m.aulas}</td>
+                          <td style={{ padding: "6px 8px", textAlign: "right", color: m.documentos === 0 ? "#9b9a96" : "inherit" }}>{m.documentos}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {/* Ranking de risco — onde a rede precisa intervir primeiro */}
             {dados.escolas_por_risco && dados.escolas_por_risco.length > 0 && (
               <div style={{ ...cardStyle, marginBottom: 20 }}>
@@ -221,6 +277,9 @@ export default function NetworkPanel() {
                           <td style={{ padding: "8px 6px", textAlign: "right" }}>{e.aee_concluidos}</td>
                           <td style={{ padding: "8px 6px", textAlign: "right", color: e.total_nee > 0 && e.profissionais_aee === 0 ? "#a32d2d" : "inherit" }}>
                             {e.profissionais_aee}
+                            {e.aee_sem_formacao > 0 && (
+                              <span title={`${e.aee_sem_formacao} sem formação registrada`} style={{ color: "#a32d2d", marginLeft: 4 }}>⚠️</span>
+                            )}
                           </td>
                           <td style={{ padding: "8px 6px", textAlign: "right" }}>{e.tem_srm ? "✓" : "—"}</td>
                           <td style={{ padding: "8px 6px", textAlign: "right", color: e.taxa_frequencia !== null && e.taxa_frequencia < 75 ? "#a32d2d" : "#0F6E56" }}>
