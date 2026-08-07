@@ -149,8 +149,40 @@ export default function NetworkPanel() {
                   <strong>{dados.fundeb_rede.sessoes_30d}</strong> sessão(ões) registradas nos últimos 30 dias na rede ·{" "}
                   <strong style={{ color: dados.fundeb_rede.alunos_sem_atendimento_30d > 0 ? "#a32d2d" : "#0F6E56" }}>
                     {dados.fundeb_rede.alunos_sem_atendimento_30d}
-                  </strong> de {dados.fundeb_rede.total_nee} aluno(s) com NEE sem atendimento registrado — repasse em risco.
+                  </strong> de {dados.fundeb_rede.total_nee} aluno(s) com NEE sem comprovação de atendimento.
                 </p>
+                <p style={{ fontSize: 12, color: "#5f5e5a", margin: "6px 0 0" }}>
+                  O recurso vem da matrícula declarada no Censo Escolar; a comprovação do atendimento
+                  (PEI, profissional habilitado, registro pedagógico) é o que sustenta esse recurso em fiscalização.
+                </p>
+
+                {dados.fundeb_rede.valor_a_comprovar !== undefined && (
+                  <div style={{ background: "#f0f8ff", borderRadius: 8, padding: "10px 14px", marginTop: 10 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
+                      <div>
+                        <p style={{ fontSize: 22, fontWeight: 600, margin: 0, color: dados.fundeb_rede.alunos_sem_comprovacao > 0 ? "#a32d2d" : "#0F6E56" }}>
+                          {dados.fundeb_rede.valor_a_comprovar.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </p>
+                        <p style={{ fontSize: 11, color: "#5f5e5a", margin: "2px 0 0" }}>
+                          exige comprovação documental na rede
+                        </p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 22, fontWeight: 600, margin: 0, color: "#0F6E56" }}>
+                          {dados.fundeb_rede.valor_total_vinculado.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </p>
+                        <p style={{ fontSize: 11, color: "#5f5e5a", margin: "2px 0 0" }}>
+                          total anual vinculado ao AEE na rede
+                        </p>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 10, color: "#9b9a96", margin: "8px 0 0" }}>
+                      Estimativa: VAAF {dados.fundeb_rede.vaaf?.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} ×
+                      {" "}fator AEE {dados.fundeb_rede.fator_aee} ({dados.fundeb_rede.ano_referencia}).
+                      {" "}{dados.fundeb_rede.fonte}. Confira a portaria vigente antes de uso oficial.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

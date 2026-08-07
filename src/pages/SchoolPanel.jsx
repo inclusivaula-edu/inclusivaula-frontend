@@ -120,8 +120,39 @@ export default function SchoolPanel() {
                 <p style={{ fontSize: 12, color: "#5f5e5a", margin: "0 0 12px" }}>
                   Últimos 30 dias: <strong>{dados.frequencia_aee.sessoes_30d}</strong> sessão(ões) ·{" "}
                   <strong>{dados.frequencia_aee.alunos_atendidos_30d}</strong> de {dados.frequencia_aee.total_nee} aluno(s) com NEE atendido(s).
-                  {" "}O FUNDEB considera o aluno matriculado no AEE — atendimento sem registro é repasse perdido.
+                  {" "}O FUNDEB gera recurso pela matrícula declarada no Censo Escolar — mas a legitimidade
+                  desse recurso depende de comprovar que o atendimento aconteceu (PEI atualizado,
+                  profissional habilitado e registro pedagógico).
                 </p>
+
+                {/* Estimativa financeira do recurso vinculado */}
+                {dados.fundeb && dados.fundeb.total_nee > 0 && (
+                  <div style={{ background: "#f0f8ff", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 20 }}>
+                      <div>
+                        <p style={{ fontSize: 20, fontWeight: 600, margin: 0, color: dados.fundeb.alunos_sem_comprovacao > 0 ? "#a32d2d" : "#0F6E56" }}>
+                          {dados.fundeb.valor_a_comprovar.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </p>
+                        <p style={{ fontSize: 11, color: "#5f5e5a", margin: "2px 0 0" }}>
+                          vinculado a {dados.fundeb.alunos_sem_comprovacao} aluno(s) sem comprovação de atendimento
+                        </p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 20, fontWeight: 600, margin: 0, color: "#0F6E56" }}>
+                          {dados.fundeb.valor_total_vinculado.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                        </p>
+                        <p style={{ fontSize: 11, color: "#5f5e5a", margin: "2px 0 0" }}>
+                          total vinculado aos {dados.fundeb.total_nee} aluno(s) com NEE
+                        </p>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 10, color: "#9b9a96", margin: "8px 0 0" }}>
+                      Estimativa: VAAF {dados.fundeb.vaaf.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} ×
+                      {" "}fator AEE {dados.fundeb.fator_aee} = {dados.fundeb.valor_por_aluno_ano.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/aluno/ano
+                      {" "}({dados.fundeb.ano_referencia}). {dados.fundeb.fonte}. Confira os valores na portaria vigente antes de uso oficial.
+                    </p>
+                  </div>
+                )}
                 {dados.frequencia_aee.sem_atendimento_30d.length === 0 ? (
                   <p style={{ fontSize: 13, color: "#0F6E56", margin: 0 }}>✅ Todos os alunos com NEE têm atendimento registrado nos últimos 30 dias.</p>
                 ) : (
