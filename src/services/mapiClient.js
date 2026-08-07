@@ -255,6 +255,17 @@ export async function getAnamnesePDFBlob(id) {
   return res.blob();
 }
 
+export async function getNetworkPanelPDFBlob(networkId = null) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  const qs = networkId ? `?network_id=${encodeURIComponent(networkId)}` : "";
+  const res = await fetch(`${BASE_URL}/api/management/network/pdf${qs}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Erro ao gerar PDF do painel da rede");
+  return res.blob();
+}
+
 // ── ADMIN (gestão global de escolas e redes) ────────────────────────
 
 export async function listAllSchools() {

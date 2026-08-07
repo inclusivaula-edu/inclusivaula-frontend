@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getNetworkPanel, listManagementNetworks } from "../services/mapiClient";
+import { getNetworkPanel, listManagementNetworks, getNetworkPanelPDFBlob } from "../services/mapiClient";
 import icone from "../assets/icone.png";
 
 const cardStyle = {
@@ -15,6 +15,27 @@ export default function NetworkPanel() {
   const [loading, setLoading] = useState(true);
   const [redes, setRedes] = useState([]);
   const [redeId, setRedeId] = useState("");
+  const [baixandoPDF, setBaixandoPDF] = useState(false);
+
+  async function handleExportarPDF() {
+    setBaixandoPDF(true);
+    try {
+      const blob = await getNetworkPanelPDFBlob(redeId || null);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      const nome = (dados?.rede?.name || "rede").replace(/[^\w]+/g, "-").toLowerCase();
+      link.download = `painel-rede-${nome}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err.message || "Erro ao gerar o PDF.");
+    } finally {
+      setBaixandoPDF(false);
+    }
+  }
 
   // Carrega as redes visíveis. Para secretaria vem só a própria rede;
   // admin/mec não pertencem a uma rede e precisam escolher qual ver.
@@ -53,10 +74,23 @@ export default function NetworkPanel() {
       </header>
 
       <main style={{ maxWidth: 960, margin: "0 auto", padding: "2rem 1rem" }}>
-        <h1 style={{ fontSize: 22, fontWeight: 500, marginBottom: 4 }}>🏛️ Painel da Rede de Ensino</h1>
-        <p style={{ fontSize: 13, color: "#5f5e5a", marginBottom: 24 }}>
-          Visão consolidada de todas as escolas da rede — secretaria de educação
-        </p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 24 }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 500, marginBottom: 4 }}>🏛️ Painel da Rede de Ensino</h1>
+            <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
+              Visão consolidada de todas as escolas da rede — secretaria de educação
+            </p>
+          </div>
+          {dados && (
+            <button onClick={handleExportarPDF} disabled={baixandoPDF} style={{
+              padding: "8px 16px", borderRadius: 8, fontSize: 13, fontWeight: 500,
+              border: "1px solid #0F6E56", background: baixandoPDF ? "#f1efe8" : "#fff",
+              color: "#0F6E56", cursor: baixandoPDF ? "not-allowed" : "pointer", whiteSpace: "nowrap"
+            }}>
+              {baixandoPDF ? "Gerando..." : "📄 Exportar PDF"}
+            </button>
+          )}
+        </div>
 
         {redes.length > 1 && (
           <div style={{ ...cardStyle, marginBottom: 20 }}>
