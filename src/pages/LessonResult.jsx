@@ -85,11 +85,11 @@ export default function LessonResult() {
 
   async function handleDownload() {
     try {
-      const blob = await getLessonPDF(jobId);
+      const { blob, filename } = await getLessonPDF(jobId);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `aula-inclusivaula-${jobId}.pdf`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
     } catch {

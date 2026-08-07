@@ -113,11 +113,11 @@ export default function CaseStudy() {
   async function baixarPDF(formato = "pdf") {
     setBaixando(true);
     try {
-      const blob = await getCaseStudyPDFBlob(jobId, formato);
+      const { blob, filename } = await getCaseStudyPDFBlob(jobId, formato);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `estudo-de-caso-${jobId.slice(0, 8)}.${formato === "docx" ? "docx" : "pdf"}`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
     } catch {

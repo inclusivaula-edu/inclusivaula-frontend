@@ -126,11 +126,11 @@ export default function AEE() {
   async function handleDownloadPDF(formato = "pdf") {
     setBaixandoPDF(true);
     try {
-      const blob = await getAEEPDFBlob(jobId, formato);
+      const { blob, filename } = await getAEEPDFBlob(jobId, formato);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `plano-aee-${jobId}.${formato === "docx" ? "docx" : "pdf"}`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
     } catch {

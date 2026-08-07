@@ -201,12 +201,11 @@ export default function Reports() {
   async function handleDownload(rel) {
     try {
       const { getReportPDF } = await import("../services/mapiClient");
-      const blob = await getReportPDF(rel.id);
+      const { blob, filename } = await getReportPDF(rel.id);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const aluno = alunosMap[rel.student_id];
-      a.download = `relatorio-${aluno?.full_name?.replace(/ /g, "-") || "aluno"}-${rel.report_type}.pdf`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
     } catch {

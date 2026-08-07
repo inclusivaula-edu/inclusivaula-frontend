@@ -50,7 +50,7 @@ export async function getLessonPDF(jobId) {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF");
-  return res.blob();
+  return { blob: await res.blob(), filename: nomeDoContentDisposition(res, `aula.pdf`) };
 }
 
 // ── EXERCÍCIOS ───────────────────────────────────────────────────
@@ -88,7 +88,7 @@ export async function getAvaliacaoPDFBlob(id, tipo = "aluno") {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF da avaliação");
-  return res.blob();
+  return { blob: await res.blob(), filename: nomeDoContentDisposition(res, `avaliacao-${tipo}.pdf`) };
 }
 
 // ── RELATÓRIOS ───────────────────────────────────────────────────
@@ -111,7 +111,7 @@ export async function getReportPDF(reportId) {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF do relatório");
-  return res.blob();
+  return { blob: await res.blob(), filename: nomeDoContentDisposition(res, `relatorio.pdf`) };
 }
 
 // ── RUBRICA ─────────────────────────────────────────────────────
@@ -175,7 +175,7 @@ export async function getCaseStudyPDFBlob(id, formato = "pdf") {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF do estudo de caso");
-  return res.blob();
+  return { blob: await res.blob(), filename: nomeDoContentDisposition(res, `estudo-de-caso.${formato}`) };
 }
 
 // ── AEE (Atendimento Educacional Especializado) ─────────────────
@@ -252,7 +252,7 @@ export async function getAnamnesePDFBlob(id) {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF da anamnese");
-  return res.blob();
+  return { blob: await res.blob(), filename: nomeDoContentDisposition(res, `anamnese.pdf`) };
 }
 
 export async function getNetworkPanelPDFBlob(networkId = null) {
@@ -342,7 +342,7 @@ export async function getPEIPDFBlob(id, formato = "pdf") {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF");
-  return res.blob();
+  return { blob: await res.blob(), filename: nomeDoContentDisposition(res, `pei.${formato}`) };
 }
 
 // ── AGENDA DE ATENDIMENTOS ──────────────────────────────────────
@@ -397,7 +397,7 @@ export async function getAEEFrequencyPDF(studentId, periodo) {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF de frequência");
-  return res.blob();
+  return { blob: await res.blob(), filename: nomeDoContentDisposition(res, `frequencia-aee.pdf`) };
 }
 
 // ── GESTÃO (painéis por nível hierárquico) ──────────────────────
@@ -480,7 +480,7 @@ export async function getAEEPDFBlob(id, formato = "pdf") {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF");
-  return res.blob();
+  return { blob: await res.blob(), filename: nomeDoContentDisposition(res, `plano-aee.${formato}`) };
 }
 
 // ── SIMULADOS ───────────────────────────────────────────────────
@@ -511,5 +511,5 @@ export async function getSimuladoPDFBlob(id, tipo = "aluno") {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error("Erro ao gerar PDF do simulado");
-  return res.blob();
+  return { blob: await res.blob(), filename: nomeDoContentDisposition(res, `simulado-${tipo}.pdf`) };
 }

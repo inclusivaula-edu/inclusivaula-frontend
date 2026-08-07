@@ -141,12 +141,11 @@ export default function AEESessions() {
     if (!alunoSelecionado) { mostrarFeedback("Selecione um aluno.", "erro"); return; }
     setGerandoPDF(true);
     try {
-      const blob = await getAEEFrequencyPDF(alunoSelecionado, form.periodo);
+      const { blob, filename } = await getAEEFrequencyPDF(alunoSelecionado, form.periodo);
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement("a");
       a.href = url;
-      const aluno = alunos.find(a => a.id === alunoSelecionado);
-      a.download = `frequencia-aee-${(aluno?.full_name || "aluno").replace(/ /g, "-")}.pdf`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
     } catch {

@@ -177,12 +177,11 @@ export default function Anamnese() {
   async function handleBaixarPDF(item) {
     setBaixandoPDF(item.id);
     try {
-      const blob = await getAnamnesePDFBlob(item.id);
-      const aluno = alunos.find(a => a.id === item.student_id);
+      const { blob, filename } = await getAnamnesePDFBlob(item.id);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `anamnese-${(aluno?.full_name || "aluno").replace(/ /g, "-")}.pdf`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

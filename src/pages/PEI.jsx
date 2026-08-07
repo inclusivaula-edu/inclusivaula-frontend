@@ -167,11 +167,11 @@ export default function PEI() {
   async function handleDownloadPDF(formato = "pdf") {
     setBaixandoPDF(true);
     try {
-      const blob = await getPEIPDFBlob(jobId, formato);
+      const { blob, filename } = await getPEIPDFBlob(jobId, formato);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${tipoDoc}-${jobId.slice(0, 8)}.${formato}`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
     } catch {

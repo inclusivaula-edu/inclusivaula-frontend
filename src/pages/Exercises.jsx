@@ -99,11 +99,11 @@ export default function Exercises() {
     if (!activityId) return;
     try {
       mostrarFeedback(`Gerando PDF ${tipo}...`);
-      const blob = await getAvaliacaoPDFBlob(activityId, tipo);
+      const { blob, filename } = await getAvaliacaoPDFBlob(activityId, tipo);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `exercicios-${tipo}-${activityId.slice(0, 8)}.pdf`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
       mostrarFeedback(`✅ PDF ${tipo} baixado!`);

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../services/supabaseClient";
 import icone from "../assets/icone.png";
+import { slugArquivo } from "../utils/arquivo";
 
 const TIPO_CONFIG = {
   semestral: { label: "Relatório Semestral", emoji: "📊", cor: "#2B9EC3" },
@@ -106,7 +107,7 @@ export default function SavedReports() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `relatorio-${aluno?.full_name?.replace(/ /g, "_") || "aluno"}-${rel.report_type}.txt`;
+    a.download = `relatorio-${slugArquivo(aluno?.full_name, "aluno")}-${rel.report_type}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   }

@@ -194,11 +194,11 @@ export default function Assessments() {
 
   async function handleDownloadPDF(activityId, tipo) {
     try {
-      const blob = await getAvaliacaoPDFBlob(activityId, tipo);
+      const { blob, filename } = await getAvaliacaoPDFBlob(activityId, tipo);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `avaliacao-${tipo}-${activityId.slice(0, 8)}.pdf`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
     } catch {

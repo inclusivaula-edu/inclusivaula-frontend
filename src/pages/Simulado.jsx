@@ -161,11 +161,11 @@ export default function Simulado() {
 
   async function handleDownloadPDF(id, tipo) {
     try {
-      const blob = await getSimuladoPDFBlob(id || jobId, tipo);
+      const { blob, filename } = await getSimuladoPDFBlob(id || jobId, tipo);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `simulado-${tipo}-${(id || jobId).slice(0, 8)}.pdf`;
+      a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
