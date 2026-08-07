@@ -372,7 +372,12 @@ export default function AdminPanel() {
 
             {/* Evolução mensal — adoção da plataforma */}
             <div style={cardStyle}>
-              <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>📈 Evolução mensal (últimos 6 meses)</p>
+              <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>
+                📈 Evolução mensal ({{
+                  "30d": "últimos 30 dias", "3m": "últimos 3 meses", "6m": "últimos 6 meses",
+                  "12m": "últimos 12 meses", total: "todo o período"
+                }[periodo] || "período selecionado"})
+              </p>
               {Object.keys(panorama.evolucao_mensal?.aulas || {}).length === 0 ? (
                 <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>Sem dados suficientes ainda.</p>
               ) : (
