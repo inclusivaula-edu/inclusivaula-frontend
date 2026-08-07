@@ -148,7 +148,7 @@ export default function SchoolPanel() {
                     </div>
                     <p style={{ fontSize: 10, color: "#9b9a96", margin: "8px 0 0" }}>
                       Estimativa: VAAF {dados.fundeb.vaaf.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} ×
-                      {" "}fator AEE {dados.fundeb.fator_aee} = {dados.fundeb.valor_por_aluno_ano.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/aluno/ano
+                      {" "}fator AEE {dados.fundeb.fator_aee.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} = {dados.fundeb.valor_por_aluno_ano.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}/aluno/ano
                       {" "}({dados.fundeb.ano_referencia}). {dados.fundeb.fonte}. Confira os valores na portaria vigente antes de uso oficial.
                     </p>
                   </div>

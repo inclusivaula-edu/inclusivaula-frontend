@@ -178,7 +178,7 @@ export default function NetworkPanel() {
                     </div>
                     <p style={{ fontSize: 10, color: "#9b9a96", margin: "8px 0 0" }}>
                       Estimativa: VAAF {dados.fundeb_rede.vaaf?.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} ×
-                      {" "}fator AEE {dados.fundeb_rede.fator_aee} ({dados.fundeb_rede.ano_referencia}).
+                      {" "}fator AEE {dados.fundeb_rede.fator_aee?.toLocaleString("pt-BR", { minimumFractionDigits: 2 })} ({dados.fundeb_rede.ano_referencia}).
                       {" "}{dados.fundeb_rede.fonte}. Confira a portaria vigente antes de uso oficial.
                     </p>
                   </div>
