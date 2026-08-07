@@ -35,6 +35,8 @@ export default function AdminPanel() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("panorama");
   const [panorama, setPanorama] = useState(null);
+  const [periodo, setPeriodo] = useState("6m");
+  const [carregandoPanorama, setCarregandoPanorama] = useState(false);
   const [redes, setRedes] = useState([]);
   const [escolas, setEscolas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,11 +53,31 @@ export default function AdminPanel() {
 
   useEffect(() => { carregarTudo(); }, []);
 
+  // O período só afeta o painel MEC (aulas/documentos/evolução) — redes,
+  // escolas e usuários não têm noção de "período", então recarregam só o
+  // panorama em vez de tudo de novo.
+  useEffect(() => {
+    if (!panorama) return; // evita disparo duplicado no primeiro carregamento
+    carregarPanorama(periodo);
+  }, [periodo]);
+
+  async function carregarPanorama(periodoSelecionado) {
+    setCarregandoPanorama(true);
+    try {
+      const pRes = await getGlobalPanel(periodoSelecionado);
+      setPanorama(pRes.data);
+    } catch (err) {
+      mostrarFeedback(err.message || "Erro ao carregar panorama.", "erro");
+    } finally {
+      setCarregandoPanorama(false);
+    }
+  }
+
   async function carregarTudo() {
     setLoading(true);
     try {
       const [pRes, rRes, eRes, uRes] = await Promise.all([
-        getGlobalPanel(), listAllNetworks(), listAllSchools(), listAllUsers()
+        getGlobalPanel(periodo), listAllNetworks(), listAllSchools(), listAllUsers()
       ]);
       setPanorama(pRes.data);
       setRedes(rRes.data || []);
@@ -224,7 +246,29 @@ export default function AdminPanel() {
         {loading && <p role="status">Carregando...</p>}
 
         {!loading && tab === "panorama" && panorama && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
+            <div>
+              <label htmlFor="periodo-mec" style={{ fontSize: 12, color: "#5f5e5a", display: "block", marginBottom: 4 }}>
+                Período (aulas, documentos e evolução mensal)
+              </label>
+              <select id="periodo-mec" value={periodo} onChange={e => setPeriodo(e.target.value)}
+                disabled={carregandoPanorama} style={{ fontSize: 13, padding: "6px 10px" }}>
+                <option value="30d">Últimos 30 dias</option>
+                <option value="3m">Últimos 3 meses</option>
+                <option value="6m">Últimos 6 meses</option>
+                <option value="12m">Últimos 12 meses</option>
+                <option value="total">Total (desde o início)</option>
+              </select>
+            </div>
+            <p style={{ fontSize: 11, color: "#9b9a96", margin: 0, maxWidth: 320, textAlign: "right" }}>
+              Redes, escolas, alunos e cobertura de estrutura são sempre o retrato de agora — só a
+              atividade (aulas, documentos, evolução) muda com o período.
+            </p>
+          </div>
+        )}
+
+        {!loading && tab === "panorama" && panorama && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, opacity: carregandoPanorama ? 0.5 : 1 }}>
             {[
               ["Redes de ensino", panorama.redes, "#0F6E56"],
               ["Escolas", panorama.escolas, "#2B9EC3"],
@@ -243,7 +287,7 @@ export default function AdminPanel() {
         )}
 
         {!loading && tab === "panorama" && panorama && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16, opacity: carregandoPanorama ? 0.5 : 1 }}>
 
             {/* Distribuição geográfica */}
             <div style={cardStyle}>

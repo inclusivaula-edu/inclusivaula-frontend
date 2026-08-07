@@ -408,8 +408,8 @@ export async function listManagementNetworks() {
   return request("/api/management/networks");
 }
 
-export async function getGlobalPanel() {
-  return request("/api/management/global");
+export async function getGlobalPanel(periodo = "6m") {
+  return request(`/api/management/global?periodo=${encodeURIComponent(periodo)}`);
 }
 
 // ── LGPD (direitos do titular) ──────────────────────────────────
