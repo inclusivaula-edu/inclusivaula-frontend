@@ -43,21 +43,33 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Só cargos de escola se autocadastram. Funções de rede (secretaria de
+    // educação, MEC) enxergam dados de todas as escolas e são provisionadas
+    // pela equipe InclusivAula — aceitá-las aqui deixaria qualquer pessoa
+    // escolher um papel acima de diretor no próprio cadastro.
     const CARGO_TO_ROLE: Record<string, string> = {
       professor: "professor",
       aee: "professor",
       psicologo: "professor",
       outro: "professor",
       coordenador: "coordenador",
-      coordenador_municipal: "coordenador",
-      coordenador_estadual: "coordenador",
       diretor: "diretor",
-      secretario_municipal: "secretaria",
-      secretario_estadual: "secretaria",
     };
+
+    const CARGOS_DE_REDE = [
+      "coordenador_municipal", "coordenador_estadual",
+      "secretario_municipal", "secretario_estadual",
+    ];
+    if (CARGOS_DE_REDE.includes(cargo)) {
+      return new Response(JSON.stringify({
+        error: "Acesso de secretaria de educação ou órgão gestor é liberado pela equipe InclusivAula. Escreva para inclusivaula@gmail.com."
+      }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // Cargo desconhecido não vira papel elevado por engano: cai em professor.
     const role = CARGO_TO_ROLE[cargo || "professor"] || "professor";
 
-    const ROLES_CAN_CREATE_SCHOOL = ["coordenador", "diretor", "secretaria", "mec"];
+    const ROLES_CAN_CREATE_SCHOOL = ["coordenador", "diretor"];
     if (schoolMode === "criar" && !ROLES_CAN_CREATE_SCHOOL.includes(role)) {
       return new Response(JSON.stringify({ error: "Apenas coordenadores, diretores ou autoridades podem cadastrar uma escola. Solicite o código de convite ao responsável da sua escola." }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }

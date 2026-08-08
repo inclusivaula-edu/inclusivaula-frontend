@@ -28,6 +28,26 @@ const PAPEL_DESC = {
   admin: "acesso global e gestão da plataforma"
 };
 
+// Papéis que atuam acima da escola. Espelha ROLES_DE_REDE do backend, que é
+// quem de fato recusa o vínculo — aqui é só para orientar quem preenche.
+const ROLES_DE_REDE = ["secretaria", "mec"];
+
+// Quem opera o sistema nesses níveis é o departamento, não o titular da pasta:
+// secretário e ministro mudam a cada gestão. Lista aberta — o nome do setor
+// varia em cada rede, então o campo aceita texto livre.
+const FUNCOES_REDE = [
+  "Educação Especial / AEE",
+  "Coordenação pedagógica da rede",
+  "Equipe técnica / Censo",
+  "Gabinete / Secretário(a)",
+  "SECADI — Educação Especial",
+  "INEP / Censo Escolar"
+];
+const FUNCOES_ESCOLA = [
+  "Professor(a)", "Coordenador(a) pedagógico(a)", "Diretor(a)",
+  "Profissional de AEE", "Psicólogo(a) escolar"
+];
+
 const redeVazia = () => ({ name: "", type: "municipal", city: "", state: "" });
 const escolaVazia = () => ({ name: "", city: "", state: "", network_id: "" });
 
@@ -49,7 +69,9 @@ export default function AdminPanel() {
   const [salvando, setSalvando] = useState(false);
   const [usuarios, setUsuarios] = useState([]);
   const [editandoUsuario, setEditandoUsuario] = useState(null);
-  const [formUsuario, setFormUsuario] = useState({ role: "", network_id: "", school_id: "" });
+  const [formUsuario, setFormUsuario] = useState({ role: "", network_id: "", school_id: "", cargo: "" });
+
+  const ehPapelDeRede = ROLES_DE_REDE.includes(formUsuario.role);
 
   useEffect(() => { carregarTudo(); }, []);
 
@@ -173,7 +195,10 @@ export default function AdminPanel() {
   }
 
   function handleEditarUsuario(u) {
-    setFormUsuario({ role: u.role || "", network_id: u.network_id || "", school_id: u.school_id || "" });
+    setFormUsuario({
+      role: u.role || "", network_id: u.network_id || "",
+      school_id: u.school_id || "", cargo: u.cargo || ""
+    });
     setEditandoUsuario(u.id);
   }
 
@@ -598,7 +623,15 @@ export default function AdminPanel() {
                           <div>
                             <label style={labelStyle}>Papel</label>
                             <select value={formUsuario.role}
-                              onChange={e => setFormUsuario(p => ({ ...p, role: e.target.value }))}
+                              onChange={e => {
+                                const novo = e.target.value;
+                                // Escolher papel de rede solta a escola na hora: o backend
+                                // recusaria o par, e deixar o campo preenchido só confunde.
+                                setFormUsuario(p => ({
+                                  ...p, role: novo,
+                                  school_id: ROLES_DE_REDE.includes(novo) ? "" : p.school_id
+                                }));
+                              }}
                               style={inputFull}>
                               {PAPEIS.map(p => <option key={p} value={p}>{p}</option>)}
                             </select>
@@ -619,12 +652,29 @@ export default function AdminPanel() {
                             <label style={labelStyle}>Escola</label>
                             <select value={formUsuario.school_id}
                               onChange={e => setFormUsuario(p => ({ ...p, school_id: e.target.value }))}
-                              style={inputFull}>
+                              disabled={ehPapelDeRede}
+                              style={{ ...inputFull, ...(ehPapelDeRede ? { background: "#f1efe8", cursor: "not-allowed" } : {}) }}>
                               <option value="">Sem escola</option>
                               {escolas.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
                             </select>
                           </div>
+                          <div>
+                            <label style={labelStyle}>Função / departamento</label>
+                            <input value={formUsuario.cargo}
+                              onChange={e => setFormUsuario(p => ({ ...p, cargo: e.target.value }))}
+                              list="funcoes-sugeridas" style={inputFull}
+                              placeholder={ehPapelDeRede ? "Ex.: Educação Especial" : "Ex.: Professor(a)"} />
+                            <datalist id="funcoes-sugeridas">
+                              {(ehPapelDeRede ? FUNCOES_REDE : FUNCOES_ESCOLA).map(f => <option key={f} value={f} />)}
+                            </datalist>
+                          </div>
                         </div>
+                        {ehPapelDeRede && (
+                          <p style={{ fontSize: 12, color: "#5f5e5a", margin: 0 }}>
+                            Papel de rede enxerga números agregados das escolas, não o aluno.
+                            Por isso não pode ficar vinculado a uma escola.
+                          </p>
+                        )}
                         {formUsuario.role === "secretaria" && !formUsuario.network_id && (
                           <p style={{ fontSize: 12, color: "#a35d17", margin: 0 }}>
                             Sem uma rede vinculada, este usuário não conseguirá abrir o Painel da Rede.

@@ -184,14 +184,19 @@ export default function Register() {
                 <option value="professor">Professor(a)</option>
                 <option value="coordenador">Coordenador(a) pedagógico(a)</option>
                 <option value="diretor">Diretor(a)</option>
-                <option value="coordenador_municipal">Coordenador(a) municipal</option>
-                <option value="coordenador_estadual">Coordenador(a) estadual</option>
-                <option value="secretario_municipal">Secretário(a) municipal de educação</option>
-                <option value="secretario_estadual">Secretário(a) estadual de educação</option>
                 <option value="aee">Profissional de AEE</option>
                 <option value="psicologo">Psicólogo(a) escolar</option>
                 <option value="outro">Outro</option>
               </select>
+              {/* Funções de rede (secretaria de educação, MEC) não aparecem aqui de
+                  propósito: elas enxergam dados de todas as escolas e por isso são
+                  provisionadas pela equipe InclusivAula, nunca autodeclaradas. */}
+              <p style={{ fontSize: 12, color: "#5f5e5a", marginTop: 6, marginBottom: 0 }}>
+                Trabalha na secretaria de educação ou em órgão gestor?{" "}
+                <a href="mailto:inclusivaula@gmail.com?subject=Acesso%20de%20rede%20-%20InclusivAula"
+                  style={{ color: "#2B9EC3" }}>Fale com a gente</a>{" "}
+                — esse acesso é liberado pela nossa equipe.
+              </p>
             </div>
 
             <div>
@@ -251,7 +256,7 @@ export default function Register() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 8 }}>
-              {["coordenador", "coordenador_municipal", "coordenador_estadual", "diretor", "secretario_municipal", "secretario_estadual"].includes(auth.cargo) ? (
+              {["coordenador", "diretor"].includes(auth.cargo) ? (
                 <div onClick={() => { setSchoolMode("criar"); setError(null); }} style={{
                   border: "0.5px solid #d3d1c7", borderRadius: 12,
                   padding: "1.2rem", cursor: "pointer"
