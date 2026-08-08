@@ -22,6 +22,23 @@ function validarCNPJ(cnpj: string): boolean {
   return calc(12) && calc(13);
 }
 
+// Vaga que cada cargo ocupa no plano gratuito
+function slotDoCargo(cargo: string): string {
+  if (cargo === "diretor") return "diretor";
+  if (["coordenador", "coordenador_municipal", "coordenador_estadual", "secretario_municipal", "secretario_estadual"].includes(cargo)) return "coordenador";
+  if (cargo === "aee") return "aee";
+  return "professor";
+}
+
+const VAGAS_FREE: Record<string, number> = { diretor: 1, coordenador: 1, aee: 1, professor: 3 };
+const ROTULO_SLOT: Record<string, string> = {
+  diretor: "diretor(a)", coordenador: "coordenador(a) pedagógico(a)",
+  aee: "profissional de AEE", professor: "professor(es)"
+};
+
+// Papéis que podem responder pela escola
+const ROLES_GESTAO = ["coordenador", "diretor", "secretaria", "mec", "admin"];
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -44,9 +61,10 @@ Deno.serve(async (req) => {
     }
 
     // Só cargos de escola se autocadastram. Funções de rede (secretaria de
-    // educação, MEC) enxergam dados de todas as escolas e são provisionadas
-    // pela equipe InclusivAula — aceitá-las aqui deixaria qualquer pessoa
-    // escolher um papel acima de diretor no próprio cadastro.
+    // educação, MEC) enxergam todas as escolas e são provisionadas pela equipe
+    // InclusivAula pelo painel de administração — aceitá-las aqui deixava
+    // qualquer pessoa sair do cadastro com um papel acima de diretor, bastando
+    // escolher "cadastrar escola nova".
     const CARGO_TO_ROLE: Record<string, string> = {
       professor: "professor",
       aee: "professor",
@@ -67,7 +85,7 @@ Deno.serve(async (req) => {
     }
 
     // Cargo desconhecido não vira papel elevado por engano: cai em professor.
-    const role = CARGO_TO_ROLE[cargo || "professor"] || "professor";
+    let role = CARGO_TO_ROLE[cargo || "professor"] || "professor";
 
     const ROLES_CAN_CREATE_SCHOOL = ["coordenador", "diretor"];
     if (schoolMode === "criar" && !ROLES_CAN_CREATE_SCHOOL.includes(role)) {
@@ -76,10 +94,67 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Segurança: quem entra por convite não assume cargo de gestão máxima da escola de outro.
+    if (schoolMode === "entrar" && ["diretor", "secretaria"].includes(role)) {
+      role = "coordenador";
+    }
+
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    // Resolve a escola ANTES de criar o usuário (evita usuário órfão)
+    let schoolIdEntrar: string | null = null;
+    if (schoolMode === "entrar") {
+      if (!inviteCode) throw new Error("Código de convite obrigatório.");
+      const { data: foundSchool, error: findError } = await supabaseAdmin
+        .from("schools").select("id")
+        .eq("invite_code", inviteCode.trim().toUpperCase()).single();
+      if (findError || !foundSchool) throw new Error("Código de convite inválido.");
+      schoolIdEntrar = foundSchool.id;
+
+      const { data: sub } = await supabaseAdmin
+        .from("subscriptions")
+        .select("plan, professores_limite")
+        .eq("school_id", schoolIdEntrar)
+        .single();
+
+      const planoFree = !sub || sub.plan === "free";
+
+      if (planoFree) {
+        // Plano gratuito: 6 vagas com papéis — 1 diretor, 1 coordenador, 1 AEE, 3 professores
+        const meuSlot = slotDoCargo(cargo || "professor");
+        const { data: perfis } = await supabaseAdmin
+          .from("profiles")
+          .select("cargo")
+          .eq("school_id", schoolIdEntrar);
+        const ocupadas = (perfis || []).filter(p => slotDoCargo(p.cargo || "professor") === meuSlot).length;
+        if (ocupadas >= VAGAS_FREE[meuSlot]) {
+          return new Response(JSON.stringify({
+            error: `O plano gratuito desta escola já preencheu a(s) ${VAGAS_FREE[meuSlot]} vaga(s) de ${ROTULO_SLOT[meuSlot]}. Peça ao administrador para fazer upgrade do plano ou use outro cargo disponível.`
+          }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+      } else {
+        // Plano pago: limite total de professores do plano
+        const limite = sub?.professores_limite ?? 1;
+        if (limite !== -1) {
+          const { count } = await supabaseAdmin
+            .from("profiles")
+            .select("id", { count: "exact", head: true })
+            .eq("school_id", schoolIdEntrar);
+          if ((count ?? 0) >= limite) {
+            return new Response(JSON.stringify({ error: `Esta escola atingiu o limite de ${limite} professor(es) do plano atual. Peça ao administrador para fazer upgrade do plano.` }), {
+              status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+        }
+      }
+    } else if (schoolMode !== "criar") {
+      throw new Error("Modo de escola inválido.");
+    }
 
     // 1. Cria o usuário
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -112,15 +187,8 @@ Deno.serve(async (req) => {
         .select().single();
       if (schoolError) throw new Error(schoolError.message);
       schoolId = newSchool.id;
-    } else if (schoolMode === "entrar") {
-      if (!inviteCode) throw new Error("Código de convite obrigatório.");
-      const { data: foundSchool, error: findError } = await supabaseAdmin
-        .from("schools").select("id")
-        .eq("invite_code", inviteCode.trim().toUpperCase()).single();
-      if (findError || !foundSchool) throw new Error("Código de convite inválido.");
-      schoolId = foundSchool.id;
     } else {
-      throw new Error("Modo de escola inválido.");
+      schoolId = schoolIdEntrar!;
     }
 
     // 3. Insere dados relacionais
@@ -136,6 +204,22 @@ Deno.serve(async (req) => {
       full_name, email, phone: phone || null, specialization: ""
     }]);
 
+    // 3.1 Escolas criadas pela Administração Global nascem sem responsável.
+    // O primeiro gestor que entrar por convite assume esse papel. A condição
+    // `admin_user_id IS NULL` faz o UPDATE ser atômico: se dois gestores se
+    // cadastrarem ao mesmo tempo, apenas o primeiro grava.
+    if (schoolMode === "entrar" && ROLES_GESTAO.includes(role)) {
+      const { data: assumida } = await supabaseAdmin
+        .from("schools")
+        .update({ admin_user_id: userId })
+        .eq("id", schoolId)
+        .is("admin_user_id", null)
+        .select("id");
+      if (assumida?.length) {
+        console.log(`Escola ${schoolId} passou a ter ${email} como responsável.`);
+      }
+    }
+
     // 4. Gera o link de confirmação
     const siteUrl = Deno.env.get("SITE_URL") || "https://www.inclusivaula.com.br";
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
@@ -149,7 +233,7 @@ Deno.serve(async (req) => {
     const confirmationUrl = linkData?.properties?.action_link;
     if (!confirmationUrl) throw new Error("Link de confirmação não gerado.");
 
-    // 5. Envia o email via Resend diretamente
+    // 5. Envia o email via Resend
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) throw new Error("RESEND_API_KEY não configurada.");
 
@@ -202,7 +286,6 @@ Deno.serve(async (req) => {
     const emailData = await emailRes.json();
     if (!emailRes.ok) {
       console.error("Erro Resend:", JSON.stringify(emailData));
-      // Usuário já foi criado — não falhar o cadastro por falha de email
       return new Response(JSON.stringify({
         success: true,
         message: "Cadastro realizado! O email de confirmação pode demorar alguns minutos."
