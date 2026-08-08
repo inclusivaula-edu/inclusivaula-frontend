@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import SecaoPainel from "../components/SecaoPainel";
 import { useNavigate } from "react-router-dom";
 import {
   getGlobalPanel,
@@ -314,6 +315,9 @@ export default function AdminPanel() {
         {!loading && tab === "panorama" && panorama && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16, opacity: carregandoPanorama ? 0.5 : 1 }}>
 
+            <SecaoPainel titulo="Alcance da política"
+              descricao="Onde a educação especial está sendo atendida no país." />
+
             {/* Distribuição geográfica */}
             <div style={cardStyle}>
               <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>🗺️ Distribuição geográfica</p>
@@ -373,6 +377,9 @@ export default function AdminPanel() {
                 </p>
               </div>
             </div>
+
+            <SecaoPainel titulo="Efetividade e adoção"
+              descricao="Se o atendimento está sendo formalizado e se a rede acompanha." />
 
             {/* Taxa de conclusão documental agregada */}
             <div style={cardStyle}>

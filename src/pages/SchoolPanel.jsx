@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import SecaoPainel from "../components/SecaoPainel";
 import { useNavigate } from "react-router-dom";
 import { getSchoolPanel } from "../services/mapiClient";
 import icone from "../assets/icone.png";
@@ -178,6 +179,9 @@ export default function SchoolPanel() {
               </div>
             )}
 
+            <SecaoPainel titulo="Situação documental"
+              descricao="O que ainda falta produzir para cada aluno com NEE." />
+
             {/* Documentos por tipo */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
               <div style={cardStyle}>
@@ -258,6 +262,9 @@ export default function SchoolPanel() {
                 </div>
               </div>
             )}
+
+            <SecaoPainel titulo="Equipe e acompanhamento"
+              descricao="Quem está registrando o trabalho e como os alunos evoluem." />
 
             {/* Uso da plataforma pelos professores */}
             <div style={{ ...cardStyle, marginBottom: 24 }}>

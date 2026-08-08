@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import SecaoPainel from "../components/SecaoPainel";
 import { useNavigate } from "react-router-dom";
 import { getNetworkPanel, listManagementNetworks, getNetworkPanelPDFBlob } from "../services/mapiClient";
 import icone from "../assets/icone.png";
@@ -133,6 +134,9 @@ export default function NetworkPanel() {
               </p>
             </div>
 
+            <SecaoPainel titulo="Panorama da rede"
+              descricao="O tamanho do atendimento hoje: escolas, alunos e documentos concluídos." />
+
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 24 }}>
               {[
                 ["Escolas", dados.total_escolas, "#2B9EC3"],
@@ -148,6 +152,9 @@ export default function NetworkPanel() {
                 </div>
               ))}
             </div>
+
+            <SecaoPainel titulo="Estrutura e equipe — onde investir"
+              descricao="Lacunas que dependem de decisão da secretaria: sala de recursos, profissional de AEE e formação. Inclui o recurso do FUNDEB que exige comprovação." />
 
             {/* Cobertura de infraestrutura — sustenta pedido de recurso à rede */}
             {dados.cobertura_estrutura && (
@@ -247,6 +254,9 @@ export default function NetworkPanel() {
                 </div>
               </div>
             )}
+
+            <SecaoPainel titulo="Evolução e prioridades"
+              descricao="Se a rede está melhorando, e quais escolas atender primeiro." />
 
             {/* Evolução mensal da rede */}
             {dados.evolucao_mensal?.length > 0 && (
