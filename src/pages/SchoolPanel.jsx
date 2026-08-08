@@ -58,6 +58,9 @@ export default function SchoolPanel() {
 
         {dados && (
           <>
+            <SecaoPainel titulo="Panorama da escola"
+              descricao="Quantos alunos, quantos com NEE e o estado geral do atendimento." />
+
             {/* Indicadores principais */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 24 }}>
               <Indicador rotulo="Alunos" valor={dados.totais.alunos} />
@@ -67,6 +70,9 @@ export default function SchoolPanel() {
               <Indicador rotulo="Taxa de frequência" valor={dados.frequencia.taxa} sufixo="%" cor={dados.frequencia.taxa !== null && dados.frequencia.taxa < 75 ? "#a32d2d" : "#4CAF82"} />
               <Indicador rotulo="Média de notas (0-10)" valor={dados.desempenho.media_notas} cor={dados.desempenho.media_notas !== null && dados.desempenho.media_notas < 6 ? "#BA7517" : "#4CAF82"} />
             </div>
+
+            <SecaoPainel titulo="Situação documental"
+              descricao="O que falta produzir por aluno, e o recurso do FUNDEB que depende dessa comprovação." />
 
             {/* Pendências documentais — o raio-X da inclusão */}
             {dados.pendencias_documentais && dados.pendencias_documentais.total_nee > 0 && (
@@ -179,9 +185,6 @@ export default function SchoolPanel() {
               </div>
             )}
 
-            <SecaoPainel titulo="Situação documental"
-              descricao="O que ainda falta produzir para cada aluno com NEE." />
-
             {/* Documentos por tipo */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12, marginBottom: 24 }}>
               <div style={cardStyle}>
@@ -209,6 +212,9 @@ export default function SchoolPanel() {
                 </p>
               </div>
             </div>
+
+            <SecaoPainel titulo="Estrutura e evolução"
+              descricao="Se a escola tem os recursos que o perfil dos alunos exige, e como isso muda no tempo." />
 
             {/* Estrutura de AEE × perfil de NEE matriculado */}
             {dados.estrutura_gaps && dados.estrutura_gaps.length > 0 && (
