@@ -290,7 +290,7 @@ export default function Register() {
               >
                 <p style={{ fontWeight: 600, marginBottom: 4, color: "#4CAF82" }}>🔑 Entrar com código de convite</p>
                 <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
-                  Minha escola já está cadastrada. Tenho o código de convite.
+                  Recebi um código da minha escola ou da secretaria de educação.
                 </p>
               </div>
             </div>
@@ -383,7 +383,13 @@ export default function Register() {
               <p style={{ fontSize: 13, color: "#5f5e5a", margin: 0 }}>
                 {conviteURL
                   ? "🎉 Você recebeu um convite! O código já está preenchido — confirme abaixo."
-                  : "Solicite o código ao administrador da sua escola"}
+                  : "Solicite o código ao responsável pela sua escola ou pela rede de ensino"}
+              </p>
+              {/* O mesmo campo aceita os dois tipos: o backend descobre pelo
+                  código se o convite é de escola ou de rede, e define o acesso
+                  a partir disso. Quem recebeu não precisa saber a diferença. */}
+              <p style={{ fontSize: 12, color: "#9b9a96", margin: "6px 0 0" }}>
+                Serve tanto para código de escola quanto de secretaria de educação.
               </p>
             </div>
 

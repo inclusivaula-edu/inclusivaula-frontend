@@ -428,6 +428,18 @@ export async function rotateSchoolInvite() {
   return request("/api/school/invite/rotate", { method: "POST" });
 }
 
+// Convite da rede — quem entra por ele vira secretaria, sem vínculo com escola.
+// networkId só é aceito para admin/mec; secretaria fica na própria rede.
+export async function getNetworkInvite(networkId = null) {
+  const qs = networkId ? `?network_id=${encodeURIComponent(networkId)}` : "";
+  return request(`/api/network/invite${qs}`);
+}
+
+export async function rotateNetworkInvite(networkId = null) {
+  const qs = networkId ? `?network_id=${encodeURIComponent(networkId)}` : "";
+  return request(`/api/network/invite/rotate${qs}`, { method: "POST" });
+}
+
 export async function getNetworkPanel(networkId = null) {
   return request(`/api/management/network${networkId ? `?network_id=${networkId}` : ""}`);
 }

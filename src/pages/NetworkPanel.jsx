@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import SecaoPainel from "../components/SecaoPainel";
 import { useNavigate } from "react-router-dom";
 import { getNetworkPanel, listManagementNetworks, getNetworkPanelPDFBlob } from "../services/mapiClient";
+import ConviteRede from "../components/ConviteRede";
 import icone from "../assets/icone.png";
 
 const cardStyle = {
@@ -254,6 +255,8 @@ export default function NetworkPanel() {
                 </div>
               </div>
             )}
+
+            <ConviteRede networkId={redeId || null} />
 
             <SecaoPainel titulo="Evolução e prioridades"
               descricao="Se a rede está melhorando, e quais escolas atender primeiro." />
