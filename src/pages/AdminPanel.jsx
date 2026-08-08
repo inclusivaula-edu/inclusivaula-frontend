@@ -381,25 +381,37 @@ export default function AdminPanel() {
             <SecaoPainel titulo="Efetividade e adoção"
               descricao="Se o atendimento está sendo formalizado e se a rede acompanha." />
 
-            {/* Taxa de conclusão documental agregada */}
+            {/* Cobertura documental — quantos alunos com NEE estão atendidos.
+                Substituiu a taxa de conclusão (documentos iniciados que
+                terminaram), que marcava 100% mesmo com a maioria dos alunos
+                sem documento algum — leitura perigosa para decisão de política. */}
             <div style={cardStyle}>
-              <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 10px" }}>📄 Taxa de conclusão documental (efetividade)</p>
+              <p style={{ fontSize: 14, fontWeight: 500, margin: "0 0 4px" }}>📄 Cobertura documental dos alunos com NEE</p>
+              <p style={{ fontSize: 12, color: "#5f5e5a", margin: "0 0 12px" }}>
+                Sobre {panorama.cobertura_documental?.total_nee ?? 0} aluno(s) com NEE matriculado(s) na plataforma.
+              </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 10 }}>
                 {[
-                  ["PEI", panorama.taxa_conclusao_documental?.pei],
-                  ["PDI", panorama.taxa_conclusao_documental?.pdi],
-                  ["PAEE", panorama.taxa_conclusao_documental?.paee],
-                  ["Estudo de Caso", panorama.taxa_conclusao_documental?.estudo_caso]
-                ].map(([rotulo, valor]) => (
+                  ["PEI", panorama.cobertura_documental?.pei],
+                  ["PDI", panorama.cobertura_documental?.pdi],
+                  ["PAEE", panorama.cobertura_documental?.paee],
+                  ["Estudo de Caso", panorama.cobertura_documental?.estudo_caso]
+                ].map(([rotulo, c]) => (
                   <div key={rotulo}>
-                    <p style={{ fontSize: 20, fontWeight: 600, margin: 0, color: valor === null ? "#9b9a96" : valor < 60 ? "#a32d2d" : "#0F6E56" }}>
-                      {valor === null || valor === undefined ? "—" : `${valor}%`}
+                    <p style={{ fontSize: 20, fontWeight: 600, margin: 0, color: !c ? "#9b9a96" : c.percentual < 60 ? "#a32d2d" : "#0F6E56" }}>
+                      {!c ? "—" : `${c.percentual}%`}
                     </p>
-                    <p style={{ fontSize: 11, color: "#5f5e5a", margin: "2px 0 0" }}>{rotulo}</p>
+                    <p style={{ fontSize: 11, color: "#5f5e5a", margin: "2px 0 0" }}>
+                      {rotulo}
+                      {c && <span style={{ color: "#9b9a96" }}> · {c.alunos_com} de {c.total}</span>}
+                    </p>
                   </div>
                 ))}
               </div>
-              <p style={{ fontSize: 11, color: "#9b9a96", margin: "10px 0 0" }}>% de documentos iniciados que foram efetivamente concluídos — não é volume, é efetividade.</p>
+              <p style={{ fontSize: 11, color: "#9b9a96", margin: "10px 0 0" }}>
+                % de alunos com NEE que têm o documento concluído. Reflete o estado atual — não muda
+                com o filtro de período, porque um documento feito antes segue valendo.
+              </p>
             </div>
 
             {/* Evolução mensal — adoção da plataforma */}
