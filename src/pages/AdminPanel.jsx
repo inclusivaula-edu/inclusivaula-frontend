@@ -33,21 +33,71 @@ const PAPEL_DESC = {
 // quem de fato recusa o vínculo — aqui é só para orientar quem preenche.
 const ROLES_DE_REDE = ["secretaria", "mec"];
 
-// Quem opera o sistema nesses níveis é o departamento, não o titular da pasta:
-// secretário e ministro mudam a cada gestão. Lista aberta — o nome do setor
-// varia em cada rede, então o campo aceita texto livre.
+// Catálogo completo de funções, da sala de aula ao MEC.
+//
+// Função é rótulo do que a pessoa faz; quem concede acesso é o papel (role).
+// Por isso a lista pode ser aberta aqui sem risco: escolher "SECADI" não dá
+// poder nenhum a quem está como professor. Nos níveis de rede e federal quem
+// opera o sistema é o departamento, não o titular da pasta — secretário e
+// ministro mudam a cada gestão.
+//
+// O campo aceita texto livre: o nome do setor varia em cada rede e não dá para
+// prever todos (DEE, NAPE, CREE, Coordenadoria de Inclusão…).
+const FUNCOES_ESCOLA = [
+  "Professor(a)",
+  "Professor(a) de AEE",
+  "Coordenador(a) pedagógico(a)",
+  "Diretor(a)",
+  "Vice-diretor(a)",
+  "Supervisor(a) escolar",
+  "Orientador(a) educacional",
+  "Psicólogo(a) escolar",
+  "Psicopedagogo(a)",
+  "Fonoaudiólogo(a)",
+  "Terapeuta ocupacional",
+  "Cuidador(a) / Profissional de apoio escolar",
+  "Intérprete de Libras",
+  "Secretaria escolar"
+];
+
 const FUNCOES_REDE = [
   "Educação Especial / AEE",
   "Coordenação pedagógica da rede",
-  "Equipe técnica / Censo",
-  "Gabinete / Secretário(a)",
-  "SECADI — Educação Especial",
-  "INEP / Censo Escolar"
+  "Equipe multiprofissional da rede",
+  "Formação continuada de professores",
+  "Equipe técnica / Censo Escolar",
+  "Setor de estatística e dados",
+  "Planejamento e orçamento",
+  "Gabinete / Secretário(a) de Educação",
+  "Secretário(a) adjunto(a)",
+  "Controle interno / Auditoria",
+  "Conselho Municipal de Educação",
+  "Conselho Estadual de Educação"
 ];
-const FUNCOES_ESCOLA = [
-  "Professor(a)", "Coordenador(a) pedagógico(a)", "Diretor(a)",
-  "Profissional de AEE", "Psicólogo(a) escolar"
+
+const FUNCOES_FEDERAIS = [
+  "SECADI — Secretaria de Modalidades Especializadas de Educação",
+  "SECADI — Diretoria de Políticas de Educação Especial",
+  "INEP — Censo Escolar",
+  "INEP — Avaliação da Educação Básica",
+  "FNDE — FUNDEB",
+  "SEB — Secretaria de Educação Básica",
+  "Conselho Nacional de Educação (CNE)",
+  "Comissão Intergovernamental de Financiamento (CIF)",
+  "Ministério Público / Defensoria",
+  "Equipe técnica do MEC"
 ];
+
+// Uma lista só, na ordem escola → rede → federal. O papel selecionado apenas
+// reordena a sugestão mais provável para o topo; nada fica escondido, porque
+// uma mesma pessoa pode acumular funções entre níveis.
+const TODAS_AS_FUNCOES = [...FUNCOES_ESCOLA, ...FUNCOES_REDE, ...FUNCOES_FEDERAIS];
+
+function funcoesSugeridas(role) {
+  if (role === "mec") return [...FUNCOES_FEDERAIS, ...FUNCOES_REDE, ...FUNCOES_ESCOLA];
+  if (role === "secretaria") return [...FUNCOES_REDE, ...FUNCOES_FEDERAIS, ...FUNCOES_ESCOLA];
+  return TODAS_AS_FUNCOES;
+}
 
 const redeVazia = () => ({ name: "", type: "municipal", city: "", state: "" });
 const escolaVazia = () => ({ name: "", city: "", state: "", network_id: "" });
@@ -682,10 +732,16 @@ export default function AdminPanel() {
                             <input value={formUsuario.cargo}
                               onChange={e => setFormUsuario(p => ({ ...p, cargo: e.target.value }))}
                               list="funcoes-sugeridas" style={inputFull}
-                              placeholder={ehPapelDeRede ? "Ex.: Educação Especial" : "Ex.: Professor(a)"} />
+                              placeholder="Escolha da lista ou digite o nome do setor" />
+                            {/* Todas as funções ficam disponíveis em qualquer papel: uma
+                                mesma pessoa pode acumular níveis, e função é rótulo, não
+                                permissão. O papel só ordena a sugestão mais provável. */}
                             <datalist id="funcoes-sugeridas">
-                              {(ehPapelDeRede ? FUNCOES_REDE : FUNCOES_ESCOLA).map(f => <option key={f} value={f} />)}
+                              {funcoesSugeridas(formUsuario.role).map(f => <option key={f} value={f} />)}
                             </datalist>
+                            <p style={{ fontSize: 11, color: "#9b9a96", margin: "4px 0 0" }}>
+                              Descreve o que a pessoa faz. Quem concede acesso é o papel, ao lado.
+                            </p>
                           </div>
                         </div>
                         {ehPapelDeRede && (
